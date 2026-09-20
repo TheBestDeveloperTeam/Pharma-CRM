@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pharma CRM | Orders</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <!-- Navbar -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item"><a class="nav-link" href="#" id="btn-logout" role="button"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="/dashboard.html" class="brand-link"><span class="brand-text font-weight-light ml-3"><b>Pharma</b>CRM</span></a>
+    <div class="sidebar">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex"><div class="info"><a href="#" class="d-block" id="sidebar-user-name">User</a></div></div>
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-item"><a href="/dashboard.html" class="nav-link"><i class="nav-icon fas fa-tachometer-alt"></i><p>Dashboard</p></a></li>
+          <li class="nav-header">MASTERS</li>
+          <li class="nav-item"><a href="/territories.html" class="nav-link"><i class="nav-icon fas fa-map-marker-alt"></i><p>Territories</p></a></li>
+          <li class="nav-item"><a href="/products.html" class="nav-link"><i class="nav-icon fas fa-pills"></i><p>Products</p></a></li>
+          <li class="nav-item"><a href="/customers.html" class="nav-link"><i class="nav-icon fas fa-user-md"></i><p>Customers</p></a></li>
+          <li class="nav-header">OPERATIONS</li>
+          <li class="nav-item"><a href="/dcrs.html" class="nav-link"><i class="nav-icon fas fa-calendar-check"></i><p>DCRs</p></a></li>
+          <li class="nav-item"><a href="/orders.html" class="nav-link active"><i class="nav-icon fas fa-shopping-cart"></i><p>Orders</p></a></li>
+          <li class="nav-item"><a href="/inventory.html" class="nav-link"><i class="nav-icon fas fa-boxes"></i><p>Inventory</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1 class="m-0">Orders</h1></div>
+          <div class="col-sm-6 text-right"><button class="btn btn-primary" data-toggle="modal" data-target="#modal-order">Place Order</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="container-fluid">
+        <div class="card">
+          <div class="card-body p-0">
+            <table class="table table-striped" id="data-table">
+              <thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Rep</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal-order">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="form-data">
+          <div class="modal-header"><h4 class="modal-title">Place Order</h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+          <div class="modal-body">
+            <div id="modal-error" class="alert alert-danger" style="display:none;"></div>
+            <div class="form-group">
+              <label>Customer</label>
+              <select id="f-customer" class="form-control" required></select>
+            </div>
+            
+            <h5>Order Items</h5>
+            <table class="table table-sm" id="items-table">
+              <thead><tr><th>Product</th><th>Quantity</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><select class="form-control item-product" required></select></td>
+                  <td><input type="number" class="form-control item-qty" min="1" value="1" required></td>
+                  <td><button type="button" class="btn btn-danger btn-sm btn-remove-item"><i class="fas fa-trash"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-sm btn-success" id="btn-add-item">Add Item</button>
+            
+            <div class="form-group mt-3"><label>Notes</label><textarea id="f-notes" class="form-control" rows="2"></textarea></div>
+          </div>
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="btn-save">Place Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="main-footer"><strong>Copyright &copy; 2026 Pharma CRM.</strong></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+  $(document).ready(async function() {
+      if (!apiClient.checkAuth()) return;
+      const user = apiClient.getUser();
+      if (user) $('#sidebar-user-name').text(user.name || user.email);
+      $('#btn-logout').click((e) => { e.preventDefault(); apiClient.logout(); });
+
+      let productsList = [];
+
+      async function loadDropdowns() {
+          try {
+              const custRes = await apiClient.request('/customers');
+              const custSelect = $('#f-customer');
+              custSelect.empty();
+              (custRes.data || []).forEach(c => custSelect.append(`<option value="${c.id}">${c.name}</option>`));
+              
+              const prodRes = await apiClient.request('/products');
+              productsList = prodRes.data || [];
+              populateProductDropdowns();
+          } catch(e) { console.error('Failed to load dropdowns', e); }
+      }
+
+      function populateProductDropdowns() {
+          $('.item-product').each(function() {
+              if ($(this).children('option').length === 0) {
+                  productsList.forEach(p => {
+                      $(this).append(`<option value="${p.id}">${p.name} ($${p.price})</option>`);
+                  });
+              }
+          });
+      }
+
+      $('#btn-add-item').click(function() {
+          const row = `<tr>
+              <td><select class="form-control item-product" required></select></td>
+              <td><input type="number" class="form-control item-qty" min="1" value="1" required></td>
+              <td><button type="button" class="btn btn-danger btn-sm btn-remove-item"><i class="fas fa-trash"></i></button></td>
+          </tr>`;
+          $('#items-table tbody').append(row);
+          populateProductDropdowns();
+      });
+
+      $(document).on('click', '.btn-remove-item', function() {
+          if ($('#items-table tbody tr').length > 1) {
+              $(this).closest('tr').remove();
+          }
+      });
+
+      async function loadData() {
+          const tbody = $('#data-table tbody');
+          tbody.html('<tr><td colspan="7" class="text-center">Loading...</td></tr>');
+          try {
+              const res = await apiClient.request('/orders?limit=100');
+              const data = res.data || [];
+              tbody.empty();
+              if (data.length === 0) { tbody.html('<tr><td colspan="7" class="text-center">No orders found</td></tr>'); return; }
+              
+              const isAdmin = (user.roles || []).includes('admin');
+              
+              data.forEach(item => {
+                  let statusBadge = item.status === 'approved' ? 'badge-success' : (item.status === 'rejected' ? 'badge-danger' : 'badge-warning');
+                  
+                  let actionBtn = '';
+                  if (item.status === 'pending' && isAdmin) {
+                      actionBtn = `<button class="btn btn-sm btn-success btn-approve" data-id="${item.id}">Approve</button>
+                                   <button class="btn btn-sm btn-danger btn-reject" data-id="${item.id}">Reject</button>`;
+                  }
+                  
+                  tbody.append(`<tr>
+                      <td>${item.id}</td>
+                      <td>${item.order_date}</td>
+                      <td>${item.customer_name}</td>
+                      <td>${item.rep_name}</td>
+                      <td>$${parseFloat(item.total_amount).toFixed(2)}</td>
+                      <td><span class="badge ${statusBadge}">${item.status.toUpperCase()}</span></td>
+                      <td>${actionBtn}</td>
+                  </tr>`);
+              });
+          } catch (err) { tbody.html('<tr><td colspan="7" class="text-center text-danger">Failed to load data</td></tr>'); }
+      }
+
+      $(document).on('click', '.btn-approve', async function() {
+          if(!confirm('Approve order?')) return;
+          const id = $(this).data('id');
+          try {
+              await apiClient.request(`/orders/${id}/status`, { method: 'PATCH', body: { status: 'approved', notes: 'Approved by admin' } });
+              loadData();
+          } catch(e) { alert(e.error?.message || 'Failed to approve'); }
+      });
+      
+      $(document).on('click', '.btn-reject', async function() {
+          if(!confirm('Reject order?')) return;
+          const id = $(this).data('id');
+          try {
+              await apiClient.request(`/orders/${id}/status`, { method: 'PATCH', body: { status: 'rejected', notes: 'Rejected by admin' } });
+              loadData();
+          } catch(e) { alert(e.error?.message || 'Failed to reject'); }
+      });
+
+      $('#form-data').submit(async function(e) {
+          e.preventDefault();
+          const $btn = $('#btn-save'); const $err = $('#modal-error');
+          
+          let items = [];
+          $('#items-table tbody tr').each(function() {
+              items.push({
+                  product_id: parseInt($(this).find('.item-product').val()),
+                  quantity: parseInt($(this).find('.item-qty').val())
+              });
+          });
+
+          if(items.length === 0) {
+              $err.text('Add at least one item').show(); return;
+          }
+
+          $btn.prop('disabled', true); $err.hide();
+          try {
+              await apiClient.request('/orders', { 
+                  method: 'POST', 
+                  body: { 
+                      customer_id: parseInt($('#f-customer').val()),
+                      notes: $('#f-notes').val(),
+                      items: items
+                  } 
+              });
+              $('#modal-order').modal('hide'); 
+              $('#form-data')[0].reset();
+              $('#items-table tbody tr:not(:first)').remove();
+              loadData();
+          } catch (err) { $err.text(err.error?.message || 'Failed to place order').show(); }
+          finally { $btn.prop('disabled', false); }
+      });
+
+      loadDropdowns();
+      loadData();
+  });
+</script>
+</body>
+</html>

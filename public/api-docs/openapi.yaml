@@ -1,0 +1,1403 @@
+openapi: 3.0.3
+info:
+  title: Pharma CRM & Sales Force Automation API
+  version: 3.0.0
+  description: |
+    Comprehensive, enterprise-grade RESTful API documentation for Pharma CRM & Sales Force Automation.
+    
+    ### Architecture & Golden Rules
+    - **Multi-Tenancy:** Row-level tenancy enforced via `org_ref` and `franchise_ref`.
+    - **Authentication:** OAuth 2.0 style Bearer JWT access tokens (15-minute expiry) and rotating refresh tokens with reuse detection.
+    - **Idempotency:** Mutating operations (`POST`, `PUT`, `PATCH`) accept/require an `Idempotency-Key` header (UUID or string 16-120 chars) preventing duplicate execution.
+    - **Deterministic Numbering:** Sequential gapless numbering for Orders, Invoices, Dispatches, and Payments via atomic sequence counters.
+    - **Inventory & Pricing:** Strict server-side First-Expiry-First-Out (FEFO) allocation and hierarchical priority pricing (Party > Tier > Default).
+    - **Auditability:** Immutable, append-only audit trail on all business and security transactions.
+servers:
+  - url: https://crm.easysolutins24.in/api/v1
+    description: Production Cloud Server (cPanel Shared Hosting)
+  - url: http://crm/api/v1
+    description: Local Development Server (XAMPP / Core PHP)
+  - url: http://localhost:8000/api/v1
+    description: Local PHP CLI Dev Server
+
+tags:
+  - name: Health
+    description: Platform and database readiness probes
+  - name: Auth
+    description: OAuth 2.0 token issuance, refresh rotation, revocation, and identity
+  - name: Geo
+    description: Public India geographic hierarchy (States, Districts, Pincodes)
+  - name: Super Admin
+    description: Multi-tenant organization and franchise management, impersonation, audit & platform stats
+  - name: Admin Users
+    description: User management within a franchise (Admin, Sales, Distributor)
+  - name: Admin Masters
+    description: Product categories, pricing tiers, transporters, templates, settings
+  - name: Admin Products
+    description: Pharmaceutical catalogue, SKU, HSN, packing, and composition CRUD
+  - name: Admin Pricing & Schemes
+    description: Hierarchical pricing rules, quantity schemes (10+1), and calculation endpoints
+  - name: Admin Leads & Follow-ups
+    description: Lead acquisition, assignment, state machine, and mandatory follow-up tracking
+  - name: Admin Parties & Onboarding
+    description: PCD franchise partners, distributors, customer onboarding invites, and ledger
+  - name: Admin Territories
+    description: District/pincode territory allocations, exclusive locks, pre-billing validator & overrides
+  - name: Admin Inventory
+    description: Batch receipts, FEFO allocations, physical stock adjustments, and near-expiry alerts
+  - name: Admin Orders
+    description: Order lifecycle (DRAFT -> CONFIRMED -> DISPATCHED -> DELIVERED / CANCELLED) with stock reservation
+  - name: Admin Billing & Invoices
+    description: Tax invoice generation with price/party snapshots, gapless sequence numbers, and GST breakdown
+  - name: Admin Dispatches
+    description: Transporter assignment, Lorry Receipt (LR) tracking, and dispatch delivery confirmation
+  - name: Admin Payments
+    description: Payment recording, invoice allocation, payment reversal, and outstanding balance sync
+  - name: Admin Reports
+    description: 12 comprehensive analytical, operational, and financial reports with JSON/CSV streaming
+  - name: Webhooks
+    description: B2B lead generation webhook sources (HMAC-SHA256 verified) and ingestion
+  - name: Notifications
+    description: In-app, Email, WhatsApp, and SMS notification dispatch, bell polling, and read tracking
+  - name: Distributor Portal
+    description: Distributor self-service portal for catalogue browsing, server-side cart pricing, order placement, and invoice tracking
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your Bearer JWT access token issued by `/oauth/token`.
+
+  parameters:
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: Unique idempotency UUID string preventing duplicate mutating writes.
+      required: false
+      schema:
+        type: string
+        example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+    XFranchiseRefHeader:
+      name: X-Franchise-Ref
+      in: header
+      description: Optional tenant reference check. If provided, must match the authenticated JWT franchise claim.
+      required: false
+      schema:
+        type: string
+        example: "FRN-MUMBAI000000000001"
+    PageParam:
+      name: page
+      in: query
+      description: 1-indexed page number for paginated listings.
+      required: false
+      schema:
+        type: integer
+        default: 1
+    PerPageParam:
+      name: per_page
+      in: query
+      description: Number of items returned per page (max 100).
+      required: false
+      schema:
+        type: integer
+        default: 20
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              example: "01J9XKZM3QVRY4BPTDGWCNH7E2"
+            page:
+              type: integer
+              example: 1
+            per_page:
+              type: integer
+              example: 20
+            total:
+              type: integer
+              example: 145
+
+    ErrorEnvelope:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_FAILED"
+            message:
+              type: string
+              example: "The request payload failed validation."
+            fields:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              example:
+                mobile: ["Must be a valid 10-digit Indian mobile number."]
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              example: "01J9XKZM3QVRY4BPTDGWCNH7E2"
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          example: "a8f7c9e1d3b542069e2b17f8a3c45678"
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          example: 900
+        user:
+          type: object
+          properties:
+            user_ref:
+              type: string
+              example: "USR-01J9XKZ"
+            name:
+              type: string
+              example: "Admin User"
+            email:
+              type: string
+              example: "admin@acme.test"
+            role:
+              type: string
+              enum: [SUPER_ADMIN, FRANCHISE_ADMIN, SALES, DISTRIBUTOR]
+            org_ref:
+              type: string
+              example: "ORG-ACME001"
+            franchise_ref:
+              type: string
+              example: "FRN-MUM001"
+
+    Product:
+      type: object
+      properties:
+        product_ref:
+          type: string
+          example: "PRD-01J9XKZ"
+        product_name:
+          type: string
+          example: "Paracetamol 650mg Tablets"
+        sku:
+          type: string
+          example: "PARA-650"
+        composition:
+          type: string
+          example: "Paracetamol IP 650mg"
+        packing:
+          type: string
+          example: "10x10 Blister"
+        hsn_code:
+          type: string
+          example: "300490"
+        mrp:
+          type: number
+          format: float
+          example: 35.00
+        franchise_rate:
+          type: number
+          format: float
+          example: 18.50
+        gst_rate:
+          type: number
+          format: float
+          example: 12.00
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, ARCHIVED]
+
+    Party:
+      type: object
+      properties:
+        party_ref:
+          type: string
+          example: "PTY-01J9XKZ"
+        party_code:
+          type: string
+          example: "PTY-MUM-001"
+        firm_name:
+          type: string
+          example: "Apex Distributors Pvt Ltd"
+        contact_name:
+          type: string
+          example: "Rajesh Sharma"
+        mobile:
+          type: string
+          example: "9876543210"
+        email:
+          type: string
+          example: "rajesh@apexdist.com"
+        gstin:
+          type: string
+          example: "27AAAAA0000A1Z5"
+        drug_license_no:
+          type: string
+          example: "DL-MH-2023-998811"
+        credit_limit:
+          type: number
+          format: float
+          example: 250000.00
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, ARCHIVED]
+
+    Lead:
+      type: object
+      properties:
+        lead_ref:
+          type: string
+          example: "LED-01J9XKZ"
+        contact_name:
+          type: string
+          example: "Amit Kumar"
+        firm_name:
+          type: string
+          example: "Kumar Medicos"
+        mobile:
+          type: string
+          example: "9822011223"
+        status:
+          type: string
+          enum: [NEW, ASSIGNED, CONTACTED, INTERESTED, FOLLOW_UP, DOCUMENTS_PENDING, QUALIFIED, CONVERTED, LOST, REJECTED, ARCHIVED]
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+        assigned_user_ref:
+          type: string
+          example: "USR-SALES-001"
+
+    Order:
+      type: object
+      properties:
+        order_ref:
+          type: string
+          example: "ORD-01J9XKZ"
+        order_no:
+          type: string
+          example: "ORD-2026-0001"
+        client_order_ref:
+          type: string
+          example: "PO-APEX-9981"
+        party_ref:
+          type: string
+          example: "PTY-01J9XKZ"
+        status:
+          type: string
+          enum: [DRAFT, CONFIRMED, HELD, REJECTED, DISPATCHED, DELIVERED, CANCELLED]
+        subtotal:
+          type: number
+          format: float
+          example: 18500.00
+        discount_total:
+          type: number
+          format: float
+          example: 500.00
+        gst_total:
+          type: number
+          format: float
+          example: 2160.00
+        grand_total:
+          type: number
+          format: float
+          example: 20160.00
+
+    Invoice:
+      type: object
+      properties:
+        invoice_ref:
+          type: string
+          example: "INV-01J9XKZ"
+        invoice_no:
+          type: string
+          example: "INV-2627-00001"
+        order_ref:
+          type: string
+          example: "ORD-01J9XKZ"
+        party_ref:
+          type: string
+          example: "PTY-01J9XKZ"
+        invoice_date:
+          type: string
+          format: date
+          example: "2026-09-20"
+        due_date:
+          type: string
+          format: date
+          example: "2026-10-20"
+        subtotal:
+          type: number
+          format: float
+          example: 18500.00
+        gst_total:
+          type: number
+          format: float
+          example: 2160.00
+        grand_total:
+          type: number
+          format: float
+          example: 20160.00
+        paid_total:
+          type: number
+          format: float
+          example: 5000.00
+        status:
+          type: string
+          enum: [POSTED, CANCELLED]
+
+    Notification:
+      type: object
+      properties:
+        notification_ref:
+          type: string
+          example: "NTF-01J9XKZ"
+        channel:
+          type: string
+          enum: [INAPP, WHATSAPP, EMAIL, SMS]
+        event_type:
+          type: string
+          example: "FOLLOW_UP_DUE"
+        status:
+          type: string
+          enum: [QUEUED, SENT, DELIVERED, READ, FAILED]
+        created_at:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================================
+  # Health & Probes
+  # ============================================================================
+  /health:
+    get:
+      summary: Liveness probe
+      description: Returns liveness status of the application.
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Application is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  timestamp: { type: string, example: "2026-09-20T18:47:00Z" }
+
+  /ready:
+    get:
+      summary: Readiness probe
+      description: Verifies database connectivity, storage write permissions, and active encryption keys.
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Application and database are ready.
+        '503':
+          description: Application dependencies not ready.
+
+  # ============================================================================
+  # OAuth & Identity
+  # ============================================================================
+  /oauth/token:
+    post:
+      summary: Issue OAuth 2.0 access & refresh tokens
+      description: Authenticates user credentials per surface client or rotates a valid refresh token.
+      tags: [Auth]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grant_type]
+              properties:
+                grant_type:
+                  type: string
+                  enum: [password, refresh_token]
+                client_id:
+                  type: string
+                  enum: [crm-super, crm-admin, crm-sales, crm-portal]
+                  example: "crm-admin"
+                username:
+                  type: string
+                  example: "admin@acme.test"
+                password:
+                  type: string
+                  example: "Secret@1234"
+                refresh_token:
+                  type: string
+                  example: "a8f7c9e1d3b542069e2b17f8a3c45678"
+      responses:
+        '200':
+          description: Tokens issued successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: Invalid credentials or token reuse detected.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /oauth/revoke:
+    post:
+      summary: Revoke active session
+      description: Revokes current user session family and access token.
+      tags: [Auth]
+      responses:
+        '200':
+          description: Session revoked successfully.
+
+  /auth/me:
+    get:
+      summary: Get authenticated user profile
+      description: Returns verified identity, permissions, tenant claims, and surface role.
+      tags: [Auth]
+      responses:
+        '200':
+          description: Authenticated user details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { $ref: '#/components/schemas/TokenResponse' }
+
+  # ============================================================================
+  # India Geographic Reference
+  # ============================================================================
+  /geo/states:
+    get:
+      summary: List Indian states
+      tags: [Geo]
+      security: []
+      responses:
+        '200':
+          description: List of states.
+
+  /geo/districts:
+    get:
+      summary: List districts by state
+      tags: [Geo]
+      security: []
+      parameters:
+        - name: state_ref
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of districts.
+
+  /geo/pincodes/{pin}:
+    get:
+      summary: Resolve pincode to city, district, and state
+      tags: [Geo]
+      security: []
+      parameters:
+        - name: pin
+          in: path
+          required: true
+          schema: { type: string, example: "400001" }
+      responses:
+        '200':
+          description: Resolved geographic details.
+
+  # ============================================================================
+  # Super Admin Endpoints
+  # ============================================================================
+  /super/dashboard/stats:
+    get:
+      summary: Platform overview statistics
+      description: Returns multi-tenant counts, job queue status, and system health.
+      tags: [Super Admin]
+      responses:
+        '200':
+          description: Platform statistics.
+
+  /super/organizations:
+    get:
+      summary: List organizations
+      tags: [Super Admin]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Organizations list.
+    post:
+      summary: Create organization
+      tags: [Super Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org_code, org_name]
+              properties:
+                org_code: { type: string, example: "ACME" }
+                org_name: { type: string, example: "Acme Healthcare" }
+      responses:
+        '201':
+          description: Organization created.
+
+  /super/franchises:
+    get:
+      summary: List franchises
+      tags: [Super Admin]
+      responses:
+        '200':
+          description: Franchises list.
+    post:
+      summary: Create franchise under an organization
+      tags: [Super Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org_ref, franchise_code, franchise_name]
+              properties:
+                org_ref: { type: string, example: "ORG-ACME" }
+                franchise_code: { type: string, example: "MUMBAI" }
+                franchise_name: { type: string, example: "Acme PCD Mumbai" }
+      responses:
+        '201':
+          description: Franchise created.
+
+  /super/impersonate/{ref}:
+    post:
+      summary: Impersonate a user with time-boxed audit
+      description: Issues a 15-minute impersonation JWT carrying original super admin identity.
+      tags: [Super Admin]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Impersonation token issued.
+
+  /super/audit:
+    get:
+      summary: Platform-wide audit trail
+      tags: [Super Admin]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Audit logs list.
+
+  /super/security-events:
+    get:
+      summary: Security and tenant bypass events
+      tags: [Super Admin]
+      responses:
+        '200':
+          description: Security logs list.
+
+  # ============================================================================
+  # Franchise Admin: Users & Masters
+  # ============================================================================
+  /admin/users:
+    get:
+      summary: List franchise users
+      tags: [Admin Users]
+      responses:
+        '200':
+          description: Users list.
+    post:
+      summary: Create new franchise user
+      tags: [Admin Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, name, role]
+              properties:
+                email: { type: string, format: email }
+                name: { type: string }
+                role: { type: string, enum: [FRANCHISE_ADMIN, SALES, DISTRIBUTOR] }
+                phone: { type: string }
+      responses:
+        '201':
+          description: User created.
+
+  /admin/categories:
+    get:
+      summary: List product categories
+      tags: [Admin Masters]
+      responses:
+        '200':
+          description: Categories list.
+    post:
+      summary: Create product category
+      tags: [Admin Masters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category_name]
+              properties:
+                category_name: { type: string, example: "Antibiotics" }
+      responses:
+        '201':
+          description: Category created.
+
+  /admin/tiers:
+    get:
+      summary: List pricing tiers
+      tags: [Admin Masters]
+      responses:
+        '200':
+          description: Pricing tiers list.
+
+  /admin/transporters:
+    get:
+      summary: List logistics transporters
+      tags: [Admin Masters]
+      responses:
+        '200':
+          description: Transporters list.
+    post:
+      summary: Add transporter
+      tags: [Admin Masters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transporter_name]
+              properties:
+                transporter_name: { type: string, example: "V-Trans Logistics" }
+                tracking_url_template: { type: string, example: "https://vtrans.com/track/{lr}" }
+      responses:
+        '201':
+          description: Transporter created.
+
+  # ============================================================================
+  # Franchise Admin: Products & Pricing
+  # ============================================================================
+  /admin/products:
+    get:
+      summary: List products
+      tags: [Admin Products]
+      responses:
+        '200':
+          description: Products list.
+    post:
+      summary: Create pharmaceutical product
+      tags: [Admin Products]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '201':
+          description: Product created.
+
+  /admin/pricing/resolve:
+    post:
+      summary: Resolve effective price for a product
+      description: Evaluates Party > Tier > Default hierarchy on a given date.
+      tags: [Admin Pricing & Schemes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_ref]
+              properties:
+                product_ref: { type: string }
+                party_ref: { type: string }
+                tier_ref: { type: string }
+                date: { type: string, format: date }
+      responses:
+        '200':
+          description: Resolved rate and source.
+
+  /admin/schemes/calculate:
+    post:
+      summary: Calculate promotional scheme free goods
+      description: Calculates quantity scheme lines (e.g. 10+1, 20+3).
+      tags: [Admin Pricing & Schemes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_ref, ordered_qty]
+              properties:
+                product_ref: { type: string }
+                ordered_qty: { type: integer, example: 25 }
+                tier_ref: { type: string }
+                date: { type: string, format: date }
+      responses:
+        '200':
+          description: Calculation breakdown and free quantity.
+
+  # ============================================================================
+  # Franchise Admin: Leads & Follow-ups
+  # ============================================================================
+  /admin/leads:
+    get:
+      summary: List leads
+      tags: [Admin Leads & Follow-ups]
+      responses:
+        '200':
+          description: Leads list.
+    post:
+      summary: Create lead
+      tags: [Admin Leads & Follow-ups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lead'
+      responses:
+        '201':
+          description: Lead created.
+
+  /admin/leads/{ref}/assign:
+    post:
+      summary: Assign lead to sales representative
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sales_user_ref]
+              properties:
+                sales_user_ref: { type: string }
+      responses:
+        '200':
+          description: Lead assigned.
+
+  /admin/follow-ups:
+    get:
+      summary: List follow-up queue
+      tags: [Admin Leads & Follow-ups]
+      responses:
+        '200':
+          description: Follow-ups list.
+    post:
+      summary: Schedule follow-up
+      tags: [Admin Leads & Follow-ups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lead_ref, next_action, next_follow_up_at]
+              properties:
+                lead_ref: { type: string }
+                next_action: { type: string, example: "Call regarding catalogue" }
+                next_follow_up_at: { type: string, format: date-time }
+      responses:
+        '201':
+          description: Follow-up scheduled.
+
+  # ============================================================================
+  # Franchise Admin: Parties & Territory
+  # ============================================================================
+  /admin/parties:
+    get:
+      summary: List customer parties / distributors
+      tags: [Admin Parties & Onboarding]
+      responses:
+        '200':
+          description: Parties list.
+    post:
+      summary: Create distributor party
+      tags: [Admin Parties & Onboarding]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Party'
+      responses:
+        '201':
+          description: Party created.
+
+  /admin/parties/{ref}/ledger:
+    get:
+      summary: Get party financial ledger summary
+      tags: [Admin Parties & Onboarding]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ledger transactions and balance.
+
+  /admin/territories/validate:
+    post:
+      summary: Validate party against geographic territory
+      tags: [Admin Territories]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [party_ref, pincode]
+              properties:
+                party_ref: { type: string }
+                pincode: { type: string, example: "400001" }
+      responses:
+        '200':
+          description: Territory validation status (ALLOWED, BLOCKED, EXCLUSIVE_CONFLICT).
+
+  /admin/territories/override:
+    post:
+      summary: Admin override for territory violation
+      tags: [Admin Territories]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_ref, party_ref, pincode, reason]
+              properties:
+                order_ref: { type: string }
+                party_ref: { type: string }
+                pincode: { type: string }
+                reason: { type: string, example: "Approved by Sales Director" }
+      responses:
+        '200':
+          description: Territory overridden and logged.
+
+  # ============================================================================
+  # Franchise Admin: Inventory Batches & FEFO
+  # ============================================================================
+  /admin/inventory/receive:
+    post:
+      summary: Receive inventory batch into warehouse
+      tags: [Admin Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_ref, batch_no, expiry_date, quantity]
+              properties:
+                product_ref: { type: string }
+                batch_no: { type: string, example: "BN-2026-09" }
+                expiry_date: { type: string, format: date, example: "2028-09-30" }
+                manufacturing_date: { type: string, format: date }
+                quantity: { type: integer, example: 1000 }
+                location_code: { type: string, example: "WH-A-12" }
+      responses:
+        '201':
+          description: Batch received.
+
+  /admin/inventory/near-expiry:
+    get:
+      summary: List near-expiry batches
+      tags: [Admin Inventory]
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, default: 180 }
+      responses:
+        '200':
+          description: Near-expiry batches list.
+
+  # ============================================================================
+  # Franchise Admin: Orders & Billing
+  # ============================================================================
+  /admin/orders:
+    get:
+      summary: List sales orders
+      tags: [Admin Orders]
+      responses:
+        '200':
+          description: Orders list.
+    post:
+      summary: Create and place an order
+      description: Validates territory, credit limits, pricing rules, and reserves stock via FEFO.
+      tags: [Admin Orders]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [party_ref, client_order_ref, items]
+              properties:
+                party_ref: { type: string }
+                client_order_ref: { type: string, example: "PO-2026-0091" }
+                channel: { type: string, example: "ADMIN" }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [product_ref, paid_qty]
+                    properties:
+                      product_ref: { type: string }
+                      paid_qty: { type: integer, example: 50 }
+      responses:
+        '201':
+          description: Order created and stock reserved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { $ref: '#/components/schemas/Order' }
+
+  /admin/orders/{ref}/confirm:
+    post:
+      summary: Confirm order for billing
+      tags: [Admin Orders]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Order confirmed.
+
+  /admin/orders/{ref}/cancel:
+    post:
+      summary: Cancel order and release reserved stock
+      tags: [Admin Orders]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Order cancelled and reservations returned.
+
+  /admin/invoices:
+    get:
+      summary: List tax invoices
+      tags: [Admin Billing & Invoices]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - name: party_ref
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [POSTED, CANCELLED] }
+      responses:
+        '200':
+          description: Invoices list.
+
+  /admin/invoices/{ref}:
+    get:
+      summary: Get invoice details and line items
+      tags: [Admin Billing & Invoices]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Invoice details.
+
+  /admin/invoices/generate:
+    post:
+      summary: Generate gapless tax invoice from confirmed order
+      description: Generates deterministic invoice_no, captures pricing snapshots, and consumes stock.
+      tags: [Admin Billing & Invoices]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_ref]
+              properties:
+                order_ref: { type: string }
+                due_date: { type: string, format: date }
+      responses:
+        '201':
+          description: Tax invoice generated.
+
+  # ============================================================================
+  # Franchise Admin: Dispatches & Payments
+  # ============================================================================
+  /admin/dispatches:
+    get:
+      summary: List dispatches
+      tags: [Admin Dispatches]
+      responses:
+        '200':
+          description: Dispatches list.
+    post:
+      summary: Create dispatch consignment
+      tags: [Admin Dispatches]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice_ref, transporter_ref, lr_number]
+              properties:
+                invoice_ref: { type: string }
+                transporter_ref: { type: string }
+                lr_number: { type: string, example: "LR-998877" }
+                vehicle_no: { type: string }
+      responses:
+        '201':
+          description: Dispatch recorded.
+
+  /admin/dispatches/{ref}/deliver:
+    post:
+      summary: Mark dispatch as delivered
+      tags: [Admin Dispatches]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Dispatch delivered.
+
+  /admin/payments:
+    get:
+      summary: List payments
+      tags: [Admin Payments]
+      responses:
+        '200':
+          description: Payments list.
+    post:
+      summary: Record payment collection and allocate to invoices
+      tags: [Admin Payments]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [party_ref, amount, payment_mode]
+              properties:
+                party_ref: { type: string }
+                amount: { type: number, format: float, example: 20000.00 }
+                payment_mode: { type: string, enum: [NEFT, RTGS, CHEQUE, CASH, UPI] }
+                reference_no: { type: string }
+                allocations:
+                  type: array
+                  items:
+                    type: object
+                    required: [invoice_ref, allocated_amount]
+                    properties:
+                      invoice_ref: { type: string }
+                      allocated_amount: { type: number, format: float }
+      responses:
+        '201':
+          description: Payment recorded and allocated.
+
+  # ============================================================================
+  # Franchise Admin: 12 Reports
+  # ============================================================================
+  /admin/reports/{type}:
+    get:
+      summary: Retrieve report dataset (JSON)
+      description: |
+        Supported report types:
+        - `sales-summary`
+        - `orders-register`
+        - `invoices-register`
+        - `payments-register`
+        - `outstanding`
+        - `party-ledger`
+        - `inventory-status`
+        - `near-expiry`
+        - `lead-funnel`
+        - `scheme-utilization`
+        - `audit-log`
+        - `tenant-activity`
+      tags: [Admin Reports]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema: { type: string }
+        - name: party_ref
+          in: query
+          schema: { type: string }
+        - name: days
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Report data rows.
+
+  /admin/reports/{type}/export:
+    get:
+      summary: Export report as CSV download
+      tags: [Admin Reports]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Streamed CSV file download.
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  # ============================================================================
+  # Notifications
+  # ============================================================================
+  /notifications:
+    get:
+      summary: List in-app notifications
+      tags: [Notifications]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Notifications list.
+
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      tags: [Notifications]
+      responses:
+        '200':
+          description: Number of notifications marked read.
+
+  /notifications/{ref}/read:
+    post:
+      summary: Mark specific notification as read
+      tags: [Notifications]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notification read confirmed.
+
+  # ============================================================================
+  # Distributor Self-Service Portal
+  # ============================================================================
+  /portal/profile:
+    get:
+      summary: Get distributor portal profile
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Distributor party profile.
+    patch:
+      summary: Update shipping address or contact info
+      tags: [Distributor Portal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shipping_address: { type: string }
+                contact_name: { type: string }
+                mobile: { type: string }
+      responses:
+        '200':
+          description: Profile updated.
+
+  /portal/catalogue:
+    get:
+      summary: Browse product catalogue with personalized tier rates
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Product catalogue with applicable pricing.
+
+  /portal/cart/calculate:
+    post:
+      summary: Server-side cart calculation with schemes & tax
+      description: Prevents client-side price tampering by computing exact unit rates, free goods schemes, and GST.
+      tags: [Distributor Portal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [product_ref, qty]
+                    properties:
+                      product_ref: { type: string }
+                      qty: { type: integer, example: 20 }
+      responses:
+        '200':
+          description: Calculated cart item lines, subtotal, discounts, GST, and grand total.
+
+  /portal/orders:
+    get:
+      summary: List distributor's own orders
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Orders list.
+    post:
+      summary: Place distributor order
+      tags: [Distributor Portal]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client_order_ref, items]
+              properties:
+                client_order_ref: { type: string, example: "WEB-ORD-001" }
+                shipping_address: { type: string }
+                remarks: { type: string }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [product_ref, paid_qty]
+                    properties:
+                      product_ref: { type: string }
+                      paid_qty: { type: integer, example: 50 }
+      responses:
+        '201':
+          description: Order placed.
+
+  /portal/orders/{ref}/cancel:
+    post:
+      summary: Cancel distributor order (allowed pre-confirm only)
+      tags: [Distributor Portal]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Order cancelled.
+
+  /portal/invoices:
+    get:
+      summary: List invoices issued to distributor
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Invoices list.
+
+  /portal/dispatches:
+    get:
+      summary: Track consignments and LR tracking details
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Dispatches list.
+
+  /portal/outstanding:
+    get:
+      summary: View distributor outstanding balance and ledger
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Outstanding balance breakdown.

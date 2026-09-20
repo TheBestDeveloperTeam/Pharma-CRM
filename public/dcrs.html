@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pharma CRM | DCRs</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+</head>
+<body class="hold-transition sidebar-mini">
+<div class="wrapper">
+  <!-- Navbar -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item"><a class="nav-link" href="#" id="btn-logout" role="button"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="/dashboard.html" class="brand-link"><span class="brand-text font-weight-light ml-3"><b>Pharma</b>CRM</span></a>
+    <div class="sidebar">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex"><div class="info"><a href="#" class="d-block" id="sidebar-user-name">User</a></div></div>
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <li class="nav-item"><a href="/dashboard.html" class="nav-link"><i class="nav-icon fas fa-tachometer-alt"></i><p>Dashboard</p></a></li>
+          <li class="nav-header">MASTERS</li>
+          <li class="nav-item"><a href="/territories.html" class="nav-link"><i class="nav-icon fas fa-map-marker-alt"></i><p>Territories</p></a></li>
+          <li class="nav-item"><a href="/products.html" class="nav-link"><i class="nav-icon fas fa-pills"></i><p>Products</p></a></li>
+          <li class="nav-item"><a href="/customers.html" class="nav-link"><i class="nav-icon fas fa-user-md"></i><p>Customers</p></a></li>
+          <li class="nav-header">OPERATIONS</li>
+          <li class="nav-item"><a href="/dcrs.html" class="nav-link active"><i class="nav-icon fas fa-calendar-check"></i><p>DCRs</p></a></li>
+          <li class="nav-item"><a href="/orders.html" class="nav-link"><i class="nav-icon fas fa-shopping-cart"></i><p>Orders</p></a></li>
+          <li class="nav-item"><a href="/inventory.html" class="nav-link"><i class="nav-icon fas fa-boxes"></i><p>Inventory</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1 class="m-0">Daily Call Reports</h1></div>
+          <div class="col-sm-6 text-right"><button class="btn btn-primary" id="btn-create-dcr">Create DCR (Today)</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="container-fluid">
+        <div class="card">
+          <div class="card-body p-0">
+            <table class="table table-striped" id="data-table">
+              <thead><tr><th>DCR ID</th><th>Date</th><th>Rep</th><th>Territory</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Visit Modal -->
+  <div class="modal fade" id="modal-visit">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="form-visit">
+          <div class="modal-header"><h4 class="modal-title">Add Visit to DCR <span id="visit-dcr-id"></span></h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+          <div class="modal-body">
+            <input type="hidden" id="v-dcr-id">
+            <div id="v-modal-error" class="alert alert-danger" style="display:none;"></div>
+            
+            <div class="form-group">
+              <label>Customer</label>
+              <select id="v-customer" class="form-control" required></select>
+            </div>
+            
+            <div class="form-group">
+              <label>Discussion Topics</label>
+              <textarea id="v-discussion" class="form-control" rows="2" required></textarea>
+            </div>
+
+            <h5>Samples Given</h5>
+            <table class="table table-sm" id="samples-table">
+              <thead><tr><th>Product (Sample)</th><th>Quantity</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><select class="form-control sample-product"></select></td>
+                  <td><input type="number" class="form-control sample-qty" min="1" value="1"></td>
+                  <td><button type="button" class="btn btn-danger btn-sm btn-remove-sample"><i class="fas fa-trash"></i></button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-sm btn-success" id="btn-add-sample">Add Sample</button>
+            
+          </div>
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-visit">Save Visit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="main-footer"><strong>Copyright &copy; 2026 Pharma CRM.</strong></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script>
+  $(document).ready(async function() {
+      if (!apiClient.checkAuth()) return;
+      const user = apiClient.getUser();
+      if (user) $('#sidebar-user-name').text(user.name || user.email);
+      $('#btn-logout').click((e) => { e.preventDefault(); apiClient.logout(); });
+
+      let productsList = [];
+
+      async function loadDropdowns() {
+          try {
+              const custRes = await apiClient.request('/customers');
+              const custSelect = $('#v-customer');
+              custSelect.empty();
+              (custRes.data || []).forEach(c => custSelect.append(`<option value="${c.id}">${c.name}</option>`));
+              
+              const prodRes = await apiClient.request('/products');
+              productsList = prodRes.data || [];
+              populateProductDropdowns();
+          } catch(e) { console.error('Failed to load dropdowns', e); }
+      }
+
+      function populateProductDropdowns() {
+          $('.sample-product').each(function() {
+              if ($(this).children('option').length === 0) {
+                  $(this).append('<option value="">-- None --</option>');
+                  productsList.forEach(p => {
+                      $(this).append(`<option value="${p.id}">${p.name}</option>`);
+                  });
+              }
+          });
+      }
+
+      $('#btn-add-sample').click(function() {
+          const row = `<tr>
+              <td><select class="form-control sample-product"></select></td>
+              <td><input type="number" class="form-control sample-qty" min="1" value="1"></td>
+              <td><button type="button" class="btn btn-danger btn-sm btn-remove-sample"><i class="fas fa-trash"></i></button></td>
+          </tr>`;
+          $('#samples-table tbody').append(row);
+          populateProductDropdowns();
+      });
+
+      $(document).on('click', '.btn-remove-sample', function() {
+          if ($('#samples-table tbody tr').length > 1) {
+              $(this).closest('tr').remove();
+          }
+      });
+
+      async function loadData() {
+          const tbody = $('#data-table tbody');
+          tbody.html('<tr><td colspan="6" class="text-center">Loading...</td></tr>');
+          try {
+              const res = await apiClient.request('/dcrs');
+              const data = res.data || [];
+              tbody.empty();
+              if (data.length === 0) { tbody.html('<tr><td colspan="6" class="text-center">No DCRs found</td></tr>'); return; }
+              
+              data.forEach(item => {
+                  let statusBadge = item.status === 'submitted' ? 'badge-success' : 'badge-warning';
+                  
+                  let actionBtn = '';
+                  if (item.status === 'draft') {
+                      actionBtn = `<button class="btn btn-sm btn-info btn-add-visit" data-id="${item.id}">Add Visit</button>
+                                   <button class="btn btn-sm btn-success btn-submit-dcr" data-id="${item.id}">Submit</button>`;
+                  } else {
+                      actionBtn = `<span class="text-muted">Locked</span>`;
+                  }
+                  
+                  tbody.append(`<tr>
+                      <td>${item.id}</td>
+                      <td>${item.dcr_date}</td>
+                      <td>${item.user_name || 'Me'}</td>
+                      <td>${item.territory_name || '-'}</td>
+                      <td><span class="badge ${statusBadge}">${item.status.toUpperCase()}</span></td>
+                      <td>${actionBtn}</td>
+                  </tr>`);
+              });
+          } catch (err) { tbody.html('<tr><td colspan="6" class="text-center text-danger">Failed to load data</td></tr>'); }
+      }
+
+      $('#btn-create-dcr').click(async function() {
+          try {
+              // Get territory dynamically if possible, hardcoding 1 for now if needed, or null if optional
+              await apiClient.request('/dcrs', { method: 'POST', body: { dcr_date: new Date().toISOString().split('T')[0], territory_id: 1 } });
+              loadData();
+          } catch(e) { alert(e.error?.message || 'Failed to create DCR. You may already have one for today.'); }
+      });
+
+      $(document).on('click', '.btn-add-visit', function() {
+          const id = $(this).data('id');
+          $('#v-dcr-id').val(id);
+          $('#visit-dcr-id').text('#' + id);
+          $('#modal-visit').modal('show');
+      });
+
+      $(document).on('click', '.btn-submit-dcr', async function() {
+          if(!confirm('Are you sure you want to submit this DCR? It cannot be edited later.')) return;
+          const id = $(this).data('id');
+          try {
+              await apiClient.request(`/dcrs/${id}/status`, { method: 'PATCH', body: { status: 'submitted' } });
+              loadData();
+          } catch(e) { alert(e.error?.message || 'Failed to submit'); }
+      });
+
+      $('#form-visit').submit(async function(e) {
+          e.preventDefault();
+          const $btn = $('#btn-save-visit'); const $err = $('#v-modal-error');
+          
+          let samples = [];
+          $('#samples-table tbody tr').each(function() {
+              const pid = $(this).find('.sample-product').val();
+              if (pid) {
+                  samples.push({
+                      product_id: parseInt(pid),
+                      quantity: parseInt($(this).find('.sample-qty').val())
+                  });
+              }
+          });
+
+          const dcrId = $('#v-dcr-id').val();
+          
+          $btn.prop('disabled', true); $err.hide();
+          try {
+              await apiClient.request(`/dcrs/${dcrId}/visits`, { 
+                  method: 'POST', 
+                  body: { 
+                      customer_id: parseInt($('#v-customer').val()),
+                      discussion_topics: $('#v-discussion').val(),
+                      samples: samples
+                  } 
+              });
+              $('#modal-visit').modal('hide'); 
+              $('#form-visit')[0].reset();
+              loadData();
+          } catch (err) { $err.text(err.error?.message || 'Failed to add visit').show(); }
+          finally { $btn.prop('disabled', false); }
+      });
+
+      loadDropdowns();
+      loadData();
+  });
+</script>
+</body>
+</html>
