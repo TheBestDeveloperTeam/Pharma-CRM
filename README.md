@@ -1,6 +1,6 @@
 # 💊 Pharma CRM & Sales Force Automation
 
-> **Version:** v3.0 (CR-Roadmap v3) &nbsp;|&nbsp; **Stack:** Core PHP 8.1+ · MySQL 8 · Custom MVVM &nbsp;|&nbsp; **Hosting:** cPanel Shared Hosting
+> **Version:** v3.0 &nbsp;|&nbsp; **Stack:** Core PHP 8.1+ · MySQL 8 · Custom MVVM &nbsp;|&nbsp; **Hosting:** cPanel Shared Hosting
 
 ![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=flat-square&logo=php)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
@@ -1265,10 +1265,10 @@ Use this checklist for every code review:
 
 | Version | Date | Summary |
 |---|---|---|
-| v3.0 | 2026-09-20 | CR-Roadmap v3: Full rebuild from scratch with R01-R16 rules, P0-P8 phases, six test agents. |
+| v3.0 | 2026-09-20 | Full rebuild from scratch with R01-R16 rules, P0-P8 phases, six test agents. |
 | v2.x | (internal) | Previous iteration — deprecated. |
 | v1.x | (internal) | Prototype — deprecated. |
 
 ---
 
-*Last updated: 2026-09-20 · Pharma CRM v3.0 (CR-Roadmap v3)*
+*Last updated: 2026-09-20 · Pharma CRM v3.0*
