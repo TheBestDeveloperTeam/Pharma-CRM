@@ -1,4 +1,4 @@
-$baseUrl = "https://crm.easysolutins24.in"
+$baseUrl = "http://localhost:8000"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $results = [System.Collections.Generic.List[PSCustomObject]]::new()

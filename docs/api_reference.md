@@ -490,4 +490,77 @@ Limits are returned in the following response headers:
 | `VALIDATION_FAILED` | Payload structurally or logically invalid. | Check `fields` object in error response. |
 
 ---
+
+## 10. The 9 Complete User Journeys (E2E)
+
+This CRM maps out the entire pharmaceutical lifecycle via 9 distinct, sequential, and interconnected API use cases (journeys).
+
+### Journey 1: Platform Provisioning (Super Admin)
+**Actor:** `SUPER_ADMIN`
+1. Login via `/api/v1/oauth/token` (grant: password, client_id: crm-super)
+2. View Platform Stats: `GET /api/v1/super/dashboard/stats`
+3. Provision Organization: `POST /api/v1/super/organizations`
+4. Setup Franchise under Organization: `POST /api/v1/super/franchises`
+5. Review global audit logs: `GET /api/v1/super/audit`
+
+### Journey 2: Franchise Onboarding & Setup (Franchise Admin)
+**Actor:** `FRANCHISE_ADMIN`
+1. Login via `/api/v1/oauth/token` (grant: password, client_id: crm-admin)
+2. Setup product catalog: `POST /api/v1/admin/products`
+3. Define territory structures: `POST /api/v1/admin/territories`
+4. Setup pricing tiers & schemes: `POST /api/v1/admin/pricing`
+5. Create Sales & Distributor users: `POST /api/v1/admin/users`
+
+### Journey 3: Lead & Prospecting (Sales Representative)
+**Actor:** `SALES`
+1. Login via `/api/v1/oauth/token` (grant: password, client_id: crm-sales)
+2. Check assigned territories: `GET /api/v1/sales/territories`
+3. Capture new lead: `POST /api/v1/sales/leads`
+4. Schedule next follow-up: `POST /api/v1/sales/leads/{id}/followups`
+5. Convert lead to Party (Distributor/Stockist): `PATCH /api/v1/sales/leads/{id}/convert`
+
+### Journey 4: Inventory & Warehouse Management (Admin / Ops)
+**Actor:** `FRANCHISE_ADMIN`
+1. Create Good Receipt Note (GRN): `POST /api/v1/admin/inventory/receipts`
+2. Check on-hand stock: `GET /api/v1/admin/inventory/stock`
+3. Identify near-expiry batches: `GET /api/v1/admin/inventory/near-expiry`
+4. Perform physical stock adjustment: `POST /api/v1/admin/inventory/adjustments`
+
+### Journey 5: Portal Catalog & Cart (Distributor Portal)
+**Actor:** `DISTRIBUTOR`
+1. Login via `/api/v1/oauth/token` (grant: password, client_id: crm-portal)
+2. Browse available products & current stock: `GET /api/v1/portal/catalogue`
+3. Check tier-specific pricing/schemes: `POST /api/v1/portal/cart/calculate`
+4. Add items to cart (Draft Order): `POST /api/v1/portal/orders`
+
+### Journey 6: Sales Order Processing (Sales / Admin / Portal)
+**Actor:** `SALES` or `DISTRIBUTOR` or `FRANCHISE_ADMIN`
+1. Submit Order for approval: `POST /api/v1/orders` (or via portal)
+2. Admin reviews order (credit limit check): `GET /api/v1/admin/orders/{id}`
+3. Admin approves order (reserves FEFO stock): `PATCH /api/v1/admin/orders/{id}/status` (CONFIRMED)
+4. System automatically deducts available stock and reserves `reserved_qty` on batches.
+
+### Journey 7: Invoicing & Billing (Finance / Ops)
+**Actor:** `FRANCHISE_ADMIN`
+1. Generate Tax Invoice from Confirmed Order: `POST /api/v1/admin/invoices`
+2. System takes snapshot of prices, applies GST (CGST/SGST/IGST).
+3. System moves `reserved_qty` out of inventory permanently.
+4. Invoice updates Party Ledger (increases outstanding balance).
+5. Distributor downloads Invoice: `GET /api/v1/portal/invoices/{id}/pdf`
+
+### Journey 8: Logistics & Dispatch (Warehouse)
+**Actor:** `FRANCHISE_ADMIN`
+1. Select transporter and create Dispatch: `POST /api/v1/admin/dispatches`
+2. Update Lorry Receipt (LR) tracking info: `PATCH /api/v1/admin/dispatches/{id}/lr`
+3. Mark as delivered: `PATCH /api/v1/admin/dispatches/{id}/status` (DELIVERED)
+4. Distributor tracks shipment on portal: `GET /api/v1/portal/dispatches`
+
+### Journey 9: Payments & Ledger Reconciliation (Finance)
+**Actor:** `FRANCHISE_ADMIN`
+1. Record incoming NEFT/RTGS payment: `POST /api/v1/admin/payments`
+2. Allocate payment to specific open invoices: `POST /api/v1/admin/payments/{id}/allocate`
+3. System clears invoice due amounts and updates global party outstanding limit.
+4. Distributor views outstanding statement: `GET /api/v1/portal/outstanding`
+
+---
 *End of API Reference*

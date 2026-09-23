@@ -12,6 +12,18 @@ info:
     - **Deterministic Numbering:** Sequential gapless numbering for Orders, Invoices, Dispatches, and Payments via atomic sequence counters.
     - **Inventory & Pricing:** Strict server-side First-Expiry-First-Out (FEFO) allocation and hierarchical priority pricing (Party > Tier > Default).
     - **Auditability:** Immutable, append-only audit trail on all business and security transactions.
+    
+    ### The 9 Complete User Journeys (E2E)
+    This specification strictly implements the 9 core workflows across all roles:
+    1. **Platform Provisioning (Super Admin):** Organization and franchise setup, auditing.
+    2. **Franchise Onboarding (Admin):** Users, catalog, pricing, and territories setup.
+    3. **Lead & Prospecting (Sales):** Lead capture, territory management, and follow-ups.
+    4. **Inventory & Warehouse (Admin):** Goods receipt (GRN), FEFO batch tracking, and adjustments.
+    5. **Portal Catalog (Distributor):** Live catalog browsing and dynamic cart calculation.
+    6. **Sales Orders (Sales/Distributor):** Order submission and FEFO stock reservation upon approval.
+    7. **Billing & Invoicing (Admin):** Tax invoice generation with snapshot pricing and GST.
+    8. **Logistics & Dispatch (Admin):** Transporter assignment and delivery tracking (LR).
+    9. **Payments & Ledger (Admin):** Payment recording, invoice allocation, and outstanding sync.
 servers:
   - url: https://crm.easysolutins24.in/api/v1
     description: Production Cloud Server (cPanel Shared Hosting)
