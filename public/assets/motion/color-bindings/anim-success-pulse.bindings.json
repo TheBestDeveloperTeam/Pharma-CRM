@@ -1,0 +1,15 @@
+{
+  "asset": "anim-success-pulse.json",
+  "bindings": [
+    {
+      "layerName": "Pulse Layer",
+      "property": "Pulse Fill",
+      "token": "--color-success-500"
+    },
+    {
+      "layerName": "Center Circle",
+      "property": "Core Fill",
+      "token": "--color-success-500"
+    }
+  ]
+}

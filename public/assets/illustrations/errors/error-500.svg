@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-hidden="true">
+  <!-- Server Rack -->
+  <rect x="150" y="100" width="100" height="150" rx="8" fill="var(--color-surface-raised, #f1f5f9)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="4" />
+  
+  <!-- Server slots -->
+  <rect x="160" y="120" width="80" height="20" rx="4" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  <circle cx="170" cy="130" r="4" fill="var(--color-success-500, #22c55e)" />
+  
+  <rect x="160" y="160" width="80" height="20" rx="4" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  <circle cx="170" cy="170" r="4" fill="var(--color-danger-500, #ef4444)" />
+  
+  <rect x="160" y="200" width="80" height="20" rx="4" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  <circle cx="170" cy="210" r="4" fill="var(--color-success-500, #22c55e)" />
+  
+  <!-- Smoke/Error indicator -->
+  <path d="M220 150 Q 240 120 230 90 T 260 50" fill="none" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="4" stroke-linecap="round" opacity="0.6" stroke-dasharray="10 10" />
+  
+  <!-- "500" Text -->
+  <text x="200" y="290" font-family="'Source Sans Pro', system-ui, sans-serif" font-weight="900" font-size="64" fill="var(--color-text-primary, #0f172a)" text-anchor="middle" letter-spacing="4">500</text>
+</svg>

@@ -8,73 +8,83 @@ final class DashboardController
 {
     public function superDashboard(Request $r): Response
     {
-        return $this->renderShell('super', 'theme-super', 'Platform Overview');
+        return $this->renderShell('super', 'theme-super', 'Platform Overview', 'pages/dashboard');
     }
 
     public function adminDashboard(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Franchise Dashboard');
+        return $this->renderShell('admin', 'theme-admin', 'Franchise Dashboard', 'pages/dashboard');
     }
 
     public function adminCategories(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Product Categories');
+        return $this->renderShell('admin', 'theme-admin', 'Product Categories', 'pages/categories');
     }
 
     public function adminTiers(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Pricing Tiers');
+        return $this->renderShell('admin', 'theme-admin', 'Pricing Tiers', 'pages/tiers');
     }
 
     public function adminProducts(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Products Catalogue');
+        return $this->renderShell('admin', 'theme-admin', 'Products Catalogue', 'pages/products');
     }
 
     public function adminPrices(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Pricing Rules');
+        return $this->renderShell('admin', 'theme-admin', 'Pricing Rules', 'pages/prices');
     }
 
     public function adminSchemes(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Promotional Schemes');
+        return $this->renderShell('admin', 'theme-admin', 'Promotional Schemes', 'pages/schemes');
     }
 
     public function adminLeads(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Leads Management');
+        return $this->renderShell('admin', 'theme-admin', 'Leads Management', 'pages/leads');
     }
 
     public function adminFollowUps(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Follow-up Queue');
+        return $this->renderShell('admin', 'theme-admin', 'Follow-up Queue', 'pages/followups');
     }
 
     public function adminParties(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Parties & Distributors');
+        return $this->renderShell('admin', 'theme-admin', 'Parties & Distributors', 'pages/parties');
     }
 
     public function adminTerritories(Request $r): Response
     {
-        return $this->renderShell('admin', 'theme-admin', 'Territory Allocations');
+        return $this->renderShell('admin', 'theme-admin', 'Territory Allocations', 'pages/territories');
     }
 
     public function salesDashboard(Request $r): Response
     {
-        return $this->renderShell('sales', 'theme-sales', 'Sales Dashboard');
+        return $this->renderShell('sales', 'theme-sales', 'Sales Dashboard', 'pages/dashboard');
     }
 
     public function portalDashboard(Request $r): Response
     {
-        return $this->renderShell('portal', 'theme-portal', 'Distributor Portal');
+        return $this->renderShell('portal', 'theme-portal', 'Distributor Portal', 'pages/dashboard');
     }
 
-    private function renderShell(string $surface, string $theme, string $title): Response
+    private function renderShell(string $surface, string $theme, string $title, string $viewName): Response
     {
         ob_start();
-        require __DIR__ . '/../../Views/layouts/shell.php';
+        $viewPath = __DIR__ . '/../../Views/' . $viewName . '.php';
+        
+        if (file_exists($viewPath)) {
+            ob_start();
+            require $viewPath;
+            $content = ob_get_clean();
+        } else {
+            $content = '<div class="content"><div class="container-fluid">View not implemented: ' . htmlspecialchars($viewName) . '</div></div>';
+        }
+        
+        require __DIR__ . '/../../Views/layouts/master.php';
         $html = ob_get_clean();
 
         return Response::html(200, $html ?: '');

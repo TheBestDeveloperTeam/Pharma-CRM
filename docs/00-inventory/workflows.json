@@ -1,0 +1,338 @@
+[
+  {
+    "file": "\\src\\api\\schema.d.ts"
+  },
+  {
+    "file": "\\src\\components\\common\\StatusChip.tsx"
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoiceDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoiceFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoicesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dashboard\\widgets\\LeadWidgets.tsx"
+  },
+  {
+    "file": "\\src\\features\\dashboard\\widgets\\OrderWidgets.tsx"
+  },
+  {
+    "file": "\\src\\features\\dev\\ComponentsDemoPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dispatch\\DispatchFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dispatch\\dispatchFormSchema.ts"
+  },
+  {
+    "file": "\\src\\features\\dispatch\\DispatchPendingPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\DistributorRegistrationDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\GenerateInviteDialog.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\InvitesTab.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\RegistrationsTab.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalCartPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDashboardPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrListPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrPendingApprovalsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\portalDcrReportDefinitions.ts"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDispatchDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalFieldCustomersPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalInvoiceDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalOrderDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalOrdersPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalOutstandingPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalPobConvertPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalPobSummaryPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalTeamPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalTourPlanPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\followup\\FollowUpDialog.tsx"
+  },
+  {
+    "file": "\\src\\features\\followup\\FollowUpsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\followup\\FollowUpsPanel.tsx"
+  },
+  {
+    "file": "\\src\\features\\inventory\\BatchDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\inventory\\BatchesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\inventory\\BatchFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\inventory\\batchFormSchema.ts"
+  },
+  {
+    "file": "\\src\\features\\inventory\\batchFormUtils.ts"
+  },
+  {
+    "file": "\\src\\features\\lead\\LeadDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\lead\\LeadFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\lead\\leadFormSchema.ts"
+  },
+  {
+    "file": "\\src\\features\\lead\\leadFormUtils.ts"
+  },
+  {
+    "file": "\\src\\features\\lead\\LeadsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\MasterCrudSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\MastersPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\CitiesSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\DistrictsSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\PincodesSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\SimpleMasterSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\StatesSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\masters\\sections\\TransportersSection.tsx"
+  },
+  {
+    "file": "\\src\\features\\nearExpiry\\NearExpiryPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrderDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrderFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrdersPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrderStatusTimeline.tsx"
+  },
+  {
+    "file": "\\src\\features\\party\\PartiesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\party\\PartyDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\party\\PartyFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\InvoiceOutstandingTable.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\paymentFormSchema.ts"
+  },
+  {
+    "file": "\\src\\features\\payment\\paymentFormUtils.ts"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PdcTrackingTable.tsx"
+  },
+  {
+    "file": "\\src\\features\\pricing\\PricingPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\product\\ProductDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\product\\ProductFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\product\\ProductsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\PublicRegistrationPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\registrationFormUtils.ts"
+  },
+  {
+    "file": "\\src\\features\\reports\\reportDefinitions.ts"
+  },
+  {
+    "file": "\\src\\features\\reports\\reportFilterUtils.ts"
+  },
+  {
+    "file": "\\src\\features\\reports\\ReportViewPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\views\\dispatchReports.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\views\\leadReports.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\views\\notificationReports.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\views\\orderReports.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\views\\paymentReports.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\RoleFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\RolesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\scheme\\SchemeFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\scheme\\SchemesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUserDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUserFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUsersPage.tsx"
+  },
+  {
+    "file": "\\src\\mocks\\mockAuditLogs.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockBatches.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDcrReports.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDispatches.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDistributorInvites.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDistributorRegistrations.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockFollowUps.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockInvoices.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockLeads.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockOrders.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockPayments.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockWebhookEvents.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockWhatsappMessages.ts"
+  },
+  {
+    "file": "\\src\\redux\\dataSlice.ts"
+  },
+  {
+    "file": "\\src\\types\\domain.ts"
+  },
+  {
+    "file": "\\src\\utils\\dashboardUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\dcrComplianceUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\dcrReportUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\followUpUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\invoiceUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\outstandingUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\pobUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\reportUtils.ts"
+  },
+  {
+    "file": "\\src\\utils\\stockUtils.ts"
+  }
+]

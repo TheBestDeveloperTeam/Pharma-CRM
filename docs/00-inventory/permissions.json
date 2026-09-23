@@ -1,0 +1,203 @@
+[
+  {
+    "file": "\\src\\api\\schema.d.ts"
+  },
+  {
+    "file": "\\src\\components\\common\\PermissionGate.tsx"
+  },
+  {
+    "file": "\\src\\components\\layout\\DistributorTopHeader.tsx"
+  },
+  {
+    "file": "\\src\\components\\layout\\NotificationMenu.tsx"
+  },
+  {
+    "file": "\\src\\components\\layout\\TopAppHeader.tsx"
+  },
+  {
+    "file": "\\src\\components\\layout\\UserProfileMenu.tsx"
+  },
+  {
+    "file": "\\src\\constants\\navigation.ts"
+  },
+  {
+    "file": "\\src\\constants\\permissions.ts"
+  },
+  {
+    "file": "\\src\\constants\\routes.ts"
+  },
+  {
+    "file": "\\src\\features\\auth\\AccessDeniedPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoiceDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoiceFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dashboard\\DashboardPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dashboard\\widgets\\LeadWidgets.tsx"
+  },
+  {
+    "file": "\\src\\features\\dev\\ComponentsDemoPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\dispatch\\DispatchFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\DistributorOnboardingPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributor\\DistributorRegistrationDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrListPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalDcrReportsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalLoginPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalProfilePage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalTeamPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalTourPlanPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrderDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\order\\OrderFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\party\\PartyDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\party\\PartyFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentAllocationPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\reportDefinitions.ts"
+  },
+  {
+    "file": "\\src\\features\\reports\\ReportShell.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\ReportsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\reports\\reportTypes.ts"
+  },
+  {
+    "file": "\\src\\features\\reports\\ReportViewPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\PermissionMatrix.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\PermissionSelector.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\RoleFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\roles\\RolesPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUserDetailsPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUserFormPage.tsx"
+  },
+  {
+    "file": "\\src\\features\\users\\InternalUsersPage.tsx"
+  },
+  {
+    "file": "\\src\\hooks\\useCrmQueries.ts"
+  },
+  {
+    "file": "\\src\\hooks\\useCurrentUser.ts"
+  },
+  {
+    "file": "\\src\\hooks\\useEffectivePermissions.ts"
+  },
+  {
+    "file": "\\src\\mocks\\initializeMockData.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockAuditLogs.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDcrReports.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDistributorBeats.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockDistributorPortalUsers.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockFieldCustomers.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockRoles.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockTourPlanEntries.ts"
+  },
+  {
+    "file": "\\src\\mocks\\mockUsers.ts"
+  },
+  {
+    "file": "\\src\\redux\\authSlice.ts"
+  },
+  {
+    "file": "\\src\\redux\\dataSlice.ts"
+  },
+  {
+    "file": "\\src\\routes\\AppRouter.tsx"
+  },
+  {
+    "file": "\\src\\routes\\DistributorOwnerOnlyRoute.tsx"
+  },
+  {
+    "file": "\\src\\routes\\routeConfig.ts"
+  },
+  {
+    "file": "\\src\\services\\mockCrmService.ts"
+  },
+  {
+    "file": "\\src\\services\\portalService.ts"
+  },
+  {
+    "file": "\\src\\types\\domain.ts"
+  },
+  {
+    "file": "\\src\\utils\\accessControl.ts"
+  },
+  {
+    "file": "\\src\\utils\\permissions.ts"
+  },
+  {
+    "file": "\\src\\utils\\pricingResolver.ts"
+  }
+]

@@ -1,0 +1,67 @@
+/**
+ * Pharma CRM - Global Theme Tokens
+ * Provides scalable token bindings for all vectors and animations.
+ */
+
+:root, [data-theme="light"] {
+    /* Brand Foundation */
+    --color-brand-50: #eff6ff;
+    --color-brand-100: #dbeafe;
+    --color-brand-200: #bfdbfe;
+    --color-brand-300: #93c5fd;
+    --color-brand-400: #60a5fa;
+    --color-brand-500: #3b82f6; /* Core Primary */
+    --color-brand-600: #2563eb;
+    --color-brand-700: #1d4ed8;
+    --color-brand-800: #1e40af;
+    --color-brand-900: #1e3a8a;
+    --color-brand-950: #172554;
+
+    /* Neutrals */
+    --color-neutral-0: #ffffff;
+    --color-neutral-50: #f8fafc;
+    --color-neutral-100: #f1f5f9;
+    --color-neutral-200: #e2e8f0;
+    --color-neutral-300: #cbd5e1;
+    --color-neutral-400: #94a3b8;
+    --color-neutral-500: #64748b;
+    --color-neutral-600: #475569;
+    --color-neutral-700: #334155;
+    --color-neutral-800: #1e293b;
+    --color-neutral-900: #0f172a;
+    --color-neutral-1000: #020617;
+
+    /* Semantic Status */
+    --color-success-500: #10b981;
+    --color-warning-500: #f59e0b;
+    --color-danger-500: #ef4444;
+    --color-info-500: #0ea5e9;
+
+    /* Asset Specific Tokens */
+    --color-icon-default: var(--color-neutral-600);
+    --color-icon-muted: var(--color-neutral-400);
+    --color-icon-strong: var(--color-neutral-900);
+    --color-icon-inverse: var(--color-neutral-0);
+    --color-icon-brand: var(--color-brand-500);
+
+    /* Text & Surfaces */
+    --color-text-primary: var(--color-neutral-900);
+    --color-text-secondary: var(--color-neutral-600);
+    --color-surface-base: var(--color-neutral-0);
+    --color-surface-raised: var(--color-neutral-50);
+    --color-border-subtle: var(--color-neutral-200);
+}
+
+[data-theme="dark"] {
+    --color-brand-500: #60a5fa; /* Adjusted for dark mode contrast */
+    
+    --color-icon-default: var(--color-neutral-300);
+    --color-icon-muted: var(--color-neutral-500);
+    --color-icon-strong: var(--color-neutral-50);
+    
+    --color-text-primary: var(--color-neutral-50);
+    --color-text-secondary: var(--color-neutral-400);
+    --color-surface-base: var(--color-neutral-950);
+    --color-surface-raised: var(--color-neutral-900);
+    --color-border-subtle: var(--color-neutral-800);
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150" aria-hidden="true" role="presentation">
+  <!-- Table Frame -->
+  <rect x="20" y="30" width="160" height="90" rx="8" fill="var(--color-surface-raised, #f8fafc)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  
+  <!-- Header Line -->
+  <line x1="20" y1="55" x2="180" y2="55" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  
+  <!-- Empty Rows -->
+  <line x1="40" y1="75" x2="160" y2="75" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="4" stroke-linecap="round" opacity="0.5" stroke-dasharray="20 10 40 10 20" />
+  <line x1="40" y1="95" x2="160" y2="95" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="4" stroke-linecap="round" opacity="0.3" stroke-dasharray="30 10 20 10 30" />
+  
+  <!-- Floating Magnifying Glass to signify 'no results found' -->
+  <g transform="translate(140, 90)">
+    <circle cx="12" cy="12" r="10" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-icon-brand, #3b82f6)" stroke-width="3" />
+    <line x1="19" y1="19" x2="28" y2="28" stroke="var(--color-icon-brand, #3b82f6)" stroke-width="4" stroke-linecap="round" />
+  </g>
+</svg>

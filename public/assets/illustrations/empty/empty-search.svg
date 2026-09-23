@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150" aria-hidden="true">
+  <!-- Search Interface Frame -->
+  <rect x="20" y="30" width="160" height="90" rx="8" fill="var(--color-surface-raised, #f8fafc)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  
+  <!-- Search Bar -->
+  <rect x="40" y="45" width="120" height="20" rx="10" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" />
+  
+  <!-- Empty Results Area -->
+  <path d="M70 85 L130 85" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="3" stroke-linecap="round" opacity="0.4" />
+  <path d="M80 100 L120 100" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="3" stroke-linecap="round" opacity="0.3" />
+  
+  <!-- Large magnifying glass indicating no hits -->
+  <g transform="translate(130, 80)">
+    <circle cx="15" cy="15" r="12" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-danger-400, #f87171)" stroke-width="3" />
+    <line x1="24" y1="24" x2="35" y2="35" stroke="var(--color-danger-400, #f87171)" stroke-width="4" stroke-linecap="round" />
+    <!-- X mark inside glass -->
+    <line x1="10" y1="10" x2="20" y2="20" stroke="var(--color-danger-400, #f87171)" stroke-width="2" stroke-linecap="round" />
+    <line x1="20" y1="10" x2="10" y2="20" stroke="var(--color-danger-400, #f87171)" stroke-width="2" stroke-linecap="round" />
+  </g>
+</svg>

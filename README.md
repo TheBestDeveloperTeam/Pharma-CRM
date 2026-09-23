@@ -1265,10 +1265,11 @@ Use this checklist for every code review:
 
 | Version | Date | Summary |
 |---|---|---|
+| v3.1 | 2026-09-23 | Legacy codebase removed, Unified Custom Assets and Frontend Views integrated. |
 | v3.0 | 2026-09-20 | Full rebuild from scratch with R01-R16 rules, P0-P8 phases, six test agents. |
 | v2.x | (internal) | Previous iteration — deprecated. |
 | v1.x | (internal) | Prototype — deprecated. |
 
 ---
 
-*Last updated: 2026-09-20 · Pharma CRM v3.0*
+*Last updated: 2026-09-23 · Pharma CRM v3.1*

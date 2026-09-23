@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="200" height="50">
+  <text x="0" y="35" font-family="'Source Sans Pro', system-ui, sans-serif" font-weight="700" font-size="32" fill="var(--color-text-primary, #0f172a)">Pharma</text>
+  <text x="120" y="35" font-family="'Source Sans Pro', system-ui, sans-serif" font-weight="300" font-size="32" fill="var(--color-text-secondary, #475569)">CRM</text>
+</svg>

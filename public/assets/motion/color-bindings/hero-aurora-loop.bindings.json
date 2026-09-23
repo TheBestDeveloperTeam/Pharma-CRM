@@ -1,0 +1,10 @@
+{
+  "asset": "hero-aurora-loop.json",
+  "bindings": [
+    {
+      "layerName": "Shape Layer 1",
+      "property": "Fill 1",
+      "token": "--color-brand-500"
+    }
+  ]
+}

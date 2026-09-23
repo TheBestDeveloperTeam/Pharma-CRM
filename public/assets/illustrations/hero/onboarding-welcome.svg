@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-hidden="true">
+  <!-- Sunburst background -->
+  <circle cx="200" cy="150" r="120" fill="var(--color-brand-500, #3b82f6)" opacity="0.1" />
+  <circle cx="200" cy="150" r="90" fill="var(--color-brand-500, #3b82f6)" opacity="0.2" />
+  
+  <!-- Abstract Welcome Door/Gateway -->
+  <path d="M140 220 L140 100 Q 200 50 260 100 L260 220 Z" fill="var(--color-surface-raised, #f8fafc)" stroke="var(--color-brand-400, #60a5fa)" stroke-width="4" stroke-linejoin="round" />
+  
+  <!-- Open Door -->
+  <path d="M200 220 L200 100 L240 120 L240 220 Z" fill="var(--color-brand-100, #dbeafe)" stroke="var(--color-brand-400, #60a5fa)" stroke-width="2" stroke-linejoin="round" />
+  
+  <!-- Star / Spark -->
+  <path d="M200 60 L205 75 L220 80 L205 85 L200 100 L195 85 L180 80 L195 75 Z" fill="var(--color-accent-500, #8b5cf6)" />
+  
+  <!-- Hand waving (abstract) -->
+  <path d="M120 180 Q 150 140 180 180" fill="none" stroke="var(--color-icon-strong, #334155)" stroke-width="6" stroke-linecap="round" />
+  <path d="M180 180 Q 190 170 190 150" fill="none" stroke="var(--color-icon-strong, #334155)" stroke-width="6" stroke-linecap="round" />
+  <circle cx="190" cy="140" r="10" fill="var(--color-icon-strong, #334155)" />
+</svg>

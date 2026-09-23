@@ -4,7 +4,7 @@ This document outlines the design and implementation of the user interface for t
 
 ## 1. Core Rules
 
-- **UI-01**: Zero external heavy libraries. No AdminLTE, no Bootstrap, no jQuery, no FontAwesome. Only the layout vocabulary of such systems is reproduced.
+- **UI-01**: Unified Architecture using local AdminLTE / Bootstrap 4. No external CDNs (no Google Fonts, no FontAwesome). It uses a lightweight, self-contained SVG/Lottie vector system for all iconography and motion.
 - **UI-02**: Asset minimalism. Only two shipped assets: `/assets/css/crm-ui.css` and `/assets/js/crm-ui.js`.
 - **UI-03**: Iconography is implemented via a single inline SVG sprite (`/assets/img/icons.svg`), referenced dynamically using `<use href="#i-name">`.
 - **UI-04**: Theming is handled entirely by CSS variables. No hard-coded colors exist outside of `:root[data-theme]` blocks.

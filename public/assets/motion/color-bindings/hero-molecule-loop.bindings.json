@@ -1,0 +1,20 @@
+{
+  "asset": "hero-molecule-loop.json",
+  "bindings": [
+    {
+      "layerName": "Center Node",
+      "property": "Center Node Fill",
+      "token": "--color-brand-500"
+    },
+    {
+      "layerName": "Orbit Node",
+      "property": "Orbit Node Fill",
+      "token": "--color-accent-500"
+    },
+    {
+      "layerName": "Orbit Node",
+      "property": "Orbit Path Stroke",
+      "token": "--color-border-subtle"
+    }
+  ]
+}

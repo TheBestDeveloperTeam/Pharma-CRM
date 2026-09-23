@@ -1,0 +1,257 @@
+[
+  {
+    "file": "\\src\\features\\auth\\LoginPage.tsx",
+    "fields": [
+      "email",
+      "password",
+      "remember"
+    ]
+  },
+  {
+    "file": "\\src\\features\\billing\\InvoiceFormPage.tsx",
+    "fields": [
+      "invoiceNumber",
+      "invoiceDate"
+    ]
+  },
+  {
+    "file": "\\src\\features\\dev\\ComponentsDemoPage.tsx",
+    "fields": []
+  },
+  {
+    "file": "\\src\\features\\dispatch\\DispatchFormPage.tsx",
+    "fields": [
+      "status",
+      "dispatchDate",
+      "transporter",
+      "lrNumber",
+      "trackingUrl",
+      "boxes",
+      "remarks"
+    ]
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalFieldCustomerFormPage.tsx",
+    "fields": [
+      "name",
+      "type",
+      "specialty",
+      "clinicOrFirmName",
+      "category",
+      "visitFrequency",
+      "mobile",
+      "email",
+      "address",
+      "beat",
+      "city",
+      "pincode",
+      "dateOfBirth",
+      "anniversaryDate",
+      "remarks"
+    ]
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalLoginPage.tsx",
+    "fields": [
+      "email",
+      "password",
+      "remember"
+    ]
+  },
+  {
+    "file": "\\src\\features\\distributorPortal\\PortalProfilePage.tsx",
+    "fields": [
+      "mobile",
+      "whatsapp",
+      "email",
+      "billingAddress",
+      "shippingAddress",
+      "dcrSubmissionCutoffTime"
+    ]
+  },
+  {
+    "file": "\\src\\features\\followup\\FollowUpDialog.tsx",
+    "fields": [
+      "discussion",
+      "activityType",
+      "reminderDate",
+      "reminderTime"
+    ]
+  },
+  {
+    "file": "\\src\\features\\followup\\FollowUpRemarkDialog.tsx",
+    "fields": [
+      "followUpId",
+      "remark",
+      "discussion",
+      "customerResponse",
+      "nextAction",
+      "nextFollowUpDate",
+      "nextFollowUpTime"
+    ]
+  },
+  {
+    "file": "\\src\\features\\inventory\\BatchFormPage.tsx",
+    "fields": [
+      "productId",
+      "batchNo",
+      "mfgDate",
+      "expiryDate",
+      "receivedQty",
+      "availableQty",
+      "reservedQty",
+      "damagedQty",
+      "warehouse",
+      "status"
+    ]
+  },
+  {
+    "file": "\\src\\features\\lead\\LeadFormPage.tsx",
+    "fields": [
+      "leadName",
+      "firmName",
+      "contactPerson",
+      "businessType",
+      "mobile",
+      "whatsapp",
+      "email",
+      "leadSource",
+      "interestedProducts",
+      "initialRemark",
+      "priority",
+      "status"
+    ]
+  },
+  {
+    "file": "\\src\\features\\order\\OrderFormPage.tsx",
+    "fields": [
+      "paymentTerms",
+      "billingAddress",
+      "shippingAddress",
+      "remarks"
+    ]
+  },
+  {
+    "file": "\\src\\features\\party\\PartyFormPage.tsx",
+    "fields": [
+      "name",
+      "owner",
+      "mobile",
+      "email",
+      "partyType",
+      "gst",
+      "drugLicense",
+      "drugLicenseValidity",
+      "billingAddress",
+      "shippingAddress",
+      "area",
+      "pricingTier",
+      "agreementStartDate",
+      "agreementEndDate",
+      "creditLimit",
+      "paymentTerms",
+      "openingOutstanding",
+      "products",
+      "active",
+      "remarks"
+    ]
+  },
+  {
+    "file": "\\src\\features\\payment\\PaymentFormPage.tsx",
+    "fields": [
+      "partyId",
+      "orderId",
+      "amount",
+      "mode",
+      "status",
+      "transactionReference",
+      "bankName",
+      "chequeNumber",
+      "chequeDate",
+      "pdcDate",
+      "remarks"
+    ]
+  },
+  {
+    "file": "\\src\\features\\product\\ProductFormPage.tsx",
+    "fields": [
+      "name",
+      "code",
+      "category",
+      "composition",
+      "packSize",
+      "dosageForm",
+      "mrp",
+      "ptr",
+      "netRate",
+      "gstPercentage",
+      "schemeEligible",
+      "storageRequirement",
+      "shelfLifeMonths",
+      "availability",
+      "active",
+      "description"
+    ]
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\RegistrationWizard.tsx",
+    "fields": []
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\steps\\AddressStep.tsx",
+    "fields": [
+      "billingAddress",
+      "shippingAddress",
+      "area",
+      "bankName",
+      "bankAccountNumber",
+      "bankIfsc"
+    ]
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\steps\\FirmKycStep.tsx",
+    "fields": [
+      "firmName",
+      "constitutionType",
+      "contactPerson",
+      "designation",
+      "gstin",
+      "drugLicenseNumber",
+      "drugLicenseValidity",
+      "pan",
+      "password",
+      "confirmPassword",
+      "preferredProductCategories",
+      "expectedMonthlyBusiness"
+    ]
+  },
+  {
+    "file": "\\src\\features\\publicRegistration\\steps\\ReviewSubmitStep.tsx",
+    "fields": [
+      "declaration"
+    ]
+  },
+  {
+    "file": "\\src\\features\\roles\\PermissionSelector.tsx",
+    "fields": []
+  },
+  {
+    "file": "\\src\\features\\scheme\\SchemeFormPage.tsx",
+    "fields": [
+      "name",
+      "schemeType",
+      "applicableProductIds",
+      "minQty",
+      "maxQty",
+      "freeQty",
+      "priority",
+      "startDate",
+      "endDate",
+      "active"
+    ]
+  },
+  {
+    "file": "\\src\\features\\settings\\SettingsPage.tsx",
+    "fields": []
+  }
+]

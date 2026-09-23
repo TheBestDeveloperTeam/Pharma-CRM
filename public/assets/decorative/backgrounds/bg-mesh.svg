@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <!-- We simulate a mesh by overlapping soft radial gradients -->
+    <radialGradient id="mesh1" cx="20%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="var(--color-brand-400, #60a5fa)" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="var(--color-brand-400, #60a5fa)" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="mesh2" cx="80%" cy="80%" r="60%">
+      <stop offset="0%" stop-color="var(--color-accent-400, #a78bfa)" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="var(--color-accent-400, #a78bfa)" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="mesh3" cx="70%" cy="10%" r="50%">
+      <stop offset="0%" stop-color="var(--color-info-400, #38bdf8)" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="var(--color-info-400, #38bdf8)" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  
+  <rect width="100%" height="100%" fill="var(--color-surface-base, #ffffff)" />
+  <rect width="100%" height="100%" fill="url(#mesh1)" />
+  <rect width="100%" height="100%" fill="url(#mesh2)" />
+  <rect width="100%" height="100%" fill="url(#mesh3)" />
+</svg>

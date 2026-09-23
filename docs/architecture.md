@@ -1,7 +1,7 @@
 # Architecture — Pharma CRM & SFA Platform
 
-> **Version:** 1.0 · **Stack:** PHP 8.1+ · MySQL 8 InnoDB · Vanilla HTML/CSS/JS  
-> **Hosting:** cPanel Shared · **Last Updated:** 2026-09-20
+> **Version:** 3.1 · **Stack:** PHP 8.1+ · MySQL 8 InnoDB · Vanilla HTML/CSS/JS  
+> **Hosting:** cPanel Shared · **Last Updated:** 2026-09-23
 
 ---
 
@@ -761,7 +761,7 @@ return [
 
 ### 8.1 Design Philosophy
 
-The UI is a **zero-dependency, custom design system** — no AdminLTE, Bootstrap, jQuery, or FontAwesome.
+The UI is built on a **local AdminLTE / Bootstrap 4 framework**, completely stripped of external CDNs. It relies entirely on a custom-built SVG/Lottie vector asset system for iconography and motion, replacing FontAwesome entirely.
 
 | Asset | Path | Purpose |
 |---|---|---|

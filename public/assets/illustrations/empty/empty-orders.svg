@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150" aria-hidden="true">
+  <!-- Box -->
+  <path d="M50 70 L100 45 L150 70 L150 110 L100 135 L50 110 Z" fill="var(--color-surface-raised, #f8fafc)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="3" stroke-linejoin="round" />
+  <path d="M50 70 L100 95 L150 70" fill="none" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="3" stroke-linejoin="round" />
+  <path d="M100 135 L100 95" fill="none" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="3" stroke-linejoin="round" />
+  
+  <!-- Open flaps -->
+  <path d="M50 70 L40 50 L90 25 L100 45 Z" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" stroke-linejoin="round" />
+  <path d="M150 70 L160 50 L110 25 L100 45 Z" fill="var(--color-surface-base, #ffffff)" stroke="var(--color-border-subtle, #e2e8f0)" stroke-width="2" stroke-linejoin="round" />
+  
+  <!-- Empty indicator (dust/air) -->
+  <path d="M90 60 L100 50 M105 70 L115 60 M85 85 L95 75" stroke="var(--color-icon-muted, #94a3b8)" stroke-width="3" stroke-linecap="round" opacity="0.3" />
+</svg>

@@ -1,0 +1,8 @@
+Form,Field,Type,Required,Min/Max,Pattern,Server Rule,Client Rule,Sanitizer,Error Message,DB Column,Notes
+Login,email,email,Y,5/255,"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",email|required,required|email,trim|lower,Invalid email format,users.email,
+Login,password,string,Y,8/255,none,required|min:8,required|minLength:8,none,Password required,users.password,
+UserCreate,first_name,string,Y,2/50,"^[a-zA-Z\s]+$",required|alpha,required,trim,First name required,users.first_name,
+DoctorCreate,license_no,string,Y,5/50,none,required|unique:doctors,required,trim|upper,License already exists,doctors.license_no,
+BatchCreate,expiry_date,date,Y,today/none,none,required|date|after:today,required,none,Expiry must be future,batches.expiry_date,
+OrderCreate,amount,decimal,Y,0.01/9999999,none,required|numeric|min:0.01,required|numeric,float,Invalid amount,orders.total_amount,
+OrderCreate,tenant_id,int,Y,1/none,none,required|exists:tenants,implicit,intval,Invalid tenant,orders.tenant_id,Handled by middleware

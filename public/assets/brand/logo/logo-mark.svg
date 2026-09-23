@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+  <path d="M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z" fill="var(--color-brand-500, #3b82f6)" opacity="0.9" />
+  <path d="M30 10 L48 20 L48 40 L30 50 L12 40 L12 20 Z" fill="var(--color-surface-base, #ffffff)" />
+  <circle cx="30" cy="30" r="8" fill="var(--color-brand-500, #3b82f6)" />
+</svg>

@@ -1,0 +1,127 @@
+{
+  "version": "1.0.0",
+  "category": "icons",
+  "themeTokens": ["--color-icon-default", "--color-icon-muted", "--color-icon-strong", "--color-success-500", "--color-danger-500", "--color-warning-500"],
+  "icons": [
+    {
+      "id": "icon-home",
+      "name": "Home",
+      "category": "navigation",
+      "tags": ["dashboard", "index", "start"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-menu",
+      "name": "Menu",
+      "category": "navigation",
+      "tags": ["hamburger", "sidebar", "nav"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-close",
+      "name": "Close",
+      "category": "navigation",
+      "tags": ["x", "cancel", "hide"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-add",
+      "name": "Add",
+      "category": "actions",
+      "tags": ["plus", "new", "create"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-edit",
+      "name": "Edit",
+      "category": "actions",
+      "tags": ["pencil", "update", "write"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-delete",
+      "name": "Delete",
+      "category": "actions",
+      "tags": ["trash", "remove", "destroy"],
+      "defaultColorToken": "--color-danger-500"
+    },
+    {
+      "id": "icon-save",
+      "name": "Save",
+      "category": "actions",
+      "tags": ["disk", "floppy", "store"],
+      "defaultColorToken": "--color-primary-500"
+    },
+    {
+      "id": "icon-search",
+      "name": "Search",
+      "category": "actions",
+      "tags": ["magnifier", "find", "query"],
+      "defaultColorToken": "--color-icon-muted"
+    },
+    {
+      "id": "icon-success",
+      "name": "Success",
+      "category": "status",
+      "tags": ["check", "done", "verified"],
+      "defaultColorToken": "--color-success-500"
+    },
+    {
+      "id": "icon-warning",
+      "name": "Warning",
+      "category": "status",
+      "tags": ["alert", "triangle", "attention"],
+      "defaultColorToken": "--color-warning-500"
+    },
+    {
+      "id": "icon-pill",
+      "name": "Pill",
+      "category": "pharma",
+      "tags": ["medicine", "tablet", "drug"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-syringe",
+      "name": "Syringe",
+      "category": "pharma",
+      "tags": ["injection", "vaccine", "medical"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-doctor",
+      "name": "Doctor",
+      "category": "people",
+      "tags": ["physician", "medic", "staff"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-invoice",
+      "name": "Invoice",
+      "category": "finance",
+      "tags": ["bill", "payment", "due"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-receipt",
+      "name": "Receipt",
+      "category": "finance",
+      "tags": ["slip", "paid", "transaction"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-chart-pie",
+      "name": "Chart Pie",
+      "category": "analytics",
+      "tags": ["data", "graph", "metrics"],
+      "defaultColorToken": "--color-icon-default"
+    },
+    {
+      "id": "icon-chart-line",
+      "name": "Chart Line",
+      "category": "analytics",
+      "tags": ["trend", "growth", "performance"],
+      "defaultColorToken": "--color-icon-default"
+    }
+  ],
+  "usage": "Use via SVG <use href='/assets/icons/sprite.svg#icon-{id}' />"
+}
