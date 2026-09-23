@@ -40,7 +40,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const res = await AppClient.fetchAPI('/admin/leads');
+        const res = await AppClient.fetchAPI('/api/v1/leads');
         document.getElementById('leads-loading').style.display = 'none';
         
         if (!res.data || res.data.length === 0) {

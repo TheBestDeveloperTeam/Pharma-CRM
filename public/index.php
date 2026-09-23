@@ -52,13 +52,17 @@ $routes = [
         '/api/v1/dashboard/stats' => ['App\Controllers\Api\DashboardController', 'stats'],
         '/api/v1/users' => ['App\Controllers\Api\UserController', 'index'],
         '/api/v1/doctors' => ['App\Controllers\Api\DoctorController', 'index'],
-        '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'index']
+        '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'index'],
+        '/api/v1/products' => ['App\Controllers\Api\ProductController', 'index'],
+        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'index']
     ],
     'POST' => [
         '/api/v1/auth/token' => ['App\Controllers\Api\AuthController', 'token'],
         '/api/v1/users' => ['App\Controllers\Api\UserController', 'create'],
         '/api/v1/doctors' => ['App\Controllers\Api\DoctorController', 'create'],
-        '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'create']
+        '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'create'],
+        '/api/v1/products' => ['App\Controllers\Api\ProductController', 'create'],
+        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'create']
     ]
 ];
 

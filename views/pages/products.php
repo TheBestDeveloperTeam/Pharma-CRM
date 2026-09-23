@@ -45,7 +45,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const res = await AppClient.fetchAPI('/admin/products');
+        const res = await AppClient.fetchAPI('/api/v1/products');
         document.getElementById('products-loading').style.display = 'none';
         
         if (!res.data || res.data.length === 0) {

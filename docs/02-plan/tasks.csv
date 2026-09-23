@@ -8,6 +8,7 @@ TSK-006,EPIC-3,Create Auth Middleware,Intercept requests and validate JWT token 
 TSK-007,EPIC-4,Build User API,CRUD for Users Roles Permissions,app/Controllers/Api/*,L,TSK-006,Backend
 TSK-008,EPIC-5,Build Masters API,CRUD for Doctors Chemists Products,app/Controllers/Api/*,L,TSK-007,Backend
 TSK-009,EPIC-6,Build Core Workflow API,Batches Inventory Orders,app/Controllers/Api/*,XL,TSK-008,Backend
+TSK-009B,EPIC-6B,Build Territory Management,Territories and Rep Visit Planning,app/Controllers/Api/*,L,TSK-009,Backend
 TSK-010,EPIC-7,Audit Logging,Hook DB wrapper to log mutations to audit_logs,app/Repositories/DB.php,M,TSK-003,Backend
 TSK-011,EPIC-8,Teardown React,Delete crmpharma-main/src contents entirely,crmpharma-main/*,S,None,Frontend
 TSK-012,EPIC-9,Setup AdminLTE,Vendor AdminLTE CSS JS into public/assets,public/assets/*,M,TSK-011,Frontend

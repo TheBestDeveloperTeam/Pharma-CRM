@@ -28,7 +28,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const stats = await AppClient.fetchAPI('/super/dashboard/stats'); // Or /admin/dashboard/stats if implemented
+        const stats = await AppClient.fetchAPI('/api/v1/dashboard/stats');
         document.getElementById('dashboard-loading').style.display = 'none';
         
         const container = document.getElementById('metrics-container');
