@@ -279,4 +279,24 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Domain\Notifications\NotificationService::class)
         );
     });
+
+    // P8: Missing Services
+    $container->singleton(\App\Domain\Users\UserService::class, function($c) {
+        return new \App\Domain\Users\UserService(
+            $c->make(\App\Repositories\Contracts\UserRepositoryInterface::class),
+            $c->make(\App\Core\Security\PasswordHasher::class)
+        );
+    });
+
+    $container->singleton(\App\Domain\Reports\ReportService::class, function($c) {
+        return new \App\Domain\Reports\ReportService(
+            new \App\Core\Database($c->make(\PDO::class))
+        );
+    });
+
+    $container->singleton(\App\Domain\Dcr\DcrService::class, function($c) {
+        return new \App\Domain\Dcr\DcrService(
+            new \App\Core\Database($c->make(\PDO::class))
+        );
+    });
 };

@@ -191,6 +191,15 @@ return function(\App\Core\Router $router): void {
     $router->get('/admin/follow-ups',  [\App\Http\Controllers\Web\DashboardController::class, 'adminFollowUps']);
     $router->get('/admin/parties',     [\App\Http\Controllers\Web\DashboardController::class, 'adminParties']);
     $router->get('/admin/territories', [\App\Http\Controllers\Web\DashboardController::class, 'adminTerritories']);
+    $router->get('/admin/orders',      [\App\Http\Controllers\Web\DashboardController::class, 'adminOrders']);
+    $router->get('/admin/invoices',    [\App\Http\Controllers\Web\DashboardController::class, 'adminInvoices']);
+    $router->get('/admin/inventory',   [\App\Http\Controllers\Web\DashboardController::class, 'adminInventory']);
+    $router->get('/admin/payments',    [\App\Http\Controllers\Web\DashboardController::class, 'adminPayments']);
+    $router->get('/admin/dispatches',  [\App\Http\Controllers\Web\DashboardController::class, 'adminDispatches']);
+    $router->get('/admin/users',       [\App\Http\Controllers\Web\DashboardController::class, 'adminUsers']);
+    $router->get('/admin/settings',    [\App\Http\Controllers\Web\DashboardController::class, 'adminSettings']);
+    $router->get('/admin/reports',     [\App\Http\Controllers\Web\DashboardController::class, 'adminReports']);
+    $router->get('/admin/notifications', [\App\Http\Controllers\Web\DashboardController::class, 'adminNotifications']);
     $router->get('/sales/dashboard',   [\App\Http\Controllers\Web\DashboardController::class, 'salesDashboard']);
     $router->get('/portal/dashboard', [\App\Http\Controllers\Web\DashboardController::class, 'portalDashboard']);
 };

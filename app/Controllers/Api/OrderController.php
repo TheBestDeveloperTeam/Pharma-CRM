@@ -50,15 +50,24 @@ class OrderController
                 [$tenantId, $doctorId, $totalAmount]);
             $orderId = DB::getInstance()->lastInsertId();
 
-            // Create Items
+            // Create Items and Deduct Inventory
             foreach ($items as $item) {
                 $qty = (int)$item['qty'];
                 $price = (float)$item['unit_price'];
                 $subtotal = $qty * $price;
                 $batchId = (int)$item['batch_id'];
 
+                // Insert order item
                 DB::query("INSERT INTO order_items (order_id, batch_id, qty, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)", 
                     [$orderId, $batchId, $qty, $price, $subtotal]);
+
+                // Deduct inventory
+                $affected = DB::query("UPDATE inventory SET qty_available = qty_available - ? WHERE tenant_id = ? AND batch_id = ? AND qty_available >= ?", 
+                    [$qty, $tenantId, $batchId, $qty])->rowCount();
+                
+                if ($affected === 0) {
+                    throw new Exception("Insufficient inventory for batch $batchId");
+                }
             }
 
             DB::getInstance()->commit();

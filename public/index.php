@@ -54,7 +54,8 @@ $routes = [
         '/api/v1/doctors' => ['App\Controllers\Api\DoctorController', 'index'],
         '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'index'],
         '/api/v1/products' => ['App\Controllers\Api\ProductController', 'index'],
-        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'index']
+        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'index'],
+        '/api/v1/territories' => ['App\Controllers\Api\TerritoryController', 'index']
     ],
     'POST' => [
         '/api/v1/auth/token' => ['App\Controllers\Api\AuthController', 'token'],
@@ -62,7 +63,8 @@ $routes = [
         '/api/v1/doctors' => ['App\Controllers\Api\DoctorController', 'create'],
         '/api/v1/orders' => ['App\Controllers\Api\OrderController', 'create'],
         '/api/v1/products' => ['App\Controllers\Api\ProductController', 'create'],
-        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'create']
+        '/api/v1/leads' => ['App\Controllers\Api\LeadController', 'create'],
+        '/api/v1/territories' => ['App\Controllers\Api\TerritoryController', 'create']
     ]
 ];
 

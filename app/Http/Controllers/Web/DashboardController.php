@@ -61,6 +61,51 @@ final class DashboardController
         return $this->renderShell('admin', 'theme-admin', 'Territory Allocations', 'pages/territories');
     }
 
+    public function adminOrders(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Order Management', 'pages/orders');
+    }
+
+    public function adminInvoices(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Invoices', 'pages/invoices');
+    }
+
+    public function adminInventory(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Inventory Control', 'pages/inventory');
+    }
+
+    public function adminPayments(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Payments & Receipts', 'pages/payments');
+    }
+
+    public function adminDispatches(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Dispatches', 'pages/dispatches');
+    }
+
+    public function adminUsers(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'User Management', 'pages/users');
+    }
+
+    public function adminSettings(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'System Settings', 'pages/settings');
+    }
+
+    public function adminReports(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Reports & Analytics', 'pages/reports');
+    }
+
+    public function adminNotifications(Request $r): Response
+    {
+        return $this->renderShell('admin', 'theme-admin', 'Notifications', 'pages/notifications');
+    }
+
     public function salesDashboard(Request $r): Response
     {
         return $this->renderShell('sales', 'theme-sales', 'Sales Dashboard', 'pages/dashboard');
