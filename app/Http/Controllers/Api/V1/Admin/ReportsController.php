@@ -4,26 +4,32 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Core\{Request, Response, Container, TenantContext};
 use App\Domain\Reports\ReportService;
+use App\Domain\Authorization\AuthorizationService;
 use App\Core\Exceptions\ForbiddenException;
 
 final class ReportsController
 {
-    public function __construct(private ReportService $reportService) {}
+    public function __construct(private ReportService $reportService, private AuthorizationService $authorization) {}
 
     private function getCtx(): TenantContext
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isAdmin() && !$ctx->isSuper()) {
-            throw new ForbiddenException('FORBIDDEN', 'Franchise Admin or Super Admin permission required.');
+        $this->authorization->requirePermission($ctx, 'reports', 'view');
+        // Existing report SQL aggregates cannot safely attribute every source row
+        // to a territory. Until a report has a module-specific scoped query it is
+        // deliberately unavailable outside ALL scope.
+        if (!$ctx->isSuper() && $ctx->scopeFor('reports') !== 'ALL') {
+            throw new ForbiddenException('REPORT_SCOPE_UNSUPPORTED', 'Reports require ALL scope until scoped report queries are configured.');
         }
         return $ctx;
     }
 
-    public function show(Request $r, string $type): Response
+    public function show(Request $r): Response
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $type = (string)$r->param('type');
 
         try {
             $data = $this->reportService->generate($franchiseRef, $type, $r->all());
@@ -33,10 +39,11 @@ final class ReportsController
         }
     }
 
-    public function exportCsv(Request $r, string $type): Response
+    public function exportCsv(Request $r): Response
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $type = (string)$r->param('type');
 
         try {
             $data = $this->reportService->generate($franchiseRef, $type, $r->all());

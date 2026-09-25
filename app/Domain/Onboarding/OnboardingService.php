@@ -1,165 +1,23 @@
 <?php
 declare(strict_types=1);
 namespace App\Domain\Onboarding;
-
-use App\Core\Database;
-use App\Core\RefGenerator;
-use App\Core\Exceptions\ValidationException;
-use App\Core\Exceptions\NotFoundException;
+use App\Core\{Container,Database,RefGenerator,TenantContext};
+use App\Domain\Authorization\Task009ScopePolicy;
+use App\Core\Exceptions\{ConflictException,NotFoundException,ValidationException};
 use App\Core\Security\PasswordHasher;
-use App\Domain\Parties\PartyService;
+use App\Domain\Audit\AuditService;
 use App\Domain\Leads\LeadService;
+use App\Domain\Parties\PartyService;
 
-final class OnboardingService
-{
-    public function __construct(
-        private Database $db,
-        private PartyService $partyService,
-        private LeadService $leadService,
-        private PasswordHasher $hasher,
-    ) {}
-
-    /**
-     * Issue an onboarding invite link (valid for 72h)
-     */
-    public function issueInvite(string $orgRef, string $franchiseRef, ?string $leadRef, string $actorRef): array
-    {
-        // 48-byte random token
-        $rawToken = bin2hex(random_bytes(24));
-        $tokenHash = hash('sha256', $rawToken);
-        $inviteRef = RefGenerator::generate('INV');
-        $expiresAt = date('Y-m-d H:i:s', time() + (72 * 3600));
-
-        $sql = "INSERT INTO onboarding_invites (
-            invite_ref, org_ref, franchise_ref, lead_ref, token_hash, expires_at, created_by_ref
-        ) VALUES (
-            :invite_ref, :org_ref, :franchise_ref, :lead_ref, :token_hash, :expires_at, :created_by_ref
-        )";
-
-        $this->db->prepare($sql)->execute([
-            ':invite_ref'     => $inviteRef,
-            ':org_ref'        => $orgRef,
-            ':franchise_ref'  => $franchiseRef,
-            ':lead_ref'       => $leadRef,
-            ':token_hash'     => $tokenHash,
-            ':expires_at'     => $expiresAt,
-            ':created_by_ref' => $actorRef,
-        ]);
-
-        return [
-            'invite_ref' => $inviteRef,
-            'token'      => $rawToken, // Provided once to admin/inviter
-            'expires_at' => $expiresAt,
-        ];
-    }
-
-    /**
-     * Complete partner registration via invite token
-     */
-    public function completeRegistration(string $rawToken, array $formData): array
-    {
-        $tokenHash = hash('sha256', $rawToken);
-
-        $invite = $this->db->fetchOne(
-            "SELECT * FROM onboarding_invites WHERE token_hash = :h LIMIT 1",
-            [':h' => $tokenHash]
-        );
-
-        if (!$invite) {
-            throw new NotFoundException('INVALID_INVITE_TOKEN', 'Onboarding invite token is invalid.');
-        }
-
-        if (!empty($invite['used_at'])) {
-            throw new ValidationException('INVITE_ALREADY_USED', 'This invite link has already been used.');
-        }
-
-        if (strtotime($invite['expires_at']) < time()) {
-            throw new ValidationException('INVITE_EXPIRED', 'This onboarding invite link has expired.');
-        }
-
-        $orgRef       = $invite['org_ref'];
-        $franchiseRef = $invite['franchise_ref'];
-        $leadRef      = $invite['lead_ref'];
-
-        // Begin transaction
-        $this->db->beginTransaction();
-        try {
-            // 1. Create party
-            $partyData = [
-                'org_ref'                 => $orgRef,
-                'franchise_ref'           => $franchiseRef,
-                'party_code'              => $formData['party_code'] ?? null,
-                'firm_name'               => $formData['firm_name'],
-                'contact_name'            => $formData['contact_name'] ?? null,
-                'mobile'                  => $formData['mobile'] ?? null,
-                'email'                   => $formData['email'] ?? null,
-                'gstin'                   => $formData['gstin'] ?? null,
-                'drug_license_no'         => $formData['drug_license_no'] ?? null,
-                'billing_address'         => $formData['billing_address'] ?? null,
-                'shipping_address'        => $formData['shipping_address'] ?? null,
-                'state_ref'               => $formData['state_ref'] ?? null,
-                'district_ref'            => $formData['district_ref'] ?? null,
-                'city_ref'                => $formData['city_ref'] ?? null,
-                'pincode'                 => $formData['pincode'] ?? null,
-                'converted_from_lead_ref' => $leadRef,
-                'status'                  => 'ACTIVE',
-                'created_by_ref'          => 'ONBOARDING',
-            ];
-
-            $partyRef = $this->partyService->create($partyData);
-
-            // 2. Create distributor portal user
-            $userRef = RefGenerator::generate('USR');
-            $rawPass = bin2hex(random_bytes(6));
-            $passHash = $this->hasher->hash($formData['password'] ?? $rawPass);
-
-            $this->db->prepare(
-                "INSERT INTO users (
-                    user_ref, org_ref, franchise_ref, role, party_ref,
-                    full_name, email, mobile, password_hash,
-                    must_change_password, status, created_by_ref
-                ) VALUES (
-                    :user_ref, :org_ref, :franchise_ref, 'DISTRIBUTOR', :party_ref,
-                    :full_name, :email, :mobile, :password_hash,
-                    1, 'ACTIVE', 'ONBOARDING'
-                )"
-            )->execute([
-                ':user_ref'      => $userRef,
-                ':org_ref'       => $orgRef,
-                ':franchise_ref' => $franchiseRef,
-                ':party_ref'     => $partyRef,
-                ':full_name'     => $formData['contact_name'] ?? $formData['firm_name'],
-                ':email'         => strtolower($formData['email']),
-                ':mobile'        => $formData['mobile'] ?? null,
-                ':password_hash' => $passHash,
-            ]);
-
-            // 3. Mark invite as used
-            $this->db->prepare("UPDATE onboarding_invites SET used_at = NOW() WHERE id = :id")->execute([':id' => $invite['id']]);
-
-            // 4. If linked to a lead, transition lead to CONVERTED
-            if ($leadRef) {
-                $this->leadService->changeStatus(
-                    $franchiseRef,
-                    $leadRef,
-                    'CONVERTED',
-                    'ONBOARDING',
-                    'Lead converted to party via onboarding registration.',
-                    $partyRef
-                );
-            }
-
-            $this->db->commit();
-
-            return [
-                'party_ref' => $partyRef,
-                'user_ref'  => $userRef,
-                'email'     => $formData['email'],
-                'status'    => 'SUCCESS',
-            ];
-        } catch (\Throwable $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
-    }
+final class OnboardingService {
+ public function __construct(private Database $db,private PartyService $parties,private LeadService $leads,private PasswordHasher $hasher,private AuditService $audit) {}
+ public function issueInvite(TenantContext $ctx,?string $lead,?string $assignee):array { $f=$ctx->requireFranchise(); if($lead&&!$this->db->fetchOne('SELECT 1 FROM leads WHERE franchise_ref=? AND lead_ref=?',[$f,$lead]))throw new ValidationException('INVALID_LEAD','lead_ref must belong to this franchise.');if($assignee&&!$this->db->fetchOne("SELECT 1 FROM users WHERE franchise_ref=? AND user_ref=? AND status='ACTIVE'",[$f,$assignee]))throw new ValidationException('INVALID_ASSIGNEE','assigned_user_ref must be an active user in this franchise.'); $token=bin2hex(random_bytes(24));$ref=RefGenerator::generate('INV');$expires=date('Y-m-d H:i:s',time()+259200);$this->db->prepare('INSERT INTO onboarding_invites (invite_ref,org_ref,franchise_ref,lead_ref,assigned_user_ref,token_hash,expires_at,created_by_ref) VALUES (?,?,?,?,?,?,?,?)')->execute([$ref,$ctx->orgRef,$f,$lead,$assignee,hash('sha256',$token),$expires,$ctx->userRef]);$this->audit->log($ctx,'BUSINESS','onboarding.invited','onboarding_invite',$ref,null,['lead_ref'=>$lead,'assigned_user_ref'=>$assignee]);return ['invite_ref'=>$ref,'token'=>$token,'expires_at'=>$expires,'assigned_user_ref'=>$assignee]; }
+ public function register(string $token,array $d):array { $invite=$this->db->fetchOne('SELECT * FROM onboarding_invites WHERE token_hash=? LIMIT 1',[hash('sha256',$token)]);if(!$invite)throw new NotFoundException('INVALID_INVITE_TOKEN','Onboarding invite token is invalid.');if($invite['used_at'])throw new ConflictException('INVITE_ALREADY_USED','This invite has already been used.');if(strtotime($invite['expires_at'])<time())throw new ValidationException('INVITE_EXPIRED','This onboarding invite has expired.');$this->validate($d,$invite['franchise_ref']);$ref=RefGenerator::generate('ONB');$this->db->transaction(function()use($invite,$d,$ref){$this->db->prepare("INSERT INTO onboarding_registrations (onboarding_ref,org_ref,franchise_ref,invite_ref,lead_ref,assigned_user_ref,status,firm_name,constitution_type,contact_name,designation,mobile,email,gstin,drug_license_no,drug_license_validity,pan,billing_address,shipping_address,state_ref,district_ref,city_ref,area,pincode,bank_account_number,bank_ifsc,bank_name,preferred_product_categories_json,expected_monthly_business,password_hash) VALUES (?,?,?,?,?,?,'SUBMITTED',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")->execute([$ref,$invite['org_ref'],$invite['franchise_ref'],$invite['invite_ref'],$invite['lead_ref'],$invite['assigned_user_ref'],$d['firm_name'],$d['constitution_type'],$d['contact_name'],$d['designation'],$d['mobile'],$d['email'],$d['gstin'],$d['drug_license_no'],$d['drug_license_validity'],$d['pan'],$d['billing_address'],$d['shipping_address'],$d['state_ref']??null,$d['district_ref']??null,$d['city_ref']??null,$d['area']??null,$d['pincode'],$d['bank_account_number']??null,$d['bank_ifsc']??null,$d['bank_name']??null,json_encode($d['preferred_product_categories']),$d['expected_monthly_business']??null,$this->hasher->hash($d['password'])]);$this->history($ref,$invite['org_ref'],$invite['franchise_ref'],null,'SUBMITTED','PUBLIC',null);foreach($d['documents'] as $doc){$map=['Drug Licence'=>'DRUG_LICENCE','GST Certificate'=>'GST_CERTIFICATE','PAN'=>'PAN','Cancelled Cheque'=>'CANCELLED_CHEQUE','Partnership Deed / Incorporation Certificate'=>'INCORPORATION_CERTIFICATE'];if(!isset($map[$doc['type']]))throw new ValidationException('INVALID_KYC_DOCUMENT_TYPE','Unsupported KYC document type.');$dr=RefGenerator::generate('KYD');$this->db->prepare("INSERT INTO kyc_documents (kyc_document_ref,onboarding_ref,org_ref,franchise_ref,document_type,file_reference,original_filename,uploaded_by_ref) VALUES (?,?,?,?,?,?,?,'PUBLIC')")->execute([$dr,$ref,$invite['org_ref'],$invite['franchise_ref'],$map[$doc['type']],$doc['file_reference'],$doc['file_name']]);$this->kycHistory($dr,$invite['org_ref'],$invite['franchise_ref'],null,'PENDING','PUBLIC',null);}$this->db->prepare('UPDATE onboarding_invites SET used_at=NOW() WHERE id=?')->execute([$invite['id']]);});return $this->detailByRef($invite['franchise_ref'],$ref); }
+ public function listing(TenantContext $ctx,array $filters,int $page,int $per):array{$f=$ctx->requireFranchise();$params=[':f'=>$f];$where=['franchise_ref=:f',Container::getInstance()->make(Task009ScopePolicy::class)->onboardingListClause($ctx,$params)];foreach(['status','assigned_user_ref']as$k)if(!empty($filters[$k])){$where[]="$k=:$k";$params[":$k"]=$filters[$k];}if(!empty($filters['search'])){$where[]='(firm_name LIKE :s OR gstin LIKE :s OR email LIKE :s)';$params[':s']='%'.$filters['search'].'%';}$sql=implode(' AND ',$where);$total=(int)$this->db->fetchColumn("SELECT COUNT(*) FROM onboarding_registrations WHERE $sql",$params);$offset=($page-1)*$per;return ['data'=>$this->db->fetchAll("SELECT onboarding_ref,firm_name,contact_name,email,gstin,status,assigned_user_ref,created_at FROM onboarding_registrations WHERE $sql ORDER BY created_at DESC LIMIT $per OFFSET $offset",$params),'meta'=>['page'=>$page,'per_page'=>$per,'total'=>$total,'total_pages'=>(int)ceil($total/$per)]];}
+ public function assertAccess(TenantContext $ctx,string $ref):void{Container::getInstance()->make(Task009ScopePolicy::class)->assertOnboarding($ctx,$this->row($ctx->requireFranchise(),$ref));}
+ public function detail(TenantContext $ctx,string $ref):array{return $this->detailByRef($ctx->requireFranchise(),$ref);}
+ public function transition(TenantContext $ctx,string $ref,string $to,?string $remarks):array{$f=$ctx->requireFranchise();$before=$this->row($f,$ref);OnboardingLifecycle::assertTransition($before['status'],$to);if(in_array($to,['INFO_REQUESTED','REJECTED'],true)&&trim((string)$remarks)==='')throw new ValidationException('REMARKS_REQUIRED','Remarks are required.');$this->db->transaction(function()use($ctx,$f,$ref,$before,$to,$remarks){$this->db->prepare('UPDATE onboarding_registrations SET status=?,reviewer_remarks=?,reviewed_by_ref=?,reviewed_at=NOW(),updated_at=NOW() WHERE franchise_ref=? AND onboarding_ref=?')->execute([$to,$remarks,$ctx->userRef,$f,$ref]);$this->history($ref,$ctx->orgRef,$f,$before['status'],$to,$ctx->userRef,$remarks);});$after=$this->detailByRef($f,$ref);$this->audit->log($ctx,'BUSINESS','onboarding.'.strtolower($to),'onboarding',$ref,$before,$after,$remarks);return $after;}
+ public function convert(TenantContext $ctx,string $ref,array $a):array{$f=$ctx->requireFranchise();$o=$this->row($f,$ref);if($o['status']!=='APPROVED')throw new ValidationException('ONBOARDING_NOT_APPROVED','Only approved onboarding can be converted.');if($o['party_ref'])throw new ConflictException('ONBOARDING_ALREADY_CONVERTED','This onboarding is already converted.');$this->db->transaction(function()use($ctx,$f,$ref,$o,$a){foreach(['gstin','mobile','drug_license_no']as$c)if($this->db->fetchOne("SELECT 1 FROM parties WHERE franchise_ref=? AND $c=?",[$f,$o[$c]]))throw new ConflictException('DUPLICATE_PARTY_IDENTIFIER',"$c is already used by a party.");$party=$this->parties->create(['org_ref'=>$ctx->orgRef,'franchise_ref'=>$f,'firm_name'=>$o['firm_name'],'contact_name'=>$o['contact_name'],'mobile'=>$o['mobile'],'email'=>$o['email'],'gstin'=>$o['gstin'],'drug_license_no'=>$o['drug_license_no'],'drug_license_validity'=>$o['drug_license_validity'],'billing_address'=>$o['billing_address'],'shipping_address'=>$o['shipping_address'],'state_ref'=>$o['state_ref'],'district_ref'=>$o['district_ref'],'city_ref'=>$o['city_ref'],'pincode'=>$o['pincode'],'area'=>$o['area'],'party_type'=>'Distributor','tier_ref'=>$a['tier_ref']??null,'sales_user_ref'=>$a['sales_user_ref']??$o['assigned_user_ref']??$ctx->userRef,'credit_limit'=>$a['credit_limit']??0,'payment_terms_days'=>$a['payment_terms_days']??0,'converted_from_lead_ref'=>$o['lead_ref'],'status'=>'ACTIVE','created_by_ref'=>$ctx->userRef]);$this->db->prepare('UPDATE onboarding_registrations SET party_ref=?,updated_at=NOW() WHERE onboarding_ref=? AND franchise_ref=? AND party_ref IS NULL')->execute([$party,$ref,$f]);if($o['lead_ref'])$this->leads->changeStatus($f,$o['lead_ref'],'CONVERTED',$ctx->userRef,'Converted after approved onboarding.',$party);});$after=$this->detailByRef($f,$ref);$this->audit->log($ctx,'BUSINESS','onboarding.converted','onboarding',$ref,$o,$after);return $after;}
+ public function verifyDocument(TenantContext $ctx,string $onb,string $doc,string $status,string $remarks):array{if(!in_array($status,['VERIFIED','REJECTED'],true))throw new ValidationException('INVALID_KYC_TRANSITION','Status must be VERIFIED or REJECTED.');if($status==='REJECTED'&&trim($remarks)==='')throw new ValidationException('REMARKS_REQUIRED','Remarks are required.');$f=$ctx->requireFranchise();$before=$this->db->fetchOne('SELECT * FROM kyc_documents WHERE franchise_ref=? AND onboarding_ref=? AND kyc_document_ref=?',[$f,$onb,$doc]);if(!$before)throw new NotFoundException('KYC_DOCUMENT_NOT_FOUND','KYC document not found.');if($before['status']!=='PENDING')throw new ConflictException('KYC_DOCUMENT_ALREADY_DECIDED','KYC document has already been decided.');$this->db->transaction(function()use($ctx,$f,$before,$status,$remarks){$this->db->prepare('UPDATE kyc_documents SET status=?,verification_remarks=?,verified_by_ref=?,verified_at=NOW() WHERE id=?')->execute([$status,$remarks,$ctx->userRef,$before['id']]);$this->kycHistory($before['kyc_document_ref'],$ctx->orgRef,$f,$before['status'],$status,$ctx->userRef,$remarks);});$this->audit->log($ctx,'BUSINESS','kyc.'.strtolower($status),'kyc_document',$doc,$before,['status'=>$status],$remarks);return $this->detailByRef($f,$onb);}
+ private function row(string$f,string$r):array{$v=$this->db->fetchOne('SELECT * FROM onboarding_registrations WHERE franchise_ref=? AND onboarding_ref=?',[$f,$r]);if(!$v)throw new NotFoundException('ONBOARDING_NOT_FOUND','Onboarding not found.');return$v;} private function detailByRef(string$f,string$r):array{$v=$this->row($f,$r);unset($v['password_hash'],$v['bank_account_number']);$v['preferred_product_categories']=json_decode($v['preferred_product_categories_json'],true)??[];unset($v['preferred_product_categories_json']);$v['documents']=$this->db->fetchAll('SELECT kyc_document_ref,document_type,original_filename,status,verification_remarks,uploaded_at,verified_at FROM kyc_documents WHERE franchise_ref=? AND onboarding_ref=? ORDER BY uploaded_at',[$f,$r]);$v['history']=$this->db->fetchAll('SELECT from_status,to_status,actor_ref,remarks,created_at FROM onboarding_history WHERE franchise_ref=? AND onboarding_ref=? ORDER BY id',[$f,$r]);return$v;} private function history(string$r,string$o,string$f,?string$from,string$to,string$a,?string$remarks):void{$this->db->prepare('INSERT INTO onboarding_history (onboarding_ref,org_ref,franchise_ref,from_status,to_status,actor_ref,remarks) VALUES (?,?,?,?,?,?,?)')->execute([$r,$o,$f,$from,$to,$a,$remarks]);}private function kycHistory(string$r,string$o,string$f,?string$from,string$to,string$a,?string$remarks):void{$this->db->prepare('INSERT INTO kyc_document_history (kyc_document_ref,org_ref,franchise_ref,from_status,to_status,actor_ref,remarks) VALUES (?,?,?,?,?,?,?)')->execute([$r,$o,$f,$from,$to,$a,$remarks]);}private function validate(array$d,string$f):void{foreach(['firm_name','constitution_type','contact_name','designation','mobile','email','gstin','drug_license_no','drug_license_validity','pan','billing_address','shipping_address','pincode','password']as$k)if(trim((string)($d[$k]??''))==='')throw new ValidationException('VALIDATION_FAILED',"$k is required.",[$k=>['required']]);if(!in_array($d['constitution_type'],['Proprietorship','Partnership','Pvt Ltd','LLP'],true))throw new ValidationException('INVALID_CONSTITUTION_TYPE','Invalid constitution_type.');if(!is_array($d['preferred_product_categories']??null)||!$d['preferred_product_categories'])throw new ValidationException('VALIDATION_FAILED','preferred_product_categories is required.');if(!is_array($d['documents']??null))throw new ValidationException('VALIDATION_FAILED','documents must be an array.');if($this->db->fetchOne('SELECT 1 FROM parties WHERE franchise_ref=? AND (gstin=? OR mobile=? OR drug_license_no=?) LIMIT 1',[$f,$d['gstin'],$d['mobile'],$d['drug_license_no']]))throw new ConflictException('DUPLICATE_PARTY_CANDIDATE','A party already uses submitted identifiers.');}
 }

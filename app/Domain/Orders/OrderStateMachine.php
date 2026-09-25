@@ -9,12 +9,10 @@ final class OrderStateMachine
     private const VALID_TRANSITIONS = [
         'DRAFT'            => ['SUBMITTED', 'CANCELLED'],
         'SUBMITTED'        => ['CONFIRMED', 'CANCELLED'],
-        // PROCESSING, DISPATCHED and DELIVERED are canonical lifecycle
-        // states. TASK-005 deliberately owns no transition into the latter
-        // two: Dispatch and Delivery will add those transitions later.
+        // TASK-007 owns the physical fulfilment transitions.
         'CONFIRMED'        => ['PROCESSING', 'CANCELLED'],
-        'PROCESSING'       => ['CANCELLED'],
-        'DISPATCHED'       => [],
+        'PROCESSING'       => ['DISPATCHED', 'CANCELLED'],
+        'DISPATCHED'       => ['DELIVERED'],
         'DELIVERED'        => [],
         'CANCELLED'        => [],
     ];

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Core\{Request, Response, Validation, TenantContext, QueryParams};
 use App\Core\Exceptions\NotFoundException;
 use App\Domain\Payments\PaymentService;
+use App\Domain\Payments\AllocationService;
+use App\Domain\Authorization\AuthorizationService;
+use App\Domain\Audit\AuditService;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 
 final class PaymentsController
@@ -12,11 +15,15 @@ final class PaymentsController
     public function __construct(
         private PaymentRepositoryInterface $paymentRepo,
         private PaymentService $paymentService,
+        private AllocationService $allocations,
+        private AuthorizationService $authorization,
+        private AuditService $audit,
     ) {}
 
     public function index(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'view');
         $franchiseRef = $ctx->franchiseRef;
         $query = QueryParams::fromRequest($r, ['created_at', 'payment_date', 'amount']);
         $page = $query['page'];
@@ -37,6 +44,7 @@ final class PaymentsController
     public function show(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'view');
         $payment = $this->paymentRepo->findByRef($ctx->franchiseRef, $ref);
         if (!$payment) {
             throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
@@ -48,6 +56,7 @@ final class PaymentsController
     public function store(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'create');
         $clean = Validation::validate($r->all(), [
             'party_ref'    => 'required|string',
             'payment_date' => 'required|string',
@@ -55,7 +64,8 @@ final class PaymentsController
             'mode'         => 'required|string',
         ]);
 
-        $autoAllocate = (bool)$r->input('auto_allocate', true);
+        // Automatic/FIFO allocation remains an unresolved business policy.
+        $autoAllocate = false;
 
         $res = $this->paymentService->recordPayment(
             $ctx->orgRef,
@@ -70,6 +80,15 @@ final class PaymentsController
             $ctx->userRef
         );
 
-        return Response::json(['data' => $res], 201);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.created', entityType: 'payment', entityRef: $res['payment_ref'], after: $res);
+        return Response::json(201, $res);
+    }
+
+    public function allocate(Request $r): Response
+    {
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'payments', 'allocate');
+        $data = Validation::validate($r->all(), ['invoice_ref' => 'required|string', 'amount' => 'required|numeric']);
+        $paymentRef = (string)$r->param('ref'); $result = $this->allocations->allocate($ctx->requireFranchise(), $paymentRef, $data['invoice_ref'], (string)$data['amount'], $ctx->userRef);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.allocated', entityType: 'payment_allocation', entityRef: $result['allocation_ref'], after: $result); return Response::json(201, $result);
     }
 }

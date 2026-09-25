@@ -29,3 +29,20 @@ The single-role-per-user frontend shape and permission-refresh behavior are not 
 - **Approved requirement:** TASK-005 defines `DRAFT`, `SUBMITTED`, `CONFIRMED`, `PROCESSING`, `DISPATCHED`, `DELIVERED`, and `CANCELLED`, and explicitly excludes Billing, Invoice, Dispatch, Delivery, and Payment implementation.
 - **Backend handling:** The TASK-005 API preserves separate Submit and Confirm endpoints and does not introduce Billing/Dispatch transition states. The frontend needs an adapter when API integration is started; no frontend integration was performed in TASK-005.
 - **Status:** OPEN — does not block backend source implementation.
+
+## TASK-006 confirmed mismatch — invoice number is client-editable
+
+- **Module:** Billing
+- **Frontend file:** `pharma-sales-crm/src/features/billing/InvoiceFormPage.tsx`.
+- **Frontend behavior:** The form accepts an editable invoice number and invoice date.
+- **Approved requirement:** TASK-006 requires tenant-safe, server-generated, concurrency-safe invoice numbers. The current GST date/rounding policy remains pending.
+- **Backend handling:** Invoice number allocation is server-owned through `SequenceService`; the current generation endpoint returns `GST_POLICY_PENDING` before number allocation until jurisdiction policy is configured.
+- **Status:** OPEN — frontend adapter required when Billing API integration begins.
+
+## TASK-007 confirmed mismatch — dispatch uses mock invoice/order state
+
+- **Module:** Dispatch
+- **Frontend files:** `pharma-sales-crm/src/features/dispatch/DispatchFormPage.tsx` and `src/features/order/OrderDetailsPage.tsx`.
+- **Frontend behavior:** Creates a dispatch from a mock order and treats a mock `Generated` invoice as sufficient.
+- **Backend handling:** Dispatch requires a tenant-valid `POSTED` invoice with a resolved GST policy; the current GST decision gate returns `GST_DEPENDENCY_BLOCKED` before creation. Dispatch number/date and lifecycle are server-authoritative.
+- **Status:** OPEN — frontend adapter required; no frontend integration was started.

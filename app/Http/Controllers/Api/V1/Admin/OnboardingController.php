@@ -1,29 +1,13 @@
 <?php
 declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
-
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\Validation;
-use App\Core\TenantContext;
-use App\Domain\Onboarding\OnboardingService;
-
-final class OnboardingController
-{
-    public function __construct(private OnboardingService $onboardingService) {}
-
-    public function invite(Request $r): Response
-    {
-        $ctx = TenantContext::get();
-        $leadRef = $r->input('lead_ref');
-
-        $invite = $this->onboardingService->issueInvite(
-            $ctx->orgRef,
-            $ctx->franchiseRef,
-            $leadRef,
-            $ctx->userRef
-        );
-
-        return Response::json(['data' => $invite], 201);
-    }
-}
+use App\Core\{Request,Response,TenantContext};use App\Domain\Authorization\AuthorizationService;use App\Domain\Onboarding\OnboardingService;
+final class OnboardingController {public function __construct(private OnboardingService $service,private AuthorizationService $auth){}private function ctx():TenantContext{return TenantContext::get();}private function access(TenantContext$c,Request$r):void{$this->service->assertAccess($c,(string)$r->param('ref'));}
+ public function invite(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','generateInvite');return Response::json(201,$this->service->issueInvite($c,$r->input('lead_ref'),$r->input('assigned_user_ref')));}
+ public function index(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','view');return Response::json(200,$this->service->listing($c,$r->query,(int)$r->query('page',1),min(100,max(1,(int)$r->query('per_page',25))));}
+ public function show(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','view');$this->access($c,$r);return Response::json(200,$this->service->detail($c,(string)$r->param('ref')));}
+ public function approve(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','approve');$this->access($c,$r);return Response::json(200,$this->service->transition($c,(string)$r->param('ref'),'APPROVED',$r->input('remarks')));}
+ public function reject(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','reject');$this->access($c,$r);return Response::json(200,$this->service->transition($c,(string)$r->param('ref'),'REJECTED',$r->input('remarks')));}
+ public function requestInfo(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','review');$this->access($c,$r);return Response::json(200,$this->service->transition($c,(string)$r->param('ref'),'INFO_REQUESTED',$r->input('remarks')));}
+ public function convert(Request$r):Response{$c=$this->ctx();$this->auth->requirePermission($c,'distributorOnboarding','convert');$this->access($c,$r);return Response::json(200,$this->service->convert($c,(string)$r->param('ref'),$r->all()));}
+ public function verifyKyc(Request$r):Response{$c=$this->ctx();$s=(string)$r->input('status');$this->auth->requirePermission($c,'kyc',$s==='REJECTED'?'reject':'verify');$this->access($c,$r);return Response::json(200,$this->service->verifyDocument($c,(string)$r->param('ref'),(string)$r->param('document_ref'),$s,(string)$r->input('remarks',''));}}

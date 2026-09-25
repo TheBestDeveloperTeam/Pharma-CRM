@@ -12,12 +12,18 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
     public function findByRef(string $franchiseRef, string $invoiceRef): ?array
     {
         return $this->db->fetchOne(
-            "SELECT i.*, p.firm_name as party_name, p.gstin as party_gstin
+            "SELECT i.*, p.firm_name as party_name, p.gstin as party_gstin, o.sales_user_ref
              FROM invoices i
              JOIN parties p ON i.franchise_ref = p.franchise_ref AND i.party_ref = p.party_ref
+             JOIN orders o ON i.franchise_ref = o.franchise_ref AND i.order_ref = o.order_ref
              WHERE i.franchise_ref = :f AND i.invoice_ref = :r LIMIT 1",
             [':f' => $franchiseRef, ':r' => $invoiceRef]
         );
+    }
+
+    public function findByRefForUpdate(string $franchiseRef, string $invoiceRef): ?array
+    {
+        return $this->db->fetchOne('SELECT * FROM invoices WHERE franchise_ref = ? AND invoice_ref = ? LIMIT 1 FOR UPDATE', [$franchiseRef, $invoiceRef]);
     }
 
     public function findByOrderRef(string $franchiseRef, string $orderRef): ?array
@@ -58,9 +64,10 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
         )['cnt'];
 
         $offset = ($page - 1) * $perPage;
-        $sql = "SELECT i.*, p.firm_name as party_name
+        $sql = "SELECT i.*, p.firm_name as party_name, o.sales_user_ref
                 FROM invoices i
                 JOIN parties p ON i.franchise_ref = p.franchise_ref AND i.party_ref = p.party_ref
+                JOIN orders o ON i.franchise_ref = o.franchise_ref AND i.order_ref = o.order_ref
                 WHERE {$whereClause}
                 ORDER BY i.id DESC LIMIT {$perPage} OFFSET {$offset}";
 
@@ -80,13 +87,13 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
             $sqlInv = "INSERT INTO invoices (
                 invoice_ref, invoice_no, org_ref, franchise_ref, order_ref,
                 party_ref, invoice_date, due_date, bill_to_snapshot, ship_to_snapshot,
-                subtotal, discount_total, gst_total, grand_total, paid_total,
-                status, created_by_ref
+                subtotal, discount_total, taxable_total, cgst_total, sgst_total, igst_total, gst_total,
+                rounding_adjustment, grand_total, tax_policy_code, paid_total, status, created_by_ref
             ) VALUES (
                 :invoice_ref, :invoice_no, :org_ref, :franchise_ref, :order_ref,
                 :party_ref, :invoice_date, :due_date, :bill_to_snapshot, :ship_to_snapshot,
-                :subtotal, :discount_total, :gst_total, :grand_total, 0.00,
-                'POSTED', :created_by_ref
+                :subtotal, :discount_total, :taxable_total, :cgst_total, :sgst_total, :igst_total, :gst_total,
+                :rounding_adjustment, :grand_total, :tax_policy_code, 0.00, 'POSTED', :created_by_ref
             )";
 
             $this->db->prepare($sqlInv)->execute([
@@ -102,8 +109,14 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                 ':ship_to_snapshot'  => json_encode($invoiceData['ship_to_snapshot'], JSON_THROW_ON_ERROR),
                 ':subtotal'          => $invoiceData['subtotal'],
                 ':discount_total'    => $invoiceData['discount_total'],
+                ':taxable_total'     => $invoiceData['taxable_total'],
+                ':cgst_total'        => $invoiceData['cgst_total'],
+                ':sgst_total'        => $invoiceData['sgst_total'],
+                ':igst_total'        => $invoiceData['igst_total'],
                 ':gst_total'         => $invoiceData['gst_total'],
+                ':rounding_adjustment' => $invoiceData['rounding_adjustment'],
                 ':grand_total'       => $invoiceData['grand_total'],
+                ':tax_policy_code'   => $invoiceData['tax_policy_code'],
                 ':created_by_ref'    => $invoiceData['created_by_ref'],
             ]);
 
@@ -111,12 +124,12 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                 item_ref, org_ref, franchise_ref, invoice_ref, order_item_ref,
                 product_ref, product_name_snapshot, sku_snapshot, hsn_snapshot,
                 batch_ref, batch_no_snapshot, expiry_snapshot, paid_qty,
-                free_qty, rate, discount, gst_percent, line_total
+                free_qty, rate, discount, taxable_amount, gst_percent, cgst_amount, sgst_amount, igst_amount, total_tax, line_total
             ) VALUES (
                 :item_ref, :org_ref, :franchise_ref, :invoice_ref, :order_item_ref,
                 :product_ref, :product_name_snapshot, :sku_snapshot, :hsn_snapshot,
                 :batch_ref, :batch_no_snapshot, :expiry_snapshot, :paid_qty,
-                :free_qty, :rate, :discount, :gst_percent, :line_total
+                :free_qty, :rate, :discount, :taxable_amount, :gst_percent, :cgst_amount, :sgst_amount, :igst_amount, :total_tax, :line_total
             )";
 
             $stmtItem = $this->db->prepare($sqlItem);
@@ -138,7 +151,12 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                     ':free_qty'              => $it['free_qty'] ?? 0,
                     ':rate'                  => $it['rate'],
                     ':discount'              => $it['discount'] ?? 0.00,
+                    ':taxable_amount'        => $it['taxable_amount'] ?? $it['line_total'],
                     ':gst_percent'           => $it['gst_percent'] ?? 0.00,
+                    ':cgst_amount'           => $it['cgst_amount'] ?? 0.00,
+                    ':sgst_amount'           => $it['sgst_amount'] ?? 0.00,
+                    ':igst_amount'           => $it['igst_amount'] ?? 0.00,
+                    ':total_tax'             => $it['total_tax'] ?? 0.00,
                     ':line_total'            => $it['line_total'],
                 ]);
             }
@@ -157,14 +175,17 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
         ]);
     }
 
-    public function cancel(string $franchiseRef, string $invoiceRef, string $reason): bool
+    public function cancelPosted(string $franchiseRef, string $invoiceRef, string $actorRef, string $reason): bool
     {
-        $sql = "UPDATE invoices SET status = 'CANCELLED', cancel_reason = :reason WHERE franchise_ref = :f AND invoice_ref = :r";
-        return $this->db->prepare($sql)->execute([
+        $sql = "UPDATE invoices SET status = 'CANCELLED', cancel_reason = :reason, cancelled_by_ref = :actor, cancelled_at = NOW() WHERE franchise_ref = :f AND invoice_ref = :r AND status = 'POSTED'";
+        $statement = $this->db->prepare($sql);
+        $statement->execute([
             ':reason' => $reason,
+            ':actor'  => $actorRef,
             ':f'      => $franchiseRef,
             ':r'      => $invoiceRef,
         ]);
+        return $statement->rowCount() === 1;
     }
 
     public function getItems(string $franchiseRef, string $invoiceRef): array

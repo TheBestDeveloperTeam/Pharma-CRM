@@ -24,13 +24,17 @@ final class WebhookIngestionController
 
         // 1. Max payload 256KB
         if (strlen($rawBody) > 262144) {
-            return Response::json(['error' => 'PAYLOAD_TOO_LARGE', 'message' => 'Payload exceeds 256KB.'], 413);
+            return Response::error(413, 'PAYLOAD_TOO_LARGE', 'Payload exceeds 256KB.');
         }
 
         // 2. Resolve source & verify HMAC signature
         $source = $this->webhookService->resolveSource($endpointSlug);
         $signature = $r->header('x-signature') ?? $r->header('X-Signature');
-        $timestamp = (int)($r->header('x-timestamp') ?? $r->header('X-Timestamp') ?? time());
+        $timestampHeader = $r->header('x-timestamp');
+        if ($timestampHeader === '' || !ctype_digit($timestampHeader)) {
+            throw new ValidationException('MISSING_TIMESTAMP', 'Webhook timestamp is required.');
+        }
+        $timestamp = (int)$timestampHeader;
 
         $this->webhookService->verifySignature($rawBody, $source['decrypted_secret'], $signature, $timestamp);
 

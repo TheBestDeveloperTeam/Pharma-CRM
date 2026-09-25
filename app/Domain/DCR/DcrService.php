@@ -1,106 +1,12 @@
 <?php
+declare(strict_types=1);
 namespace App\Domain\DCR;
-
-use App\Repositories\Contracts\DcrRepositoryInterface;
-use App\Domain\Audit\AuditService;
-
-class DcrService {
-    private DcrRepositoryInterface $dcrRepo;
-    private AuditService $audit;
-
-    public function __construct(DcrRepositoryInterface $dcrRepo, AuditService $audit) {
-        $this->dcrRepo = $dcrRepo;
-        $this->audit = $audit;
-    }
-
-    public function createDcr(int $userId, array $data): array {
-        // Validate date
-        $date = $data['dcr_date'] ?? date('Y-m-d');
-        
-        // Check if DCR already exists for this user and date
-        $existing = $this->dcrRepo->getDcrByDateAndUser($date, $userId);
-        if ($existing) {
-            throw new \Exception("A DCR for this date already exists.", 400);
-        }
-
-        $dcrData = [
-            'user_id' => $userId,
-            'territory_id' => $data['territory_id'],
-            'dcr_date' => $date
-        ];
-        
-        $id = $this->dcrRepo->createDcr($dcrData);
-        $dcr = $this->dcrRepo->getDcrById($id);
-        
-        $this->audit->log('dcr.create', 'dcr', $id, null, $dcr);
-        
-        return $dcr;
-    }
-    
-    public function getDcrWithVisits(int $id, int $userId): array {
-        $dcr = $this->dcrRepo->getDcrById($id);
-        if (!$dcr) {
-            throw new \Exception("DCR not found", 404);
-        }
-        
-        // Ensure the user owns this DCR (or is a manager, which we could check via roles)
-        // For simplicity, just check ownership
-        if ($dcr['user_id'] != $userId) {
-            throw new \Exception("Unauthorized access to this DCR", 403);
-        }
-        
-        $dcr['visits'] = $this->dcrRepo->listVisitsByDcr($id);
-        return $dcr;
-    }
-    
-    public function listUserDcrs(int $userId, ?string $date = null, ?string $status = null): array {
-        return $this->dcrRepo->listDcrs($userId, $date, $status);
-    }
-
-    public function addVisit(int $dcrId, int $userId, array $visitData): array {
-        $dcr = $this->dcrRepo->getDcrById($dcrId);
-        if (!$dcr || $dcr['user_id'] != $userId) {
-            throw new \Exception("DCR not found or unauthorized", 404);
-        }
-        
-        if (in_array($dcr['status'], ['submitted', 'approved'])) {
-            throw new \Exception("Cannot add visits to a {$dcr['status']} DCR", 400);
-        }
-        
-        $visitId = $this->dcrRepo->addVisit($dcrId, $visitData);
-        
-        if (!empty($visitData['products'])) {
-            $this->dcrRepo->addProductsToVisit($visitId, $visitData['products']);
-        }
-        
-        $this->audit->log('dcr.visit.add', 'dcr_visit', $visitId, null, $visitData);
-        
-        return $this->dcrRepo->getVisitById($visitId);
-    }
-    
-    public function updateStatus(int $dcrId, int $userId, string $status, ?string $managerNotes = null): array {
-        $dcr = $this->dcrRepo->getDcrById($dcrId);
-        if (!$dcr) {
-            throw new \Exception("DCR not found", 404);
-        }
-        
-        $validStatuses = ['draft', 'submitted', 'approved', 'rejected'];
-        if (!in_array($status, $validStatuses)) {
-            throw new \Exception("Invalid status", 400);
-        }
-        
-        // Simple permission check: if transitioning from draft -> submitted, the owner can do it.
-        // If approved/rejected, typically only a manager can do it. For this scope, we let it pass but
-        // in reality you'd check roles.
-        if ($status === 'submitted' && $dcr['user_id'] != $userId) {
-            throw new \Exception("Only the owner can submit the DCR", 403);
-        }
-        
-        $this->dcrRepo->updateDcrStatus($dcrId, $status, $managerNotes);
-        
-        $newDcr = $this->dcrRepo->getDcrById($dcrId);
-        $this->audit->log('dcr.status.update', 'dcr', $dcrId, ['status' => $dcr['status']], ['status' => $status]);
-        
-        return $newDcr;
-    }
-}
+use App\Core\{Container,Database,RefGenerator,TenantContext}; use App\Core\Exceptions\{ConflictException,NotFoundException,ValidationException}; use App\Domain\Audit\AuditService; use App\Domain\Authorization\Task009ScopePolicy;
+final class DcrService { public function __construct(private Database $db,private AuditService $audit) {}
+ public function list(TenantContext$c,array$f):array{$p=[':f'=>$c->requireFranchise()];$w=['franchise_ref=:f',Container::getInstance()->make(Task009ScopePolicy::class)->dcrListClause($c,$p)];if($c->isDistributor()){$w[]='distributor_party_ref=:p';$p[':p']=$c->partyRef;}if(!empty($f['status'])){$w[]='status=:s';$p[':s']=$f['status'];}return $this->db->fetchAll('SELECT * FROM dcr_reports_v2 WHERE '.implode(' AND ',$w).' ORDER BY report_date DESC',$p);}
+ public function assertAccess(TenantContext$c,string$r):void{Container::getInstance()->make(Task009ScopePolicy::class)->assertDcr($c,$this->row($c,$r));}
+ public function create(TenantContext$c,array$d):array{$this->check($d);if(!$c->partyRef)throw new ValidationException('DCR_DISTRIBUTOR_REQUIRED','DCR requires a distributor portal user.');$date=$d['report_date'];if($this->db->fetchOne('SELECT 1 FROM dcr_reports_v2 WHERE owner_user_ref=? AND report_date=?',[$c->userRef,$date]))throw new ConflictException('DCR_ALREADY_EXISTS','A DCR already exists for this user and date.');$r=RefGenerator::generate('DCR');$this->db->transaction(function()use($c,$d,$r){$this->db->prepare('INSERT INTO dcr_reports_v2 (dcr_ref,org_ref,franchise_ref,distributor_party_ref,owner_user_ref,report_date,work_type,beat) VALUES (?,?,?,?,?,?,?,?)')->execute([$r,$c->orgRef,$c->requireFranchise(),$c->partyRef,$c->userRef,$d['report_date'],$d['work_type'],$d['beat']]);$this->hist($c,$r,null,'DRAFT',null);$this->visits($c,$r,$d['visits']??[]);});return $this->detail($c,$r);}
+ public function update(TenantContext$c,string$r,array$d):array{$b=$this->row($c,$r);$this->own($c,$b);if(!in_array($b['status'],['DRAFT','REJECTED'],true))throw new ValidationException('DCR_LOCKED','Only Draft or Rejected DCR can be edited.');$d=['report_date'=>$b['report_date'],'work_type'=>$d['work_type']??$b['work_type'],'beat'=>$d['beat']??$b['beat'],'visits'=>$d['visits']??[]];$this->check($d);$this->db->transaction(function()use($c,$r,$d){$this->db->prepare("UPDATE dcr_reports_v2 SET work_type=?,beat=?,status='DRAFT',reviewed_by_ref=NULL,reviewed_at=NULL,reviewer_remarks=NULL,updated_at=NOW() WHERE dcr_ref=?")->execute([$d['work_type'],$d['beat'],$r]);$this->visits($c,$r,$d['visits']);});return $this->detail($c,$r);}
+ public function transition(TenantContext$c,string$r,string$to,?string$m):array{$b=$this->row($c,$r);$next=['DRAFT'=>['SUBMITTED'],'REJECTED'=>['DRAFT'],'SUBMITTED'=>['APPROVED','REJECTED']];if(!in_array($to,$next[$b['status']]??[],true))throw new ValidationException('INVALID_DCR_TRANSITION','Invalid DCR lifecycle transition.');if(in_array($to,['REJECTED','DRAFT'],true)&&trim((string)$m)==='')throw new ValidationException('REMARKS_REQUIRED','Remarks are required.');if($to==='SUBMITTED'){$this->own($c,$b);if($b['work_type']==='FIELD_WORK'&&!$this->db->fetchOne('SELECT 1 FROM dcr_visits_v2 WHERE dcr_ref=?',[$r]))throw new ValidationException('DCR_VISIT_REQUIRED','Field Work DCR requires a visit.');}elseif($b['owner_user_ref']===$c->userRef)throw new ValidationException('DCR_REVIEWER_REQUIRED','Owner cannot review their own DCR.');$this->db->prepare("UPDATE dcr_reports_v2 SET status=?,submitted_at=IF(?='SUBMITTED',NOW(),submitted_at),reviewed_by_ref=IF(? IN ('APPROVED','REJECTED'),?,reviewed_by_ref),reviewed_at=IF(? IN ('APPROVED','REJECTED'),NOW(),reviewed_at),reviewer_remarks=?,updated_at=NOW() WHERE dcr_ref=?")->execute([$to,$to,$to,$c->userRef,$to,$m,$r]);$this->hist($c,$r,$b['status'],$to,$m);return $this->detail($c,$r);}
+ public function detail(TenantContext$c,string$r):array{$v=$this->row($c,$r);$v['visits']=$this->db->fetchAll('SELECT * FROM dcr_visits_v2 WHERE franchise_ref=? AND dcr_ref=? ORDER BY visit_time',[$c->requireFranchise(),$r]);$v['history']=$this->db->fetchAll('SELECT from_status,to_status,actor_ref,remarks,created_at FROM dcr_history WHERE franchise_ref=? AND dcr_ref=? ORDER BY id',[$c->requireFranchise(),$r]);return$v;}
+ private function row(TenantContext$c,string$r):array{$v=$this->db->fetchOne('SELECT * FROM dcr_reports_v2 WHERE franchise_ref=? AND dcr_ref=?',[$c->requireFranchise(),$r]);if(!$v)throw new NotFoundException('DCR_NOT_FOUND','DCR not found.');return$v;}private function own(TenantContext$c,array$v):void{if($v['owner_user_ref']!==$c->userRef)throw new NotFoundException('DCR_NOT_FOUND','DCR not found.');}private function hist(TenantContext$c,string$r,?string$f,string$t,?string$m):void{$this->db->prepare('INSERT INTO dcr_history (dcr_ref,org_ref,franchise_ref,from_status,to_status,actor_ref,remarks) VALUES (?,?,?,?,?,?,?)')->execute([$r,$c->orgRef,$c->requireFranchise(),$f,$t,$c->userRef,$m]);}private function check(array$d):void{if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',(string)($d['report_date']??''))||!in_array($d['work_type']??'',['FIELD_WORK','LEAVE','HOLIDAY','MEETING','TRAINING'],true)||trim((string)($d['beat']??''))==='')throw new ValidationException('VALIDATION_FAILED','report_date, work_type and beat are required.');}private function visits(TenantContext$c,string$r,array$rows):void{$this->db->prepare('DELETE FROM dcr_visits_v2 WHERE dcr_ref=?')->execute([$r]);foreach($rows as$v){$party=$v['party_ref']??null;$lead=$v['lead_ref']??null;if((bool)$party===(bool)$lead)throw new ValidationException('INVALID_DCR_RELATION','Each visit needs exactly one party_ref or lead_ref.');if(empty($v['visit_time'])||empty($v['visit_purpose'])||!is_array($v['products_promoted']??null))throw new ValidationException('VALIDATION_FAILED','Visit time, purpose and products are required.');$this->db->prepare('INSERT INTO dcr_visits_v2 (visit_ref,dcr_ref,org_ref,franchise_ref,party_ref,lead_ref,customer_type,visit_time,visit_purpose,products_promoted_json,samples_given_json,pob_product_ref,pob_quantity,pob_value,feedback,next_visit_date,photo_file_reference) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([RefGenerator::generate('DCV'),$r,$c->orgRef,$c->requireFranchise(),$party,$lead,$v['customer_type']??'OTHER',$v['visit_time'],$v['visit_purpose'],json_encode($v['products_promoted']),isset($v['samples_given'])?json_encode($v['samples_given']):null,$v['pob_product_ref']??null,$v['pob_quantity']??null,$v['pob_value']??null,$v['feedback']??null,$v['next_visit_date']??null,$v['photo_file_reference']??null]);}}}

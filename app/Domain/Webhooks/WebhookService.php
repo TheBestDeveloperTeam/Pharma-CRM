@@ -21,7 +21,7 @@ final class WebhookService
         $endpointSlug = bin2hex(random_bytes(16)); // 32 chars unique
         $rawSecret = bin2hex(random_bytes(32));
 
-        $appKey = $_ENV['APP_KEY'] ?? 'fallback_key_32_bytes_long_123456';
+        $appKey = $this->encryptionKey();
         $iv = random_bytes(12);
         $tag = '';
         $ciphertext = openssl_encrypt($rawSecret, 'aes-256-gcm', $appKey, OPENSSL_RAW_DATA, $iv, $tag);
@@ -64,7 +64,7 @@ final class WebhookService
             throw new NotFoundException('WEBHOOK_ENDPOINT_NOT_FOUND', 'Webhook endpoint not found or inactive.');
         }
 
-        $appKey = $_ENV['APP_KEY'] ?? 'fallback_key_32_bytes_long_123456';
+        $appKey = $this->encryptionKey();
         $blob = $source['secret_enc'];
         $iv = substr($blob, 0, 12);
         $tag = substr($blob, 12, 16);
@@ -100,5 +100,14 @@ final class WebhookService
         if (!hash_equals($expectedHmac, $provided)) {
             throw new UnauthorizedException('INVALID_SIGNATURE', 'Webhook signature verification failed.');
         }
+    }
+
+    private function encryptionKey(): string
+    {
+        $key = (string)($_ENV['APP_KEY'] ?? '');
+        if ($key === '') {
+            throw new \RuntimeException('Webhook encryption is not configured.');
+        }
+        return $key;
     }
 }

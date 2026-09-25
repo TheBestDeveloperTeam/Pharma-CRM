@@ -617,15 +617,17 @@ CREATE TABLE invoices (
   invoice_date DATE NOT NULL, due_date DATE NULL,
   bill_to_snapshot JSON NOT NULL, ship_to_snapshot JSON NOT NULL,
   subtotal DECIMAL(18,2) NOT NULL DEFAULT 0.00, discount_total DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-  gst_total DECIMAL(18,2) NOT NULL DEFAULT 0.00, grand_total DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  taxable_total DECIMAL(18,2) NOT NULL DEFAULT 0.00, cgst_total DECIMAL(18,2) NOT NULL DEFAULT 0.00, sgst_total DECIMAL(18,2) NOT NULL DEFAULT 0.00, igst_total DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  gst_total DECIMAL(18,2) NOT NULL DEFAULT 0.00, rounding_adjustment DECIMAL(18,2) NOT NULL DEFAULT 0.00, tax_policy_code VARCHAR(40) NULL, grand_total DECIMAL(18,2) NOT NULL DEFAULT 0.00,
   paid_total DECIMAL(18,2) NOT NULL DEFAULT 0.00,
   status ENUM('POSTED','CANCELLED') NOT NULL DEFAULT 'POSTED',
-  cancel_reason VARCHAR(255) NULL,
+  cancel_reason VARCHAR(255) NULL, cancelled_by_ref VARCHAR(24) NULL, cancelled_at DATETIME NULL,
   created_by_ref VARCHAR(24) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_inv_ref (franchise_ref, invoice_ref),
   UNIQUE KEY uq_inv_no (franchise_ref, invoice_no),
   INDEX idx_inv_party (franchise_ref, party_ref, invoice_date),
-  INDEX idx_inv_order (franchise_ref, order_ref),
+  UNIQUE KEY uq_inv_order (franchise_ref, order_ref),
+  INDEX idx_inv_order (franchise_ref, order_ref), INDEX idx_inv_status (franchise_ref, status, invoice_date),
   CONSTRAINT fk_inv_order FOREIGN KEY (franchise_ref, order_ref) REFERENCES orders(franchise_ref, order_ref),
   CONSTRAINT chk_inv_paid CHECK (paid_total >= 0 AND paid_total <= grand_total)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -638,8 +640,8 @@ CREATE TABLE invoice_items (
   product_name_snapshot VARCHAR(191) NOT NULL, sku_snapshot VARCHAR(64) NOT NULL, hsn_snapshot VARCHAR(16) NULL,
   batch_ref VARCHAR(24) NOT NULL, batch_no_snapshot VARCHAR(64) NOT NULL, expiry_snapshot DATE NOT NULL,
   paid_qty INT NOT NULL, free_qty INT NOT NULL DEFAULT 0,
-  rate DECIMAL(18,2) NOT NULL, discount DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-  gst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00, line_total DECIMAL(18,2) NOT NULL,
+  rate DECIMAL(18,2) NOT NULL, discount DECIMAL(18,2) NOT NULL DEFAULT 0.00, taxable_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  gst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00, cgst_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00, sgst_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00, igst_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00, total_tax DECIMAL(18,2) NOT NULL DEFAULT 0.00, line_total DECIMAL(18,2) NOT NULL,
   UNIQUE KEY uq_ii_ref (franchise_ref, item_ref),
   INDEX idx_ii_invoice (franchise_ref, invoice_ref),
   CONSTRAINT fk_ii_inv FOREIGN KEY (franchise_ref, invoice_ref) REFERENCES invoices(franchise_ref, invoice_ref)
@@ -660,14 +662,24 @@ CREATE TABLE dispatches (
   org_ref VARCHAR(24) NOT NULL, franchise_ref VARCHAR(24) NOT NULL,
   invoice_ref VARCHAR(24) NOT NULL, transporter_ref VARCHAR(24) NULL,
   lr_number VARCHAR(64) NULL, tracking_url VARCHAR(255) NULL,
-  dispatch_date DATE NULL, boxes INT NOT NULL DEFAULT 0,
+  dispatch_date DATE NULL, delivered_at DATETIME NULL, boxes INT NOT NULL DEFAULT 0,
   status ENUM('PENDING','PACKING','READY','DISPATCHED','IN_TRANSIT','DELIVERED','FAILED','RETURNED') NOT NULL DEFAULT 'PENDING',
-  remarks VARCHAR(255) NULL,
+  remarks VARCHAR(255) NULL, delivery_remarks VARCHAR(255) NULL,
   created_by_ref VARCHAR(24) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_dsp_ref (franchise_ref, dispatch_ref),
   UNIQUE KEY uq_dsp_no (franchise_ref, dispatch_no),
   INDEX idx_dsp_inv (franchise_ref, invoice_ref),
   CONSTRAINT fk_dsp_inv FOREIGN KEY (franchise_ref, invoice_ref) REFERENCES invoices(franchise_ref, invoice_ref)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE dispatch_status_history (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  org_ref VARCHAR(24) NOT NULL, franchise_ref VARCHAR(24) NOT NULL,
+  dispatch_ref VARCHAR(24) NOT NULL, from_status VARCHAR(24) NULL, to_status VARCHAR(24) NOT NULL,
+  actor_ref VARCHAR(24) NOT NULL, reason VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_dsh_dispatch (franchise_ref, dispatch_ref, created_at),
+  CONSTRAINT fk_dsh_dispatch FOREIGN KEY (franchise_ref, dispatch_ref) REFERENCES dispatches(franchise_ref, dispatch_ref)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE payments (

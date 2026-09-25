@@ -12,14 +12,20 @@ final class SqlDispatchRepository implements DispatchRepositoryInterface
     public function findByRef(string $franchiseRef, string $dispatchRef): ?array
     {
         return $this->db->fetchOne(
-            "SELECT d.*, i.invoice_no, i.party_ref, p.firm_name as party_name, t.transporter_name
+            "SELECT d.*, i.invoice_no, i.party_ref, o.sales_user_ref, p.firm_name as party_name, t.transporter_name
              FROM dispatches d
              JOIN invoices i ON d.franchise_ref = i.franchise_ref AND d.invoice_ref = i.invoice_ref
+             JOIN orders o ON i.franchise_ref = o.franchise_ref AND i.order_ref = o.order_ref
              JOIN parties p ON i.franchise_ref = p.franchise_ref AND i.party_ref = p.party_ref
              LEFT JOIN transporters t ON d.franchise_ref = t.franchise_ref AND d.transporter_ref = t.transporter_ref
              WHERE d.franchise_ref = :f AND d.dispatch_ref = :r LIMIT 1",
             [':f' => $franchiseRef, ':r' => $dispatchRef]
         );
+    }
+
+    public function findByRefForUpdate(string $franchiseRef, string $dispatchRef): ?array
+    {
+        return $this->db->fetchOne('SELECT d.*, i.order_ref, i.party_ref FROM dispatches d JOIN invoices i ON d.franchise_ref = i.franchise_ref AND d.invoice_ref = i.invoice_ref WHERE d.franchise_ref = ? AND d.dispatch_ref = ? LIMIT 1 FOR UPDATE', [$franchiseRef, $dispatchRef]);
     }
 
     public function findByInvoiceRef(string $franchiseRef, string $invoiceRef): ?array
@@ -56,9 +62,10 @@ final class SqlDispatchRepository implements DispatchRepositoryInterface
         )['cnt'];
 
         $offset = ($page - 1) * $perPage;
-        $sql = "SELECT d.*, i.invoice_no, p.firm_name as party_name, t.transporter_name
+        $sql = "SELECT d.*, i.invoice_no, i.party_ref, o.sales_user_ref, p.firm_name as party_name, t.transporter_name
                 FROM dispatches d
                 JOIN invoices i ON d.franchise_ref = i.franchise_ref AND d.invoice_ref = i.invoice_ref
+                JOIN orders o ON i.franchise_ref = o.franchise_ref AND i.order_ref = o.order_ref
                 JOIN parties p ON i.franchise_ref = p.franchise_ref AND i.party_ref = p.party_ref
                 LEFT JOIN transporters t ON d.franchise_ref = t.franchise_ref AND d.transporter_ref = t.transporter_ref
                 WHERE {$whereClause}
@@ -105,13 +112,20 @@ final class SqlDispatchRepository implements DispatchRepositoryInterface
         return $data['dispatch_ref'];
     }
 
-    public function updateStatus(string $franchiseRef, string $dispatchRef, string $status): bool
+    public function updateStatusIfCurrent(string $franchiseRef, string $dispatchRef, string $fromStatus, string $toStatus, ?string $deliveryRemarks = null): bool
     {
-        $sql = "UPDATE dispatches SET status = :s, updated_at = NOW() WHERE franchise_ref = :f AND dispatch_ref = :r";
-        return $this->db->prepare($sql)->execute([
-            ':s' => $status,
+        $sql = "UPDATE dispatches SET status = :s, delivery_remarks = :remarks, delivered_at = CASE WHEN :s = 'DELIVERED' THEN NOW() ELSE delivered_at END, updated_at = NOW() WHERE franchise_ref = :f AND dispatch_ref = :r AND status = :from";
+        $statement = $this->db->prepare($sql); $statement->execute([
+            ':s' => $toStatus, ':remarks' => $deliveryRemarks,
             ':f' => $franchiseRef,
             ':r' => $dispatchRef,
+            ':from' => $fromStatus,
         ]);
+        return $statement->rowCount() === 1;
+    }
+
+    public function history(string $franchiseRef, string $dispatchRef): array
+    {
+        return $this->db->fetchAll('SELECT * FROM dispatch_status_history WHERE franchise_ref = ? AND dispatch_ref = ? ORDER BY created_at ASC, id ASC', [$franchiseRef, $dispatchRef]);
     }
 }

@@ -504,6 +504,12 @@ components:
           type: number
           format: float
           example: 2160.00
+        taxable_total: { type: number, format: float }
+        cgst_total: { type: number, format: float }
+        sgst_total: { type: number, format: float }
+        igst_total: { type: number, format: float }
+        rounding_adjustment: { type: number, format: float }
+        tax_policy_code: { type: string, nullable: true }
         tax_breakdown:
           $ref: '#/components/schemas/TaxBreakdown'
         grand_total:
@@ -517,6 +523,25 @@ components:
         status:
           type: string
           enum: [POSTED, CANCELLED]
+
+    InvoiceLine:
+      type: object
+      properties:
+        item_ref: { type: string }
+        product_ref: { type: string }
+        product_name_snapshot: { type: string }
+        batch_no_snapshot: { type: string }
+        paid_qty: { type: integer }
+        free_qty: { type: integer }
+        rate: { type: number, format: float }
+        discount: { type: number, format: float }
+        taxable_amount: { type: number, format: float }
+        gst_percent: { type: number, format: float }
+        cgst_amount: { type: number, format: float }
+        sgst_amount: { type: number, format: float }
+        igst_amount: { type: number, format: float }
+        total_tax: { type: number, format: float }
+        line_total: { type: number, format: float }
 
     Notification:
       type: object
@@ -1167,6 +1192,85 @@ paths:
   # ============================================================================
   # Franchise Admin: Parties & Territory
   # ============================================================================
+  /admin/onboarding:
+    get:
+      summary: List distributor onboarding registrations
+      tags: [Admin Parties & Onboarding]
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Paginated registrations, server-filtered by effective ALL, OWN, TEAM, TERRITORY, or NONE scope. }, '403': { description: Missing permission. } }
+  /admin/audit:
+    get:
+      summary: List tenant audit events
+      tags: [Admin Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: entity_type, in: query, schema: { type: string } }
+        - { name: actor_ref, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses: { '200': { description: Scope-filtered audit events. }, '403': { description: Missing audit permission. } }
+  /admin/dashboard:
+    get:
+      summary: Scope-aware dashboard widget DTO
+      tags: [Admin Users]
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: Named leads, follow_ups, orders, outstanding, near_expiry and sales_team groups. }, '403': { description: Missing dashboard permission. } }
+  /admin/analytics/reports/{key}:
+    get:
+      summary: Scope-aware frontend report adapter
+      tags: [Admin Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string, enum: [lead-source, response-time, conversion, sales-team-productivity, territory-sales, party-sales, product-sales, scheme-utilization, order-status, dispatch-pending, batch-inventory, near-expiry, territory-violations, webhook-failures, whatsapp-delivery, payment-outstanding] } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: sort_by, in: query, schema: { type: string } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses: { '200': { description: Report rows with canonical pagination metadata. }, '403': { description: Missing underlying-module permission. }, '422': { description: Invalid key or business-decision-blocked report. } }
+  /admin/onboarding/{ref}:
+    get:
+      summary: Get onboarding registration and redacted KYC metadata
+      tags: [Admin Parties & Onboarding]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: Registration detail. }, '403': { description: Missing permission. }, '404': { description: Not found in tenant or permitted scope. } }
+  /admin/onboarding/{ref}/approve:
+    post:
+      summary: Approve a submitted distributor registration
+      tags: [Admin Parties & Onboarding]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: Approved registration. }, '422': { description: Invalid lifecycle transition. } }
+  /admin/onboarding/{ref}/kyc-documents/{document_ref}/verify:
+    post:
+      summary: Verify or reject a pending KYC document
+      tags: [Admin Parties & Onboarding]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }, { name: document_ref, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [VERIFIED, REJECTED] }, remarks: { type: string } } } } } }
+      responses: { '200': { description: KYC decision recorded. }, '403': { description: Missing KYC permission. }, '404': { description: Parent registration is not in permitted scope. }, '422': { description: Invalid KYC transition. } }
+  /portal/dcrs:
+    get:
+      summary: List online DCRs in the authenticated distributor context
+      tags: [Distributor Portal]
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: DCR list filtered by effective scope. TEAM is derived only from TASK-001 direct reports. } }
+    post:
+      summary: Create online DCR draft
+      tags: [Distributor Portal]
+      security: [{ bearerAuth: [] }]
+      responses: { '201': { description: DCR draft created. }, '409': { description: Duplicate owner/date. } }
+  /portal/dcrs/{ref}/status:
+    post:
+      summary: Submit, approve, reject, or reopen an online DCR
+      tags: [Distributor Portal]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: Lifecycle transition recorded. }, '403': { description: Missing action permission. }, '404': { description: DCR not in permitted scope. }, '422': { description: Invalid lifecycle or required remark missing. } }
   /admin/parties:
     get:
       summary: List customer parties / distributors
@@ -1453,11 +1557,18 @@ paths:
       responses:
         '200':
           description: Invoice details.
+  /admin/invoices/by-order/{order_ref}:
+    get:
+      summary: Get the invoice generated for an order
+      tags: [Admin Billing & Invoices]
+      parameters:
+        - { name: order_ref, in: path, required: true, schema: { type: string } }
+      responses: { '200': { description: Invoice detail. } }
 
   /admin/invoices/generate:
     post:
       summary: Generate gapless tax invoice from confirmed order
-      description: Generates deterministic invoice_no, captures pricing snapshots, and consumes stock.
+      description: Validates order/reservation state and creates an immutable tax invoice only after the configured GST place-of-supply policy resolves. Until then it returns GST_POLICY_PENDING before consuming stock or allocating an invoice number.
       tags: [Admin Billing & Invoices]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
@@ -1475,6 +1586,23 @@ paths:
         '201':
           description: Tax invoice generated.
 
+  /admin/invoices/{ref}/cancel:
+    post:
+      summary: Cancel an unpaid, undispatched posted invoice
+      tags: [Admin Billing & Invoices]
+      parameters:
+        - { name: ref, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties: { reason: { type: string, minLength: 2 } }
+      responses: { '200': { description: Invoice cancelled. } }
+
   # ============================================================================
   # Franchise Admin: Dispatches & Payments
   # ============================================================================
@@ -1487,6 +1615,7 @@ paths:
           description: Dispatches list.
     post:
       summary: Create dispatch consignment
+      description: Requires a POSTED invoice with a resolved GST policy; otherwise returns `GST_DEPENDENCY_BLOCKED`. Partial dispatch and client-selected line quantities are not supported by the approved frontend flow.
       tags: [Admin Dispatches]
       requestBody:
         required: true
@@ -1500,6 +1629,9 @@ paths:
                 transporter_ref: { type: string }
                 lr_number: { type: string, example: "LR-998877" }
                 vehicle_no: { type: string }
+                tracking_url: { type: string }
+                boxes: { type: integer, minimum: 1 }
+                remarks: { type: string }
       responses:
         '201':
           description: Dispatch recorded.
@@ -1516,6 +1648,14 @@ paths:
       responses:
         '200':
           description: Dispatch delivered.
+
+  /admin/dispatches/{ref}:
+    get:
+      summary: Get dispatch detail, delivery metadata, and lifecycle history
+      tags: [Admin Dispatches]
+      parameters:
+        - { name: ref, in: path, required: true, schema: { type: string } }
+      responses: { '200': { description: Dispatch detail. } }
 
   /admin/payments:
     get:
@@ -1552,6 +1692,26 @@ paths:
       responses:
         '201':
           description: Payment recorded and allocated.
+
+  /admin/payments/{ref}/allocations:
+    post:
+      summary: Manually allocate a payment to one invoice
+      description: Supports partial and multi-invoice allocation through explicit requests. Automatic allocation order is not assumed.
+      tags: [Admin Payments]
+      parameters:
+        - { name: ref, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice_ref, amount]
+              properties:
+                invoice_ref: { type: string }
+                amount: { type: number, format: float, minimum: 0.01 }
+      responses: { '201': { description: Allocation created. } }
 
   # ============================================================================
   # Franchise Admin: 12 Reports
@@ -1842,6 +2002,14 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delivery_remarks: { type: string }
       requestBody:
         content:
           application/json:

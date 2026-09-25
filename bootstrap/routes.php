@@ -43,6 +43,9 @@ return function(\App\Core\Router $router): void {
 
     // Franchise Admin Routes
     $router->get('/api/v1/admin/users', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'index']);
+    $router->get('/api/v1/admin/audit', [\App\Http\Controllers\Api\V1\Admin\AuditLogsController::class, 'index']);
+    $router->get('/api/v1/admin/dashboard', [\App\Http\Controllers\Api\V1\Admin\AnalyticsController::class, 'dashboard']);
+    $router->get('/api/v1/admin/analytics/reports/{key}', [\App\Http\Controllers\Api\V1\Admin\AnalyticsController::class, 'report']);
     $router->post('/api/v1/admin/users', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'create']);
     $router->get('/api/v1/admin/users/{ref}', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'show']);
     $router->patch('/api/v1/admin/users/{ref}', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'update']);
@@ -151,6 +154,20 @@ return function(\App\Core\Router $router): void {
     // Onboarding Invites & Public Registration
     $router->post('/api/v1/admin/onboarding/invite', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'invite']);
     $router->post('/api/v1/onboarding/register', [\App\Http\Controllers\Api\V1\PublicOnboardingController::class, 'register']);
+    $router->get('/api/v1/admin/onboarding', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'index']);
+    $router->get('/api/v1/admin/onboarding/{ref}', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'show']);
+    $router->post('/api/v1/admin/onboarding/{ref}/approve', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'approve']);
+    $router->post('/api/v1/admin/onboarding/{ref}/reject', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'reject']);
+    $router->post('/api/v1/admin/onboarding/{ref}/request-info', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'requestInfo']);
+    $router->post('/api/v1/admin/onboarding/{ref}/convert', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'convert']);
+    $router->post('/api/v1/admin/onboarding/{ref}/kyc-documents/{document_ref}/verify', [\App\Http\Controllers\Api\V1\Admin\OnboardingController::class, 'verifyKyc']);
+
+    // TASK-009 online DCR (offline capture/synchronisation is intentionally not implemented).
+    $router->get('/api/v1/portal/dcrs', [\App\Http\Controllers\Api\DCR\DcrController::class, 'index']);
+    $router->post('/api/v1/portal/dcrs', [\App\Http\Controllers\Api\DCR\DcrController::class, 'store']);
+    $router->get('/api/v1/portal/dcrs/{ref}', [\App\Http\Controllers\Api\DCR\DcrController::class, 'show']);
+    $router->patch('/api/v1/portal/dcrs/{ref}', [\App\Http\Controllers\Api\DCR\DcrController::class, 'update']);
+    $router->post('/api/v1/portal/dcrs/{ref}/status', [\App\Http\Controllers\Api\DCR\DcrController::class, 'status']);
 
     // Webhooks
     $router->get('/api/v1/admin/webhook-sources', [\App\Http\Controllers\Api\V1\Admin\WebhookSourcesController::class, 'index']);
@@ -180,7 +197,9 @@ return function(\App\Core\Router $router): void {
     // P4: Invoices (Billing)
     $router->get('/api/v1/admin/invoices', [\App\Http\Controllers\Api\V1\Admin\InvoicesController::class, 'index']);
     $router->post('/api/v1/admin/invoices/generate', [\App\Http\Controllers\Api\V1\Admin\InvoicesController::class, 'generate']);
+    $router->get('/api/v1/admin/invoices/by-order/{order_ref}', [\App\Http\Controllers\Api\V1\Admin\InvoicesController::class, 'byOrder']);
     $router->get('/api/v1/admin/invoices/{ref}', [\App\Http\Controllers\Api\V1\Admin\InvoicesController::class, 'show']);
+    $router->post('/api/v1/admin/invoices/{ref}/cancel', [\App\Http\Controllers\Api\V1\Admin\InvoicesController::class, 'cancel']);
 
     // P4: Dispatches
     $router->get('/api/v1/admin/dispatches', [\App\Http\Controllers\Api\V1\Admin\DispatchesController::class, 'index']);
@@ -192,6 +211,7 @@ return function(\App\Core\Router $router): void {
     $router->get('/api/v1/admin/payments', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'index']);
     $router->post('/api/v1/admin/payments', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'store']);
     $router->get('/api/v1/admin/payments/{ref}', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'show']);
+    $router->post('/api/v1/admin/payments/{ref}/allocations', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'allocate']);
 
     // P7: Reports
     $router->get('/api/v1/admin/reports/{type}', [\App\Http\Controllers\Api\V1\Admin\ReportsController::class, 'show']);

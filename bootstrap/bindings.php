@@ -173,7 +173,8 @@ return function(\App\Core\Container $container): void {
             new \App\Core\Database($c->make(\PDO::class)),
             $c->make(\App\Domain\Parties\PartyService::class),
             $c->make(\App\Domain\Leads\LeadService::class),
-            $c->make(\App\Core\Security\PasswordHasher::class)
+            $c->make(\App\Core\Security\PasswordHasher::class),
+            $c->make(\App\Domain\Audit\AuditService::class)
         );
     });
     $container->singleton(\App\Domain\Webhooks\WebhookService::class, function($c) {
@@ -258,11 +259,12 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Repositories\Contracts\InvoiceRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\OrderRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class),
-            $c->make(\App\Repositories\Contracts\StockReservationRepositoryInterface::class),
-            $c->make(\App\Repositories\Contracts\InventoryBatchRepositoryInterface::class),
-            $c->make(\App\Repositories\Contracts\InventoryMovementRepositoryInterface::class),
-            $c->make(\App\Core\SequenceService::class)
+            $c->make(\App\Core\SequenceService::class),
+            new \App\Domain\Billing\GstCalculator()
         );
+    });
+    $container->singleton(\App\Domain\Authorization\Task009ScopePolicy::class, function($c) {
+        return new \App\Domain\Authorization\Task009ScopePolicy(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Authorization\AuthorizationService::class));
     });
     $container->singleton(\App\Domain\Dispatch\DispatchService::class, function($c) {
         return new \App\Domain\Dispatch\DispatchService(
@@ -280,6 +282,9 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class),
             $c->make(\App\Core\SequenceService::class)
         );
+    });
+    $container->singleton(\App\Domain\Payments\AllocationService::class, function($c) {
+        return new \App\Domain\Payments\AllocationService(new \App\Core\Database($c->make(\PDO::class)));
     });
 
     // P5: Notifications & Scanners
@@ -311,7 +316,9 @@ return function(\App\Core\Container $container): void {
 
     $container->singleton(\App\Domain\Dcr\DcrService::class, function($c) {
         return new \App\Domain\Dcr\DcrService(
-            new \App\Core\Database($c->make(\PDO::class))
+            new \App\Core\Database($c->make(\PDO::class)),
+            $c->make(\App\Domain\Audit\AuditService::class)
         );
     });
+    $container->singleton(\App\Domain\Reports\ScopedAnalyticsService::class, function($c) { return new \App\Domain\Reports\ScopedAnalyticsService(new \App\Core\Database($c->make(\PDO::class))); });
 };
