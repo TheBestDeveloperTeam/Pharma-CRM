@@ -47,7 +47,7 @@ final class SqlSchemeRepository implements SchemeRepositoryInterface
                 'page'     => $page,
                 'per_page' => $perPage,
                 'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
+                'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
     }
@@ -109,5 +109,17 @@ final class SqlSchemeRepository implements SchemeRepositoryInterface
             'franchise_ref = ? AND scheme_ref = ?',
             [$franchiseRef, $schemeRef]
         ) > 0;
+    }
+
+    public function replaceRules(string $franchiseRef, string $schemeRef, array $rules): void
+    {
+        $this->db->transaction(function () use ($franchiseRef, $schemeRef, $rules): void {
+            $stmt = $this->db->pdo()->prepare('DELETE FROM scheme_rules WHERE franchise_ref = ? AND scheme_ref = ?');
+            $stmt->execute([$franchiseRef, $schemeRef]);
+            foreach ($rules as $rule) {
+                $rule['scheme_ref'] = $schemeRef;
+                $this->createRule($rule);
+            }
+        });
     }
 }

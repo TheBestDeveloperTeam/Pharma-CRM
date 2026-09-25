@@ -56,7 +56,7 @@ final class SqlProductPriceRepository implements ProductPriceRepositoryInterface
                 'page'     => $page,
                 'per_page' => $perPage,
                 'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
+                'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
     }
@@ -81,6 +81,16 @@ final class SqlProductPriceRepository implements ProductPriceRepositoryInterface
              ORDER BY priority ASC, effective_from DESC, id DESC",
             [$franchiseRef, $productRef, $date, $date]
         );
+    }
+
+    public function findOverlapping(string $franchiseRef, string $productRef, ?string $partyRef, ?string $tierRef, string $from, ?string $to, ?string $excludeRef = null): ?array
+    {
+        $where = ['franchise_ref = ?', 'product_ref = ?', 'status = \'ACTIVE\'', 'effective_from <= COALESCE(?, \'9999-12-31\')', '(effective_to IS NULL OR effective_to >= ?)'];
+        $params = [$franchiseRef, $productRef, $to, $from];
+        if ($partyRef !== null) { $where[] = 'party_ref = ?'; $params[] = $partyRef; $where[] = 'tier_ref IS NULL'; }
+        else { $where[] = 'tier_ref = ?'; $params[] = $tierRef; $where[] = 'party_ref IS NULL'; }
+        if ($excludeRef !== null) { $where[] = 'price_ref <> ?'; $params[] = $excludeRef; }
+        return $this->db->fetchOne('SELECT * FROM product_prices WHERE ' . implode(' AND ', $where) . ' ORDER BY priority ASC, effective_from DESC LIMIT 1', $params);
     }
 
     public function create(array $data): string

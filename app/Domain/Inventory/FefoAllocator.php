@@ -27,14 +27,15 @@ final class FefoAllocator
         string $franchiseRef,
         string $orderRef,
         array $lineItems,
-        string $actorRef
+        string $actorRef,
+        bool $transactional = true
     ): array {
         // Deadlock prevention: sort lines deterministically by product_ref
         usort($lineItems, fn($a, $b) => strcmp($a['product_ref'], $b['product_ref']));
 
         $reservationsCreated = [];
 
-        return $this->db->transaction(function() use (
+        $work = function() use (
             $orgRef, $franchiseRef, $orderRef, $lineItems, $actorRef, &$reservationsCreated
         ) {
             foreach ($lineItems as $line) {
@@ -122,30 +123,28 @@ final class FefoAllocator
             }
 
             return $reservationsCreated;
-        });
+        };
+        return $transactional ? $this->db->transaction($work) : $work();
     }
 
     /**
      * Releases active reservations back into saleable inventory (e.g. on order cancellation/rejection).
      */
-    public function releaseOrderStock(string $orgRef, string $franchiseRef, string $orderRef, string $actorRef): void
+    public function releaseOrderStock(string $orgRef, string $franchiseRef, string $orderRef, string $actorRef, bool $transactional = true): void
     {
-        $reservations = $this->reservationRepo->getActiveForOrder($franchiseRef, $orderRef);
-        if (empty($reservations)) {
-            return;
-        }
-
-        $this->db->transaction(function() use ($orgRef, $franchiseRef, $orderRef, $reservations, $actorRef) {
+        $work = function() use ($orgRef, $franchiseRef, $orderRef, $actorRef): void {
+            $reservations = $this->reservationRepo->getActiveForOrder($franchiseRef, $orderRef);
             foreach ($reservations as $res) {
                 $batch = $this->batchRepo->findByRef($franchiseRef, $res['batch_ref']);
                 if ($batch) {
-                    $this->batchRepo->updateQty(
+                    $updated = $this->batchRepo->updateQty(
                         $franchiseRef,
                         $res['batch_ref'],
                         0,
                         -(int)$res['reserved_qty'],
                         (int)$batch['version']
                     );
+                    if (!$updated) throw new ValidationException('CONCURRENT_STOCK_ERROR', "Batch {$res['batch_ref']} changed while releasing stock.");
 
                     $this->movementRepo->record([
                         'movement_ref'   => RefGenerator::generate('mov'),
@@ -162,6 +161,20 @@ final class FefoAllocator
                 }
 
                 $this->reservationRepo->release($franchiseRef, $res['reservation_ref']);
+            }
+        };
+        if ($transactional) $this->db->transaction($work); else $work();
+    }
+
+    public function consumeOrderStock(string $orgRef, string $franchiseRef, string $orderRef, string $actorRef): void
+    {
+        $this->db->transaction(function () use ($orgRef, $franchiseRef, $orderRef, $actorRef): void {
+            $reservations = $this->reservationRepo->getActiveForOrder($franchiseRef, $orderRef);
+            foreach ($reservations as $res) {
+                $batch = $this->batchRepo->findByRef($franchiseRef, $res['batch_ref']); if (!$batch) throw new ValidationException('BATCH_NOT_FOUND', 'Reserved batch not found.');
+                if (!$this->batchRepo->updateQty($franchiseRef, $res['batch_ref'], -(int)$res['reserved_qty'], -(int)$res['reserved_qty'], (int)$batch['version'])) throw new ValidationException('CONCURRENT_STOCK_ERROR', 'Batch changed while consuming reservation.');
+                if (!$this->reservationRepo->consume($franchiseRef, $res['reservation_ref'])) throw new ValidationException('RESERVATION_STATE_CHANGED', 'Reservation is no longer active.');
+                $this->movementRepo->record(['movement_ref' => RefGenerator::generate('mov'), 'org_ref' => $orgRef, 'franchise_ref' => $franchiseRef, 'batch_ref' => $res['batch_ref'], 'movement_type' => 'SALE', 'qty' => (int)$res['reserved_qty'], 'reference_type' => 'ORDER', 'reference_ref' => $orderRef, 'remarks' => "Reservation consumed for order {$orderRef}", 'created_by_ref' => $actorRef]);
             }
         });
     }

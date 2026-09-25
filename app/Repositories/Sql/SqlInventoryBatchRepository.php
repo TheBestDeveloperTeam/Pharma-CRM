@@ -27,16 +27,17 @@ final class SqlInventoryBatchRepository implements InventoryBatchRepositoryInter
 
     public function getSaleableBatches(string $franchiseRef, string $productRef, int $minShelfDays = 0): array
     {
+        $minShelfDays = max(0, min(3650, $minShelfDays));
         return $this->db->fetchAll(
             "SELECT * FROM inventory_batches
              WHERE franchise_ref = :f
                AND product_ref = :p
                AND status = 'SALEABLE'
-               AND expiry_date >= DATE_ADD(CURDATE(), INTERVAL :minDay DAY)
+               AND expiry_date >= DATE_ADD(CURDATE(), INTERVAL {$minShelfDays} DAY)
                AND (on_hand_qty - reserved_qty) > 0
              ORDER BY expiry_date ASC, manufacturing_date ASC, id ASC
              FOR UPDATE",
-            [':f' => $franchiseRef, ':p' => $productRef, ':minDay' => $minShelfDays]
+            [':f' => $franchiseRef, ':p' => $productRef]
         );
     }
 
@@ -116,5 +117,16 @@ final class SqlInventoryBatchRepository implements InventoryBatchRepositoryInter
              ORDER BY ib.expiry_date ASC",
             [':f' => $franchiseRef, ':d' => $days]
         );
+    }
+
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage): array
+    {
+        $where = ['ib.franchise_ref = ?']; $params = [$franchiseRef];
+        if (!empty($filters['product_ref'])) { $where[] = 'ib.product_ref = ?'; $params[] = $filters['product_ref']; }
+        if (!empty($filters['status'])) { $where[] = 'ib.status = ?'; $params[] = $filters['status']; }
+        if (!empty($filters['search'])) { $where[] = '(ib.batch_no LIKE ? OR p.product_name LIKE ? OR p.sku LIKE ?)'; $term = '%' . $filters['search'] . '%'; array_push($params, $term, $term, $term); }
+        $clause = implode(' AND ', $where); $total = (int)$this->db->fetchColumn("SELECT COUNT(*) FROM inventory_batches ib JOIN products p ON p.franchise_ref = ib.franchise_ref AND p.product_ref = ib.product_ref WHERE {$clause}", $params); $offset = ($page - 1) * $perPage;
+        $rows = $this->db->fetchAll("SELECT ib.*, p.product_name, p.sku, (ib.on_hand_qty - ib.reserved_qty) AS available_qty FROM inventory_batches ib JOIN products p ON p.franchise_ref = ib.franchise_ref AND p.product_ref = ib.product_ref WHERE {$clause} ORDER BY ib.expiry_date ASC, ib.id ASC LIMIT {$perPage} OFFSET {$offset}", $params);
+        return ['items' => $rows, 'total' => $total, 'page' => $page, 'per_page' => $perPage, 'total_pages' => (int)ceil($total / $perPage)];
     }
 }

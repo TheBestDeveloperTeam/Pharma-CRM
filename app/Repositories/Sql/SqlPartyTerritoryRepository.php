@@ -22,6 +22,20 @@ final class SqlPartyTerritoryRepository implements PartyTerritoryRepositoryInter
         );
     }
 
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage): array
+    {
+        $where = ['pt.franchise_ref = ?']; $params = [$franchiseRef];
+        foreach (['party_ref', 'level', 'status', 'pincode', 'district_ref'] as $field) {
+            if (!empty($filters[$field])) { $where[] = "pt.{$field} = ?"; $params[] = $filters[$field]; }
+        }
+        if (!empty($filters['territory_refs'])) { $marks = implode(',', array_fill(0, count($filters['territory_refs']), '?')); $where[] = "pt.territory_ref IN ({$marks})"; foreach ($filters['territory_refs'] as $ref) $params[] = $ref; }
+        if (!empty($filters['party_refs'])) { $marks = implode(',', array_fill(0, count($filters['party_refs']), '?')); $where[] = "pt.party_ref IN ({$marks})"; foreach ($filters['party_refs'] as $ref) $params[] = $ref; }
+        if (!empty($filters['search'])) { $where[] = '(pt.territory_ref LIKE ? OR pt.pincode LIKE ? OR pt.district_ref LIKE ?)'; $term = '%' . $filters['search'] . '%'; array_push($params, $term, $term, $term); }
+        $clause = implode(' AND ', $where); $total = (int)$this->db->fetchColumn("SELECT COUNT(*) FROM party_territories pt WHERE {$clause}", $params); $offset = ($page - 1) * $perPage;
+        $rows = $this->db->fetchAll("SELECT pt.*, p.firm_name, d.district_name FROM party_territories pt JOIN parties p ON p.franchise_ref = pt.franchise_ref AND p.party_ref = pt.party_ref LEFT JOIN districts d ON d.district_ref = pt.district_ref WHERE {$clause} ORDER BY pt.effective_from DESC, pt.created_at DESC LIMIT {$perPage} OFFSET {$offset}", $params);
+        return ['items' => $rows, 'total' => $total, 'page' => $page, 'per_page' => $perPage, 'total_pages' => (int)ceil($total / $perPage)];
+    }
+
     public function findByRef(string $franchiseRef, string $territoryRef): ?array
     {
         return $this->db->fetchOne(
@@ -135,6 +149,7 @@ final class SqlPartyTerritoryRepository implements PartyTerritoryRepositoryInter
                 JOIN parties p ON pt.franchise_ref = p.franchise_ref AND pt.party_ref = p.party_ref
                 WHERE pt.franchise_ref = :f
                   AND pt.status = 'ACTIVE'
+                  AND p.status = 'ACTIVE'
                   AND pt.effective_from <= :dt1
                   AND (pt.effective_to >= :dt2 OR pt.effective_to IS NULL)
                   AND (

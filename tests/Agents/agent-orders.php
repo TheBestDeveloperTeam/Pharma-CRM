@@ -48,7 +48,7 @@ return [
 
             \Tests\Support\Assert::true(!empty($res['order_ref']), 'Order ref created');
             \Tests\Support\Assert::true(!empty($res['order_no']), 'Order no generated');
-            \Tests\Support\Assert::eq('SUBMITTED', $res['status'], 'Status is SUBMITTED');
+            \Tests\Support\Assert::eq('DRAFT', $res['status'], 'New order starts as DRAFT');
 
             $order = $orderRepo->findByRef($frnRef, $res['order_ref']);
             \Tests\Support\Assert::eq($clientRef, $order['client_order_ref'], 'Client order ref preserved');
@@ -111,11 +111,16 @@ return [
                 null, null, null, null, 'USR-FRNADMIN000000001'
             );
 
-            $confirmRes = $orderService->confirmOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
-            \Tests\Support\Assert::eq('CONFIRMED', $confirmRes['status'], 'Order status is CONFIRMED');
+            // This fixture intentionally uses an unassigned pincode. Submit must
+            // surface the unresolved territory policy instead of reserving stock.
+            \Tests\Support\Assert::throws(
+                fn() => $orderService->submitOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001'),
+                \App\Core\Exceptions\ValidationException::class,
+                'Unassigned territory is surfaced as a pending policy decision'
+            );
 
             $activeRes = $resRepo->getActiveForOrder($frnRef, $ord['order_ref']);
-            \Tests\Support\Assert::true(count($activeRes) >= 1, 'Stock reservations created on confirm');
+            \Tests\Support\Assert::eq(0, count($activeRes), 'No stock is reserved before approved territory policy');
         }
     ]
 ];

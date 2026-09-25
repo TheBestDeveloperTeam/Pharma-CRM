@@ -25,7 +25,9 @@ final class TerritoryService
             throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         }
 
-        $level = $data['level']; // PINCODE | DISTRICT
+        $level = strtoupper((string)$data['level']); // PINCODE | DISTRICT
+        if (!in_array($level, ['PINCODE', 'DISTRICT'], true)) throw new \App\Core\Exceptions\ValidationException('INVALID_TERRITORY_LEVEL', 'level must be PINCODE or DISTRICT.');
+        if (empty($data['effective_from']) || ($data['effective_to'] ?? null) !== null && $data['effective_to'] < $data['effective_from']) throw new \App\Core\Exceptions\ValidationException('INVALID_EFFECTIVE_DATES', 'effective_to must be on or after effective_from.');
         $locationVal = $level === 'PINCODE' ? ($data['pincode'] ?? '') : ($data['district_ref'] ?? '');
         $isExclusive = !empty($data['is_exclusive']);
 
@@ -48,7 +50,21 @@ final class TerritoryService
         }
 
         $data['territory_ref'] = $data['territory_ref'] ?? RefGenerator::generate('TER');
+        $data['level'] = $level;
         return $this->territories->create($data);
+    }
+
+    public function update(string $franchiseRef, string $territoryRef, array $data): bool
+    {
+        $existing = $this->territories->findByRef($franchiseRef, $territoryRef);
+        if (!$existing) throw new NotFoundException('TERRITORY_NOT_FOUND', 'Territory allocation not found.');
+        if (isset($data['effective_from'], $data['effective_to']) && $data['effective_to'] !== null && $data['effective_to'] < $data['effective_from']) throw new \App\Core\Exceptions\ValidationException('INVALID_EFFECTIVE_DATES', 'effective_to must be on or after effective_from.');
+        if (!empty($data['is_exclusive'])) {
+            $location = $existing['level'] === 'PINCODE' ? $existing['pincode'] : $existing['district_ref'];
+            $conflict = $this->territories->checkExclusiveConflict($franchiseRef, $existing['level'], $location, $data['effective_from'] ?? $existing['effective_from'], $data['effective_to'] ?? $existing['effective_to'], $existing['party_ref']);
+            if ($conflict) throw new ConflictException('TERRITORY_CONFLICT', 'Exclusive territory overlaps another party allocation.');
+        }
+        return $this->territories->update($franchiseRef, $territoryRef, $data);
     }
 
     public function createOverride(array $data): string

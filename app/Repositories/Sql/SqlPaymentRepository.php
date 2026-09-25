@@ -4,6 +4,7 @@ namespace App\Repositories\Sql;
 
 use App\Core\Database;
 use App\Core\RefGenerator;
+use App\Core\Pagination;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 
 final class SqlPaymentRepository implements PaymentRepositoryInterface
@@ -65,12 +66,7 @@ final class SqlPaymentRepository implements PaymentRepositoryInterface
 
         $rows = $this->db->fetchAll($sql, $params);
 
-        return [
-            'data' => $rows,
-            'total' => $total,
-            'page' => $page,
-            'per_page' => $perPage,
-        ];
+        return ['data' => $rows, 'meta' => Pagination::meta($page, $perPage, $total)];
     }
 
     public function create(array $data): string

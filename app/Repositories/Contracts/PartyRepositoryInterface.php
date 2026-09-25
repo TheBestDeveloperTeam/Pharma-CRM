@@ -11,4 +11,7 @@ interface PartyRepositoryInterface
     public function update(string $franchiseRef, string $partyRef, array $data): bool;
     public function setStatus(string $franchiseRef, string $partyRef, string $status): bool;
     public function getLedgerSummary(string $franchiseRef, string $partyRef): array;
+    public function findTerritoryRefs(string $franchiseRef, string $partyRef): array;
+    public function replaceProductInterests(string $franchiseRef, string $partyRef, array $productRefs, string $orgRef, string $userRef): void;
+    public function listProductInterests(string $franchiseRef, string $partyRef): array;
 }

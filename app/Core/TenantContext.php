@@ -15,6 +15,16 @@ final class TenantContext
         public readonly ?string $partyRef,        // set for DISTRIBUTOR users
         public readonly string  $requestId,
         public readonly ?string $impersonatorRef = null,
+        /** @var array<int,string> normalized role refs/slugs */
+        public readonly array   $roles = [],
+        /** @var array<string,array<int,string>> module => actions */
+        public readonly array   $permissions = [],
+        /** @var array<string,string> module => ALL|TERRITORY|TEAM|OWN|NONE */
+        public readonly array   $scopes = [],
+        /** @var array<int,string> direct-report user refs */
+        public readonly array   $teamUserRefs = [],
+        /** @var array<int,string> assigned territory refs */
+        public readonly array   $territoryRefs = [],
     ) {}
 
     public function isSuper(): bool          { return $this->role === 'SUPER_ADMIN'; }
@@ -23,6 +33,16 @@ final class TenantContext
     public function isFranchiseAdmin(): bool { return $this->role === 'FRANCHISE_ADMIN'; }
     public function isSales(): bool          { return $this->role === 'SALES'; }
     public function isDistributor(): bool    { return $this->role === 'DISTRIBUTOR'; }
+
+    public function can(string $module, string $action): bool
+    {
+        return $this->isSuper() || in_array($action, $this->permissions[$module] ?? [], true);
+    }
+
+    public function scopeFor(string $module): string
+    {
+        return $this->scopes[$module] ?? 'NONE';
+    }
 
     public static function get(): self
     {

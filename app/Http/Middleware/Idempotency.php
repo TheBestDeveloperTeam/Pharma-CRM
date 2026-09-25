@@ -42,16 +42,17 @@ final class Idempotency
         $ctx = TenantContext::get();
         $franchiseRef = $ctx->franchiseRef ?? 'PLATFORM';
         $orgRef = $ctx->orgRef;
-
-        $bodyCanonical = json_encode($r->all());
-        $requestHash = hash('sha256', $r->method . '|' . $r->path . '|' . $bodyCanonical);
+        // The actor is part of the fingerprint so a key cannot replay another
+        // user's response inside the same tenant.
+        $bodyCanonical = json_encode($r->all(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $queryCanonical = json_encode($r->query, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $requestHash = hash('sha256', implode('|', [$ctx->userRef, $r->method, $r->path, $queryCanonical, $bodyCanonical]));
 
         $existing = $this->repo->find($franchiseRef, $key);
         if ($existing) {
             if ($existing['status'] === 'COMPLETED') {
                 if ($existing['request_hash'] === $requestHash) {
-                    $json = json_decode($existing['response_json'], true) ?? [];
-                    return Response::json((int)$existing['response_status'], $json);
+                    return Response::replay((int)$existing['response_status'], (string)$existing['response_json']);
                 }
                 throw new ConflictException('IDEMPOTENCY_MISMATCH', 'Different payload submitted with the same idempotency key.');
             }
@@ -69,8 +70,8 @@ final class Idempotency
         try {
             /** @var Response $res */
             $res = $next($r);
-            $bodyData = json_decode($res->body(), true)['data'] ?? [];
-            $this->repo->complete($franchiseRef, $key, $res->status(), $bodyData);
+            $body = json_decode($res->body(), true);
+            $this->repo->complete($franchiseRef, $key, $res->status(), is_array($body) ? $body : []);
             return $res;
         } catch (\Throwable $e) {
             $this->repo->fail($franchiseRef, $key);

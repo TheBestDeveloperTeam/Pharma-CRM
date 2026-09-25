@@ -44,7 +44,7 @@ final class SqlOrganizationRepository implements OrganizationRepositoryInterface
                 'page'     => $page,
                 'per_page' => $perPage,
                 'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
+                'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
     }

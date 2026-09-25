@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Core\{Request, Response, Container, Validation, TenantContext, RefGenerator};
+use App\Core\{Request, Response, Container, Validation, TenantContext, RefGenerator, QueryParams};
 use App\Repositories\Contracts\{
     ProductCategoryRepositoryInterface,
     PricingTierRepositoryInterface,
@@ -11,7 +11,8 @@ use App\Repositories\Contracts\{
     NotificationTemplateRepositoryInterface
 };
 use App\Domain\Audit\AuditService;
-use App\Core\Exceptions\{NotFoundException, ConflictException, ForbiddenException};
+use App\Domain\Authorization\AuthorizationService;
+use App\Core\Exceptions\{NotFoundException, ConflictException, ForbiddenException, ValidationException};
 
 final class MastersController
 {
@@ -22,6 +23,7 @@ final class MastersController
         private SystemSettingsRepositoryInterface $settings,
         private NotificationTemplateRepositoryInterface $templates,
         private AuditService $audit,
+        private AuthorizationService $authorization,
     ) {}
 
     private function getCtx(): TenantContext
@@ -40,11 +42,11 @@ final class MastersController
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
-        $page = (int) $r->query('page', '1');
-        $perPage = (int) $r->query('per_page', '50');
+        $this->authorization->requirePermission($ctx, 'masters', 'view');
+        $query = QueryParams::fromRequest($r);
+        $page = $query['page']; $perPage = $query['per_page'];
         $filters = [
-            'status' => $r->query('status', ''),
-            'search' => $r->query('search', ''),
+            'status' => $query['status'], 'search' => $query['search'],
         ];
 
         $res = $this->categories->list($franchiseRef, $filters, $page, $perPage);
@@ -55,6 +57,7 @@ final class MastersController
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'masters', 'create');
         $clean = Validation::validate($r->all(), [
             'category_name' => 'required|string',
         ]);
@@ -88,17 +91,46 @@ final class MastersController
         return Response::json(201, $data);
     }
 
+    public function showCategory(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $this->authorization->requirePermission($ctx, 'masters', 'view');
+        $row = $this->categories->findByRef($ctx->requireFranchise(), $r->param('ref'));
+        if (!$row) throw new NotFoundException('CATEGORY_NOT_FOUND', 'Category not found.');
+        return Response::json(200, $row);
+    }
+
+    public function updateCategory(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'masters', 'edit');
+        $ref = $r->param('ref'); if (!$this->categories->findByRef($franchiseRef, $ref)) throw new NotFoundException('CATEGORY_NOT_FOUND', 'Category not found.');
+        $clean = Validation::validate($r->all(), ['category_name' => 'required|string']);
+        $name = trim($clean['category_name']); $existing = $this->categories->findByName($franchiseRef, $name);
+        if ($existing && $existing['category_ref'] !== $ref) throw new ConflictException('DUPLICATE_CATEGORY', 'Category already exists.');
+        $this->categories->update($franchiseRef, $ref, ['category_name' => $name]);
+        return Response::json(200, $this->categories->findByRef($franchiseRef, $ref));
+    }
+
+    public function categoryStatus(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $franchiseRef = $ctx->requireFranchise(); $ref = $r->param('ref');
+        $this->authorization->requirePermission($ctx, 'masters', 'activateDeactivate');
+        if (!$this->categories->findByRef($franchiseRef, $ref)) throw new NotFoundException('CATEGORY_NOT_FOUND', 'Category not found.');
+        $status = strtoupper((string)$r->input('status', '')); if (!in_array($status, ['ACTIVE', 'INACTIVE'], true)) throw new ValidationException('INVALID_STATUS', 'status must be ACTIVE or INACTIVE.');
+        $this->categories->update($franchiseRef, $ref, ['status' => $status]); return Response::json(200, ['category_ref' => $ref, 'status' => $status]);
+    }
+
     // ── Pricing Tiers ───────────────────────────────────────────────────────
 
     public function listTiers(Request $r): Response
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
-        $page = (int) $r->query('page', '1');
-        $perPage = (int) $r->query('per_page', '50');
+        $this->authorization->requirePermission($ctx, 'masters', 'view');
+        $query = QueryParams::fromRequest($r);
+        $page = $query['page']; $perPage = $query['per_page'];
         $filters = [
-            'status' => $r->query('status', ''),
-            'search' => $r->query('search', ''),
+            'status' => $query['status'], 'search' => $query['search'],
         ];
 
         $res = $this->tiers->list($franchiseRef, $filters, $page, $perPage);
@@ -109,6 +141,7 @@ final class MastersController
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'masters', 'create');
         $clean = Validation::validate($r->all(), [
             'tier_name' => 'required|string',
         ]);
@@ -140,6 +173,31 @@ final class MastersController
         );
 
         return Response::json(201, $data);
+    }
+
+    public function showTier(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $this->authorization->requirePermission($ctx, 'masters', 'view');
+        $row = $this->tiers->findByRef($ctx->requireFranchise(), $r->param('ref'));
+        if (!$row) throw new NotFoundException('TIER_NOT_FOUND', 'Pricing tier not found.');
+        return Response::json(200, $row);
+    }
+
+    public function updateTier(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $franchiseRef = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'masters', 'edit');
+        $ref = $r->param('ref'); if (!$this->tiers->findByRef($franchiseRef, $ref)) throw new NotFoundException('TIER_NOT_FOUND', 'Pricing tier not found.');
+        $clean = Validation::validate($r->all(), ['tier_name' => 'required|string']); $name = strtoupper(trim($clean['tier_name']));
+        $existing = $this->tiers->findByName($franchiseRef, $name); if ($existing && $existing['tier_ref'] !== $ref) throw new ConflictException('DUPLICATE_TIER', 'Pricing tier already exists.');
+        $this->tiers->update($franchiseRef, $ref, ['tier_name' => $name]); return Response::json(200, $this->tiers->findByRef($franchiseRef, $ref));
+    }
+
+    public function tierStatus(Request $r): Response
+    {
+        $ctx = $this->getCtx(); $franchiseRef = $ctx->requireFranchise(); $ref = $r->param('ref'); $this->authorization->requirePermission($ctx, 'masters', 'activateDeactivate');
+        if (!$this->tiers->findByRef($franchiseRef, $ref)) throw new NotFoundException('TIER_NOT_FOUND', 'Pricing tier not found.');
+        $status = strtoupper((string)$r->input('status', '')); if (!in_array($status, ['ACTIVE', 'INACTIVE'], true)) throw new ValidationException('INVALID_STATUS', 'status must be ACTIVE or INACTIVE.');
+        $this->tiers->update($franchiseRef, $ref, ['status' => $status]); return Response::json(200, ['tier_ref' => $ref, 'status' => $status]);
     }
 
     // ── Transporters ────────────────────────────────────────────────────────

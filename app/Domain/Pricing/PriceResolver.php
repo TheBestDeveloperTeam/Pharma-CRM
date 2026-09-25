@@ -31,6 +31,9 @@ final class PriceResolver
                 if ($rule['party_ref'] === $partyRef) {
                     return [
                         'rate'        => (float)$rule['rate'],
+                        'mrp'         => (float)($rule['mrp'] ?? 0),
+                        'pts'         => (float)($rule['pts'] ?? 0),
+                        'net_rate'    => (float)($rule['net_rate'] ?? $rule['rate']),
                         'rate_source' => 'PARTY',
                         'price_ref'   => $rule['price_ref'],
                     ];
@@ -44,6 +47,9 @@ final class PriceResolver
                 if ($rule['tier_ref'] === $tierRef) {
                     return [
                         'rate'        => (float)$rule['rate'],
+                        'mrp'         => (float)($rule['mrp'] ?? 0),
+                        'pts'         => (float)($rule['pts'] ?? 0),
+                        'net_rate'    => (float)($rule['net_rate'] ?? $rule['rate']),
                         'rate_source' => 'TIER',
                         'price_ref'   => $rule['price_ref'],
                     ];
@@ -56,6 +62,9 @@ final class PriceResolver
         if ($prod && (float)$prod['franchise_rate'] > 0) {
             return [
                 'rate'        => (float)$prod['franchise_rate'],
+                'mrp'         => (float)($prod['mrp'] ?? 0),
+                'pts'         => (float)($prod['pts'] ?? 0),
+                'net_rate'    => (float)$prod['franchise_rate'],
                 'rate_source' => 'DEFAULT',
                 'price_ref'   => null,
             ];

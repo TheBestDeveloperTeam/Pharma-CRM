@@ -26,12 +26,26 @@ final class SqlPartyRepository implements PartyRepositoryInterface
         }
 
         if (!empty($filters['search'])) {
-            $where[] = "(firm_name LIKE :s1 OR party_code LIKE :s2 OR contact_name LIKE :s3 OR mobile LIKE :s4)";
+            $where[] = "(firm_name LIKE :s1 OR party_code LIKE :s2 OR contact_name LIKE :s3 OR mobile LIKE :s4 OR gstin LIKE :s5)";
             $searchTerm = '%' . $filters['search'] . '%';
             $params[':s1'] = $searchTerm;
             $params[':s2'] = $searchTerm;
             $params[':s3'] = $searchTerm;
             $params[':s4'] = $searchTerm;
+            $params[':s5'] = $searchTerm;
+        }
+        foreach (['party_type' => 'party_type', 'city_ref' => 'city_ref', 'area' => 'area', 'sales_user_ref' => 'sales_user_ref'] as $filter => $column) {
+            if (!empty($filters[$filter])) { $where[] = "{$column} = :{$filter}"; $params[":{$filter}"] = $filters[$filter]; }
+        }
+        if (!empty($filters['sales_user_refs'])) {
+            $placeholders = [];
+            foreach (array_values($filters['sales_user_refs']) as $i => $ref) { $key = ':sales' . $i; $placeholders[] = $key; $params[$key] = $ref; }
+            if ($placeholders) $where[] = 'sales_user_ref IN (' . implode(',', $placeholders) . ')';
+        }
+        if (!empty($filters['territory_refs'])) {
+            $placeholders = [];
+            foreach (array_values($filters['territory_refs']) as $i => $ref) { $key = ':terr' . $i; $placeholders[] = $key; $params[$key] = $ref; }
+            if ($placeholders) $where[] = "EXISTS (SELECT 1 FROM party_territories v WHERE v.franchise_ref = parties.franchise_ref AND v.party_ref = parties.party_ref AND v.territory_ref IN (" . implode(',', $placeholders) . "))";
         }
 
         $whereSql = implode(' AND ', $where);
@@ -41,7 +55,9 @@ final class SqlPartyRepository implements PartyRepositoryInterface
             $params
         );
 
-        $sql = "SELECT * FROM parties WHERE {$whereSql} ORDER BY firm_name ASC LIMIT {$perPage} OFFSET {$offset}";
+        $sort = in_array($filters['sort_by'] ?? '', ['firm_name','party_code','created_at','credit_limit','status'], true) ? $filters['sort_by'] : 'firm_name';
+        $direction = strtoupper($filters['sort_dir'] ?? '') === 'DESC' ? 'DESC' : 'ASC';
+        $sql = "SELECT * FROM parties WHERE {$whereSql} ORDER BY {$sort} {$direction} LIMIT {$perPage} OFFSET {$offset}";
         $items = $this->db->fetchAll($sql, $params);
 
         return [
@@ -73,7 +89,7 @@ final class SqlPartyRepository implements PartyRepositoryInterface
     {
         $sql = "INSERT INTO parties (
             party_ref, org_ref, franchise_ref, party_code, firm_name, contact_name,
-            mobile, email, gstin, drug_license_no,
+            mobile, whatsapp, email, gstin, drug_license_no, drug_license_validity, party_type, area, remarks,
             billing_address, shipping_address,
             state_ref, district_ref, city_ref, pincode,
             tier_ref, sales_user_ref, agreement_from, agreement_to,
@@ -81,7 +97,7 @@ final class SqlPartyRepository implements PartyRepositoryInterface
             converted_from_lead_ref, status, created_by_ref
         ) VALUES (
             :party_ref, :org_ref, :franchise_ref, :party_code, :firm_name, :contact_name,
-            :mobile, :email, :gstin, :drug_license_no,
+            :mobile, :whatsapp, :email, :gstin, :drug_license_no, :drug_license_validity, :party_type, :area, :remarks,
             :billing_address, :shipping_address,
             :state_ref, :district_ref, :city_ref, :pincode,
             :tier_ref, :sales_user_ref, :agreement_from, :agreement_to,
@@ -97,9 +113,14 @@ final class SqlPartyRepository implements PartyRepositoryInterface
             ':firm_name'                => $data['firm_name'],
             ':contact_name'             => $data['contact_name'] ?? null,
             ':mobile'                   => $data['mobile'] ?? null,
+            ':whatsapp'                 => $data['whatsapp'] ?? null,
             ':email'                    => $data['email'] ?? null,
             ':gstin'                    => $data['gstin'] ?? null,
             ':drug_license_no'          => $data['drug_license_no'] ?? null,
+            ':drug_license_validity'    => $data['drug_license_validity'] ?? null,
+            ':party_type'               => $data['party_type'] ?? null,
+            ':area'                     => $data['area'] ?? null,
+            ':remarks'                  => $data['remarks'] ?? null,
             ':billing_address'          => $data['billing_address'] ?? null,
             ':shipping_address'         => $data['shipping_address'] ?? null,
             ':state_ref'                => $data['state_ref'] ?? null,
@@ -124,7 +145,7 @@ final class SqlPartyRepository implements PartyRepositoryInterface
     public function update(string $franchiseRef, string $partyRef, array $data): bool
     {
         $allowed = [
-            'firm_name', 'contact_name', 'mobile', 'email', 'gstin', 'drug_license_no',
+            'firm_name', 'contact_name', 'mobile', 'whatsapp', 'email', 'gstin', 'drug_license_no', 'drug_license_validity', 'party_type', 'area', 'remarks',
             'billing_address', 'shipping_address', 'state_ref', 'district_ref', 'city_ref', 'pincode',
             'tier_ref', 'sales_user_ref', 'agreement_from', 'agreement_to',
             'credit_limit', 'payment_terms_days', 'opening_outstanding', 'updated_by_ref'
@@ -185,5 +206,26 @@ final class SqlPartyRepository implements PartyRepositoryInterface
             'current_outstanding' => number_format($currentOutstanding, 2, '.', ''),
             'credit_limit'        => $party['credit_limit'] ?? '0.00',
         ];
+    }
+
+    public function findTerritoryRefs(string $franchiseRef, string $partyRef): array
+    {
+        return array_column($this->db->fetchAll("SELECT territory_ref FROM party_territories WHERE franchise_ref = ? AND party_ref = ? AND status = 'ACTIVE'", [$franchiseRef, $partyRef]), 'territory_ref');
+    }
+
+    public function replaceProductInterests(string $franchiseRef, string $partyRef, array $productRefs, string $orgRef, string $userRef): void
+    {
+        $this->db->transaction(function () use ($franchiseRef, $partyRef, $productRefs, $orgRef, $userRef): void {
+            $stmt = $this->db->pdo()->prepare('DELETE FROM party_product_interests WHERE franchise_ref = ? AND party_ref = ?');
+            $stmt->execute([$franchiseRef, $partyRef]);
+            foreach (array_values(array_unique($productRefs)) as $productRef) {
+                $this->db->insert('party_product_interests', ['org_ref' => $orgRef, 'franchise_ref' => $franchiseRef, 'party_ref' => $partyRef, 'product_ref' => $productRef, 'created_by_ref' => $userRef]);
+            }
+        });
+    }
+
+    public function listProductInterests(string $franchiseRef, string $partyRef): array
+    {
+        return $this->db->fetchAll('SELECT p.product_ref, p.product_name, p.sku FROM party_product_interests i JOIN products p ON p.franchise_ref = i.franchise_ref AND p.product_ref = i.product_ref WHERE i.franchise_ref = ? AND i.party_ref = ? ORDER BY p.product_name', [$franchiseRef, $partyRef]);
     }
 }

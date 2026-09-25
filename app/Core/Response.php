@@ -14,31 +14,38 @@ final class Response
 
     // ── Factories ──────────────────────────────────────────────────────────
 
-    public static function json(
-        int|array $statusOrData,
-        int|array $dataOrMeta = [],
-        array $meta = [],
-        array $extraHeaders = []
-    ): self {
-        if (is_array($statusOrData)) {
-            if (is_int($dataOrMeta)) {
-                $status = $dataOrMeta;
-                $data   = $statusOrData;
-                $meta   = $meta;
-            } else {
-                $status = 200;
-                $data   = $statusOrData;
-                $meta   = $dataOrMeta;
+    public static function json(int|array $statusOrData, int|array $dataOrMeta = [], array $meta = [], array $extraHeaders = []): self
+    {
+        $status = is_int($statusOrData) ? $statusOrData : (is_int($dataOrMeta) ? $dataOrMeta : 200);
+        $payload = is_int($statusOrData) ? $dataOrMeta : $statusOrData;
+        $providedMeta = is_int($statusOrData) ? $meta : (is_int($dataOrMeta) ? $meta : $dataOrMeta);
+
+        if (is_array($payload) && array_key_exists('success', $payload)) {
+            if ($payload['success'] === false) {
+                $error = is_array($payload['error'] ?? null) ? $payload['error'] : [];
+                return self::error($status, (string)($error['code'] ?? ApiErrorCodes::INTERNAL_ERROR), (string)($error['message'] ?? 'Request failed.'), (array)($error['fields'] ?? []), $extraHeaders);
             }
+            $data = $payload['data'] ?? null;
+            $providedMeta = array_merge($providedMeta, is_array($payload['meta'] ?? null) ? $payload['meta'] : []);
         } else {
-            $status = $statusOrData;
-            $data   = $dataOrMeta;
+            $data = is_array($payload) && array_key_exists('data', $payload) ? $payload['data'] : $payload;
+            if (is_array($payload) && array_key_exists('meta', $payload) && is_array($payload['meta'])) {
+                $providedMeta = array_merge($providedMeta, $payload['meta']);
+            }
+            // Several existing list controllers pass a repository result as
+            // ['data' => ['data' => $items, 'meta' => $pagination]]. Unwrap
+            // that historical shape centrally so the public contract remains
+            // one envelope without a broad controller rewrite.
+            if (is_array($data) && array_key_exists('data', $data) && array_key_exists('meta', $data) && is_array($data['meta'])) {
+                $providedMeta = array_merge($providedMeta, $data['meta']);
+                $data = $data['data'];
+            }
         }
 
         $envelope = [
             'success' => $status < 400,
             'data'    => $data,
-            'meta'    => array_merge(['request_id' => RequestId::current()], $meta),
+            'meta'    => array_merge(['request_id' => RequestId::current()], $providedMeta),
         ];
 
         return new self(

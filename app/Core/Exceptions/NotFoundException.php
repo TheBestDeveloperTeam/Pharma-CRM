@@ -4,8 +4,12 @@ namespace App\Core\Exceptions;
 
 class NotFoundException extends AppException
 {
-    public function __construct(string $msg = 'Resource not found')
+    public function __construct(string $codeOrMessage = 'NOT_FOUND', ?string $message = null)
     {
-        parent::__construct('NOT_FOUND', $msg, [], 404);
+        if ($message === null) {
+            parent::__construct('NOT_FOUND', $codeOrMessage, [], 404);
+            return;
+        }
+        parent::__construct($codeOrMessage, $message, [], 404);
     }
 }

@@ -94,6 +94,9 @@ return function(\App\Core\Container $container): void {
     $container->singleton(\App\Repositories\Contracts\SchemeRepositoryInterface::class, function($c) {
         return new \App\Repositories\Sql\SqlSchemeRepository(new \App\Core\Database($c->make(\PDO::class)));
     });
+    $container->singleton(\App\Repositories\Contracts\CatalogMasterRepositoryInterface::class, function($c) {
+        return new \App\Repositories\Sql\SqlCatalogMasterRepository(new \App\Core\Database($c->make(\PDO::class)));
+    });
     $container->singleton(\App\Domain\Pricing\PriceResolver::class, function($c) {
         return new \App\Domain\Pricing\PriceResolver(
             $c->make(\App\Repositories\Contracts\ProductPriceRepositoryInterface::class),
@@ -146,6 +149,15 @@ return function(\App\Core\Container $container): void {
     });
     $container->singleton(\App\Domain\Territory\TerritoryValidator::class, function($c) {
         return new \App\Domain\Territory\TerritoryValidator(
+            $c->make(\App\Repositories\Contracts\PartyTerritoryRepositoryInterface::class),
+            new \App\Core\Database($c->make(\PDO::class))
+        );
+    });
+    $container->singleton(\App\Domain\Parties\PartyCreditService::class, function($c) {
+        return new \App\Domain\Parties\PartyCreditService($c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class));
+    });
+    $container->singleton(\App\Domain\Territory\TerritoryResolver::class, function($c) {
+        return new \App\Domain\Territory\TerritoryResolver(
             $c->make(\App\Repositories\Contracts\PartyTerritoryRepositoryInterface::class),
             new \App\Core\Database($c->make(\PDO::class))
         );
@@ -228,13 +240,16 @@ return function(\App\Core\Container $container): void {
         return new \App\Domain\Orders\OrderService(
             $c->make(\App\Repositories\Contracts\OrderRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class),
+            $c->make(\App\Domain\Parties\PartyCreditService::class),
             $c->make(\App\Repositories\Contracts\ProductRepositoryInterface::class),
             $c->make(\App\Domain\Pricing\PriceResolver::class),
             $c->make(\App\Domain\Schemes\SchemeCalculator::class),
+            $c->make(\App\Domain\Territory\TerritoryResolver::class),
             $c->make(\App\Domain\Territory\TerritoryValidator::class),
             $c->make(\App\Domain\Orders\CreditRuleService::class),
             $c->make(\App\Domain\Inventory\FefoAllocator::class),
-            $c->make(\App\Core\SequenceService::class)
+            $c->make(\App\Core\SequenceService::class),
+            new \App\Core\Database($c->make(\PDO::class))
         );
     });
     $container->singleton(\App\Domain\Billing\BillingService::class, function($c) {

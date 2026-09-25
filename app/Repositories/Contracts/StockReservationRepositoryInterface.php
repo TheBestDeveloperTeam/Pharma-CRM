@@ -8,4 +8,5 @@ interface StockReservationRepositoryInterface
     public function release(string $franchiseRef, string $reservationRef): bool;
     public function consume(string $franchiseRef, string $reservationRef): bool;
     public function getActiveForOrder(string $franchiseRef, string $orderRef): array;
+    public function listForOrder(string $franchiseRef, string $orderRef): array;
 }

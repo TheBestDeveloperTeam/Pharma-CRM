@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace App\Repositories\Sql;
 
 use App\Core\Database;
+use App\Core\Pagination;
 use App\Repositories\Contracts\ProductRepositoryInterface;
 
 final class SqlProductRepository implements ProductRepositoryInterface
@@ -60,15 +61,7 @@ final class SqlProductRepository implements ProductRepositoryInterface
             array_merge($params, [$perPage, $offset])
         );
 
-        return [
-            'data' => $rows,
-            'meta' => [
-                'page'     => $page,
-                'per_page' => $perPage,
-                'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
-            ],
-        ];
+        return ['data' => $rows, 'meta' => Pagination::meta($page, $perPage, $total)];
     }
 
     public function findByRef(string $franchiseRef, string $productRef): ?array
@@ -123,5 +116,25 @@ final class SqlProductRepository implements ProductRepositoryInterface
             [$franchiseRef, $productRef]
         );
         return $count > 0;
+    }
+
+    public function isReferenced(string $franchiseRef, string $productRef): bool
+    {
+        $checks = [
+            'order_items' => 'franchise_ref = ? AND product_ref = ?',
+            'scheme_rules' => 'franchise_ref = ? AND product_ref = ?',
+            'product_prices' => 'franchise_ref = ? AND product_ref = ?',
+        ];
+        foreach ($checks as $table => $where) {
+            if ((int)$this->db->fetchColumn("SELECT COUNT(*) FROM {$table} WHERE {$where}", [$franchiseRef, $productRef]) > 0) return true;
+        }
+        return false;
+    }
+
+    public function delete(string $franchiseRef, string $productRef): bool
+    {
+        $stmt = $this->db->pdo()->prepare('DELETE FROM products WHERE franchise_ref = ? AND product_ref = ?');
+        $stmt->execute([$franchiseRef, $productRef]);
+        return $stmt->rowCount() > 0;
     }
 }

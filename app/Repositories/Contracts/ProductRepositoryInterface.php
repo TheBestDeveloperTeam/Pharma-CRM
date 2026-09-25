@@ -12,4 +12,6 @@ interface ProductRepositoryInterface
     public function update(string $franchiseRef, string $productRef, array $data): bool;
     public function setStatus(string $franchiseRef, string $productRef, string $status): bool;
     public function isReferencedInOrders(string $franchiseRef, string $productRef): bool;
+    public function isReferenced(string $franchiseRef, string $productRef): bool;
+    public function delete(string $franchiseRef, string $productRef): bool;
 }

@@ -42,7 +42,7 @@ final class SqlPricingTierRepository implements PricingTierRepositoryInterface
                 'page'     => $page,
                 'per_page' => $perPage,
                 'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
+                'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
     }

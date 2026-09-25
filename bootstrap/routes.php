@@ -51,18 +51,40 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/users/{ref}/reset-password', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'resetPassword']);
     $router->post('/api/v1/admin/users/{ref}/unlock', [\App\Http\Controllers\Api\V1\Admin\UsersController::class, 'unlock']);
 
+    // TASK-001: normalized roles, permissions, scopes and assignments
+    $router->get('/api/v1/admin/roles', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'roles']);
+    $router->post('/api/v1/admin/roles', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'createRole']);
+    $router->get('/api/v1/admin/roles/{ref}', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'role']);
+    $router->patch('/api/v1/admin/roles/{ref}', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'updateRole']);
+    $router->post('/api/v1/admin/roles/{ref}/clone', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'cloneRole']);
+    $router->delete('/api/v1/admin/roles/{ref}', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'deleteRole']);
+    $router->get('/api/v1/admin/permissions', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'permissionCatalogue']);
+    $router->post('/api/v1/admin/users/{ref}/roles', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'assignUserRole']);
+    $router->delete('/api/v1/admin/users/{ref}/roles/{role_ref}', [\App\Http\Controllers\Api\V1\Admin\AuthorizationController::class, 'revokeUserRole']);
+
     $router->patch('/api/v1/admin/settings', [\App\Http\Controllers\Api\V1\Admin\SettingsController::class, 'update']);
     $router->get('/api/v1/admin/settings', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listSettings']);
 
     // Admin Masters (Categories, Tiers, Transporters, Templates)
     $router->get('/api/v1/admin/categories', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listCategories']);
     $router->post('/api/v1/admin/categories', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'createCategory']);
+    $router->get('/api/v1/admin/categories/{ref}', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'showCategory']);
+    $router->patch('/api/v1/admin/categories/{ref}', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'updateCategory']);
+    $router->post('/api/v1/admin/categories/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'categoryStatus']);
 
     $router->get('/api/v1/admin/tiers', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listTiers']);
     $router->post('/api/v1/admin/tiers', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'createTier']);
+    $router->get('/api/v1/admin/tiers/{ref}', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'showTier']);
+    $router->patch('/api/v1/admin/tiers/{ref}', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'updateTier']);
+    $router->post('/api/v1/admin/tiers/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'tierStatus']);
 
     $router->get('/api/v1/admin/transporters', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listTransporters']);
     $router->post('/api/v1/admin/transporters', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'createTransporter']);
+    $router->get('/api/v1/admin/catalog-masters/{category}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'index']);
+    $router->post('/api/v1/admin/catalog-masters/{category}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'create']);
+    $router->get('/api/v1/admin/catalog-masters/{category}/{ref}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'show']);
+    $router->patch('/api/v1/admin/catalog-masters/{category}/{ref}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'update']);
+    $router->post('/api/v1/admin/catalog-masters/{category}/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'status']);
 
     $router->get('/api/v1/admin/notification-templates', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listTemplates']);
 
@@ -74,16 +96,22 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/products/{ref}/activate', [\App\Http\Controllers\Api\V1\Admin\ProductsController::class, 'activate']);
     $router->post('/api/v1/admin/products/{ref}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ProductsController::class, 'deactivate']);
     $router->post('/api/v1/admin/products/{ref}/archive', [\App\Http\Controllers\Api\V1\Admin\ProductsController::class, 'archive']);
+    $router->post('/api/v1/admin/products/{ref}/restore', [\App\Http\Controllers\Api\V1\Admin\ProductsController::class, 'restore']);
+    $router->delete('/api/v1/admin/products/{ref}', [\App\Http\Controllers\Api\V1\Admin\ProductsController::class, 'delete']);
 
     // Admin Pricing
     $router->get('/api/v1/admin/prices', [\App\Http\Controllers\Api\V1\Admin\PricesController::class, 'index']);
     $router->post('/api/v1/admin/prices', [\App\Http\Controllers\Api\V1\Admin\PricesController::class, 'create']);
+    $router->get('/api/v1/admin/prices/{ref}', [\App\Http\Controllers\Api\V1\Admin\PricesController::class, 'show']);
+    $router->post('/api/v1/admin/prices/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\PricesController::class, 'status']);
     $router->post('/api/v1/admin/pricing/resolve', [\App\Http\Controllers\Api\V1\Admin\PricesController::class, 'resolve']);
 
     // Admin Schemes
     $router->get('/api/v1/admin/schemes', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'index']);
     $router->post('/api/v1/admin/schemes', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'create']);
     $router->get('/api/v1/admin/schemes/{ref}', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'show']);
+    $router->patch('/api/v1/admin/schemes/{ref}', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'update']);
+    $router->post('/api/v1/admin/schemes/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'status']);
     $router->post('/api/v1/admin/schemes/calculate', [\App\Http\Controllers\Api\V1\Admin\SchemesController::class, 'calculate']);
 
     // Admin & Sales Leads
@@ -105,12 +133,18 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/parties', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'store']);
     $router->get('/api/v1/admin/parties/{ref}', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'show']);
     $router->patch('/api/v1/admin/parties/{ref}', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'update']);
+    $router->post('/api/v1/admin/parties/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'status']);
     $router->post('/api/v1/admin/parties/{ref}/archive', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'archive']);
+    $router->post('/api/v1/admin/parties/{ref}/restore', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'restore']);
     $router->get('/api/v1/admin/parties/{ref}/ledger', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'ledger']);
 
     // Territories
     $router->get('/api/v1/admin/territories', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'index']);
     $router->post('/api/v1/admin/territories', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'store']);
+    $router->get('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'show']);
+    $router->patch('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'update']);
+    $router->post('/api/v1/admin/territories/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'status']);
+    $router->post('/api/v1/admin/territories/resolve', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'resolve']);
     $router->post('/api/v1/admin/territories/validate', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'validate']);
     $router->post('/api/v1/admin/territories/override', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'override']);
 
@@ -124,15 +158,22 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/webhooks/{slug}/leads', [\App\Http\Controllers\Api\V1\WebhookIngestionController::class, 'ingest']);
 
     // P4: Inventory Batches & Stock
+    $router->get('/api/v1/admin/inventory/batches', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'index']);
     $router->get('/api/v1/admin/inventory/batches/{ref}', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'showBatch']);
     $router->post('/api/v1/admin/inventory/receive', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'receive']);
     $router->post('/api/v1/admin/inventory/batches/{ref}/adjust', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'adjust']);
     $router->get('/api/v1/admin/inventory/near-expiry', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'nearExpiry']);
+    $router->get('/api/v1/admin/inventory/reservations/{order_ref}', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'reservations']);
+    $router->post('/api/v1/admin/inventory/reservations/{order_ref}/release', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'release']);
+    $router->post('/api/v1/admin/inventory/reservations/{order_ref}/consume', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'consume']);
 
     // P4: Orders
     $router->get('/api/v1/admin/orders', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'index']);
     $router->post('/api/v1/admin/orders', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'store']);
     $router->get('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'show']);
+    $router->patch('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'updateDraft']);
+    $router->delete('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'deleteDraft']);
+    $router->post('/api/v1/admin/orders/{ref}/submit', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'submit']);
     $router->post('/api/v1/admin/orders/{ref}/confirm', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'confirm']);
     $router->post('/api/v1/admin/orders/{ref}/cancel', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'cancel']);
 

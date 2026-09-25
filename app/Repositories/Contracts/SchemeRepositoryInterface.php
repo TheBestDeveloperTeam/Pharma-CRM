@@ -11,4 +11,5 @@ interface SchemeRepositoryInterface
     public function createScheme(array $data): string;
     public function createRule(array $data): string;
     public function updateScheme(string $franchiseRef, string $schemeRef, array $data): bool;
+    public function replaceRules(string $franchiseRef, string $schemeRef, array $rules): void;
 }

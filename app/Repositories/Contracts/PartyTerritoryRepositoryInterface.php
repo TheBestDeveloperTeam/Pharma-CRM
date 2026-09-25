@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 interface PartyTerritoryRepositoryInterface
 {
     public function listForParty(string $franchiseRef, string $partyRef): array;
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage): array;
     public function findByRef(string $franchiseRef, string $territoryRef): ?array;
     public function create(array $data): string;
     public function update(string $franchiseRef, string $territoryRef, array $data): bool;

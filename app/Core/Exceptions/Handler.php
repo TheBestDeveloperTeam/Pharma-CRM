@@ -30,31 +30,8 @@ class Handler
             // Logger unavailable — fail silently
         }
 
-        $requestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? 'req_unknown';
-
-        // Validation error — include field-level errors
-        if ($e instanceof ValidationException) {
-            return Response::json([
-                'success' => false,
-                'error'   => [
-                    'code'    => $e->getErrorCode(),
-                    'message' => $e->getMessage(),
-                    'fields'  => $e->getFieldErrors(),
-                ],
-                'meta' => ['request_id' => $requestId],
-            ], 422);
-        }
-
-        // Known application exceptions
         if ($e instanceof AppException) {
-            return Response::json([
-                'success' => false,
-                'error'   => [
-                    'code'    => $e->getErrorCode(),
-                    'message' => $e->getMessage(),
-                ],
-                'meta' => ['request_id' => $requestId],
-            ], $e->getHttpStatus());
+            return Response::error($e->statusCode(), $e->errorCode(), $e->getMessage(), $e->fields());
         }
 
         // Unknown / system errors — never expose internals
@@ -62,13 +39,6 @@ class Handler
             ? $e->getMessage()
             : 'An unexpected error occurred. Please try again.';
 
-        return Response::json([
-            'success' => false,
-            'error'   => [
-                'code'    => 'INTERNAL_ERROR',
-                'message' => $message,
-            ],
-            'meta' => ['request_id' => $requestId],
-        ], 500);
+        return Response::error(500, 'INTERNAL_ERROR', $message);
     }
 }

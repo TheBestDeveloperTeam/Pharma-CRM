@@ -65,6 +65,7 @@ class UserRepository implements UserRepositoryInterface
 
         $rows = $this->db->fetchAll(
             "SELECT user_ref, org_ref, franchise_ref, role, party_ref, full_name, email, mobile,
+                    employee_code, reporting_manager_ref, department, designation, assigned_region, joining_date,
                     must_change_password, status, last_login_at, failed_login_count, locked_until,
                     created_by_ref, created_at, updated_at
              FROM users WHERE $clause ORDER BY created_at DESC LIMIT ? OFFSET ?",
@@ -77,7 +78,7 @@ class UserRepository implements UserRepositoryInterface
                 'page'     => $page,
                 'per_page' => $perPage,
                 'total'    => $total,
-                'pages'    => (int) ceil($total / $perPage),
+                'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
     }

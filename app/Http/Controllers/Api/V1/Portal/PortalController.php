@@ -188,11 +188,7 @@ final class PortalController
             'status' => $r->query('status')
         ], $page, $perPage, $ctx->partyRef);
 
-        return Response::json(200, $res['data'], [
-            'total' => $res['total'],
-            'page' => $res['page'],
-            'per_page' => $res['per_page'],
-        ]);
+        return Response::json(200, $res['data'], $res['meta']);
     }
 
     public function showOrder(Request $r, string $ref): Response
@@ -278,6 +274,7 @@ final class PortalController
             'total' => $res['total'],
             'page' => $res['page'],
             'per_page' => $res['per_page'],
+            'total_pages' => $res['per_page'] > 0 ? (int)ceil($res['total'] / $res['per_page']) : 0,
         ]);
     }
 
@@ -296,6 +293,7 @@ final class PortalController
             'total' => $res['total'],
             'page' => $res['page'],
             'per_page' => $res['per_page'],
+            'total_pages' => $res['per_page'] > 0 ? (int)ceil($res['total'] / $res['per_page']) : 0,
         ]);
     }
 

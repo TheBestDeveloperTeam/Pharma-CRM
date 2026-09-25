@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Core\{Request, Response, Container, FileCache};
 use App\Core\Security\Jwt;
 use App\Core\Exceptions\UnauthorizedException;
+use App\Domain\Authorization\AuthorizationService;
 
 final class BearerAuth
 {
@@ -27,7 +28,8 @@ final class BearerAuth
     public function __construct(
         private Jwt $jwt,
         private \PDO $pdo,
-        private FileCache $cache
+        private FileCache $cache,
+        private AuthorizationService $authorization
     ) {}
 
     public function __invoke(Request $r, callable $next): Response
@@ -92,19 +94,21 @@ final class BearerAuth
             }
         }
 
-        // Load and check active status from cache/DB
+        // Load and check active status from DB on every request. A short-lived
+        // cache would allow a deactivated user to keep calling protected APIs.
         $userRef = $payload['sub'];
-        $user = $this->cache->remember('u_status_' . $userRef, 30, function() use ($userRef) {
-            $stmt = $this->pdo->prepare("SELECT user_ref, org_ref, franchise_ref, role, party_ref, status FROM users WHERE user_ref = :u LIMIT 1");
-            $stmt->execute([':u' => $userRef]);
-            return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
-        });
+        $stmtUser = $this->pdo->prepare("SELECT user_ref, org_ref, franchise_ref, role, party_ref, status FROM users WHERE user_ref = :u LIMIT 1");
+        $stmtUser->execute([':u' => $userRef]);
+        $user = $stmtUser->fetch(\PDO::FETCH_ASSOC) ?: null;
 
         if (!$user || $user['status'] !== 'ACTIVE') {
             throw new UnauthorizedException('USER_INACTIVE', 'User account is not active.');
         }
 
-        // Build TenantContext
+        $effective = $this->authorization->effectiveForUser($user['user_ref'], $user['franchise_ref']);
+
+        // Build TenantContext. The legacy role is retained only for surface
+        // compatibility; permissions/scopes come from normalized auth_* data.
         $tenantCtx = new \App\Core\TenantContext(
             orgRef: $user['org_ref'],
             franchiseRef: $user['franchise_ref'],
@@ -113,7 +117,12 @@ final class BearerAuth
             scope: $user['role'] === 'SUPER_ADMIN' ? 'PLATFORM' : 'FRANCHISE',
             partyRef: $user['party_ref'],
             requestId: \App\Core\RequestId::current(),
-            impersonatorRef: $payload['imp'] ?? null
+            impersonatorRef: $payload['imp'] ?? null,
+            roles: array_map(static fn(array $role): string => (string)$role['role_slug'], $effective['roles']),
+            permissions: $effective['permissions'],
+            scopes: $effective['scopes'],
+            teamUserRefs: $effective['team_user_refs'],
+            territoryRefs: $effective['territory_refs']
         );
 
         Container::getInstance()->instance(\App\Core\TenantContext::class, $tenantCtx);

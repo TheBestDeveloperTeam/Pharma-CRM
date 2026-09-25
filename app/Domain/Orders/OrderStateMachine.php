@@ -8,19 +8,15 @@ final class OrderStateMachine
 {
     private const VALID_TRANSITIONS = [
         'DRAFT'            => ['SUBMITTED', 'CANCELLED'],
-        'SUBMITTED'        => ['UNDER_REVIEW', 'CONFIRMED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
-        'UNDER_REVIEW'     => ['CONFIRMED', 'ON_HOLD', 'REJECTED', 'CANCELLED'],
-        'ON_HOLD'          => ['UNDER_REVIEW', 'CONFIRMED', 'REJECTED', 'CANCELLED'],
-        'CONFIRMED'        => ['BILLING_PENDING', 'CANCELLED'],
-        'BILLING_PENDING'  => ['BILLED', 'CANCELLED'],
-        'BILLED'           => ['PACKED', 'CANCELLED'],
-        'PACKED'           => ['DISPATCH_READY', 'CANCELLED'],
-        'DISPATCH_READY'   => ['DISPATCHED', 'CANCELLED'],
-        'DISPATCHED'       => ['DELIVERED', 'CANCELLED'],
-        'DELIVERED'        => ['COMPLETED'],
-        'COMPLETED'        => [],
+        'SUBMITTED'        => ['CONFIRMED', 'CANCELLED'],
+        // PROCESSING, DISPATCHED and DELIVERED are canonical lifecycle
+        // states. TASK-005 deliberately owns no transition into the latter
+        // two: Dispatch and Delivery will add those transitions later.
+        'CONFIRMED'        => ['PROCESSING', 'CANCELLED'],
+        'PROCESSING'       => ['CANCELLED'],
+        'DISPATCHED'       => [],
+        'DELIVERED'        => [],
         'CANCELLED'        => [],
-        'REJECTED'         => [],
     ];
 
     public static function canTransition(string $fromStatus, string $toStatus): bool

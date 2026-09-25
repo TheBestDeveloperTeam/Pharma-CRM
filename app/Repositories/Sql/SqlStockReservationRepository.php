@@ -61,4 +61,9 @@ final class SqlStockReservationRepository implements StockReservationRepositoryI
             [':f' => $franchiseRef, ':o' => $orderRef]
         );
     }
+
+    public function listForOrder(string $franchiseRef, string $orderRef): array
+    {
+        return $this->db->fetchAll('SELECT sr.*, ib.batch_no, ib.expiry_date, ib.product_ref FROM stock_reservations sr JOIN inventory_batches ib ON sr.franchise_ref = ib.franchise_ref AND sr.batch_ref = ib.batch_ref WHERE sr.franchise_ref = ? AND sr.order_ref = ? ORDER BY sr.created_at ASC, sr.id ASC', [$franchiseRef, $orderRef]);
+    }
 }

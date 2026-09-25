@@ -2,10 +2,7 @@
 declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\Validation;
-use App\Core\TenantContext;
+use App\Core\{Request, Response, Validation, TenantContext, QueryParams};
 use App\Core\Exceptions\NotFoundException;
 use App\Domain\Payments\PaymentService;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -21,19 +18,20 @@ final class PaymentsController
     {
         $ctx = TenantContext::get();
         $franchiseRef = $ctx->franchiseRef;
-        $page = (int)$r->query('page', 1);
-        $perPage = min((int)$r->query('per_page', 20), 100);
+        $query = QueryParams::fromRequest($r, ['created_at', 'payment_date', 'amount']);
+        $page = $query['page'];
+        $perPage = $query['per_page'];
 
         $partyRef = ($ctx->role === 'DISTRIBUTOR') ? $ctx->partyRef : $r->query('party_ref');
 
         $filters = [
             'mode'   => $r->query('mode'),
-            'status' => $r->query('status'),
-            'search' => $r->query('search'),
+            'status' => $query['status'],
+            'search' => $query['search'],
         ];
 
         $res = $this->paymentRepo->list($franchiseRef, $filters, $page, $perPage, $partyRef);
-        return Response::json(['data' => $res]);
+        return Response::json(200, $res['data'], $res['meta']);
     }
 
     public function show(Request $r, string $ref): Response
