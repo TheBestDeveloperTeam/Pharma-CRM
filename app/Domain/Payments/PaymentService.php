@@ -17,6 +17,7 @@ final class PaymentService
         private PaymentRepositoryInterface $paymentRepo,
         private PartyRepositoryInterface $partyRepo,
         private SequenceService $sequenceService,
+        private AllocationService $allocationService
     ) {}
 
     public function recordPayment(
@@ -66,7 +67,8 @@ final class PaymentService
 
             $allocations = [];
             if ($autoAllocate) {
-                $allocations = $this->autoAllocatePayment($franchiseRef, $paymentRef, $partyRef, $amount);
+                $result = $this->allocationService->autoAllocateFifo($franchiseRef, $paymentRef, $actorRef);
+                $allocations = $result['allocations'] ?? [];
             }
 
             return [
@@ -78,42 +80,12 @@ final class PaymentService
         });
     }
 
-    private function autoAllocatePayment(string $franchiseRef, string $paymentRef, string $partyRef, float $amount): array
+    public function bouncePayment(string $franchiseRef, string $paymentRef, string $actorRef): array
     {
-        $sqlRepo = $this->paymentRepo;
-        if (!method_exists($sqlRepo, 'getOpenInvoicesForParty')) {
-            return [];
-        }
-
-        $openInvoices = $sqlRepo->getOpenInvoicesForParty($franchiseRef, $partyRef);
-        $remainingPaise = Money::fromDecimal((string)$amount);
-        $allocations = [];
-
-        foreach ($openInvoices as $inv) {
-            if ($remainingPaise <= 0) {
-                break;
-            }
-
-            $unpaidPaise = Money::fromDecimal((string)$inv['grand_total']) - Money::fromDecimal((string)$inv['paid_total']);
-            if ($unpaidPaise <= 0) {
-                continue;
-            }
-
-            $allocPaise = min($remainingPaise, $unpaidPaise);
-            $allocFloat = (float)Money::toDecimal($allocPaise);
-
-            $allocRef = $this->paymentRepo->allocate($franchiseRef, $paymentRef, $inv['invoice_ref'], $allocFloat);
-
-            $allocations[] = [
-                'allocation_ref'   => $allocRef,
-                'invoice_ref'      => $inv['invoice_ref'],
-                'invoice_no'       => $inv['invoice_no'],
-                'allocated_amount' => $allocFloat,
-            ];
-
-            $remainingPaise -= $allocPaise;
-        }
-
-        return $allocations;
+        return $this->db->transaction(function() use ($franchiseRef, $paymentRef, $actorRef) {
+            $this->allocationService->reverse($franchiseRef, $paymentRef, $actorRef);
+            $this->db->prepare("UPDATE payments SET status = 'BOUNCED', updated_at = NOW() WHERE franchise_ref = ? AND payment_ref = ?")->execute([$franchiseRef, $paymentRef]);
+            return ['payment_ref' => $paymentRef, 'status' => 'BOUNCED'];
+        });
     }
 }

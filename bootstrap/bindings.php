@@ -272,7 +272,8 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Repositories\Contracts\DispatchRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\InvoiceRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\OrderRepositoryInterface::class),
-            $c->make(\App\Core\SequenceService::class)
+            $c->make(\App\Core\SequenceService::class),
+            $c->make(\App\Domain\Inventory\FefoAllocator::class)
         );
     });
     $container->singleton(\App\Domain\Payments\PaymentService::class, function($c) {
@@ -280,7 +281,8 @@ return function(\App\Core\Container $container): void {
             new \App\Core\Database($c->make(\PDO::class)),
             $c->make(\App\Repositories\Contracts\PaymentRepositoryInterface::class),
             $c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class),
-            $c->make(\App\Core\SequenceService::class)
+            $c->make(\App\Core\SequenceService::class),
+            $c->make(\App\Domain\Payments\AllocationService::class)
         );
     });
     $container->singleton(\App\Domain\Payments\AllocationService::class, function($c) {

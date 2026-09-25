@@ -6,11 +6,19 @@ namespace App\Domain\Dispatch;
 use App\Core\{Database, RefGenerator, SequenceService};
 use App\Core\Exceptions\{ConflictException, ValidationException};
 use App\Domain\Orders\OrderStateMachine;
+use App\Domain\Inventory\FefoAllocator;
 use App\Repositories\Contracts\{DispatchRepositoryInterface, InvoiceRepositoryInterface, OrderRepositoryInterface};
 
 final class DispatchService
 {
-    public function __construct(private Database $db, private DispatchRepositoryInterface $dispatches, private InvoiceRepositoryInterface $invoices, private OrderRepositoryInterface $orders, private SequenceService $sequences) {}
+    public function __construct(
+        private Database $db, 
+        private DispatchRepositoryInterface $dispatches, 
+        private InvoiceRepositoryInterface $invoices, 
+        private OrderRepositoryInterface $orders, 
+        private SequenceService $sequences,
+        private FefoAllocator $fefo
+    ) {}
 
     public function create(string $orgRef, string $franchiseRef, string $invoiceRef, ?string $transporterRef, string $lrNumber, ?string $trackingUrl, int $boxes, ?string $remarks, string $actorRef): array
     {
@@ -46,8 +54,13 @@ final class DispatchService
             OrderStateMachine::assertCanTransition($order['status'], 'DELIVERED');
             if (!$this->dispatches->updateStatusIfCurrent($franchiseRef, $dispatchRef, $dispatch['status'], 'DELIVERED', $remarks)) throw new ConflictException('DISPATCH_STATE_CHANGED', 'Dispatch changed concurrently.');
             if (!$this->orders->updateStatusNoTransaction($franchiseRef, $dispatch['order_ref'], $order['status'], 'DELIVERED', $actorRef, $remarks ?? 'Delivery confirmed')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order changed concurrently.');
+            
+            // Consume the stock reservations now that delivery is successful
+            $this->fefo->consumeOrderStock($orgRef, $franchiseRef, $dispatch['order_ref'], $actorRef);
+
             $this->db->insert('dispatch_status_history', ['org_ref' => $orgRef, 'franchise_ref' => $franchiseRef, 'dispatch_ref' => $dispatchRef, 'from_status' => $dispatch['status'], 'to_status' => 'DELIVERED', 'actor_ref' => $actorRef, 'reason' => $remarks]);
             return ['dispatch_ref' => $dispatchRef, 'status' => 'DELIVERED'];
         });
     }
+}
 }

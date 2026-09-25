@@ -2066,3 +2066,95 @@ paths:
       responses:
         '200': { description: Role revoked. }
         '403': { description: Last privileged user protection or missing permission. }
+
+  /admin/dashboard:
+    get:
+      summary: Get scoped dashboard analytics
+      tags: [Admin Reports]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Dashboard data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: object
+                    properties:
+                      leads: { type: object }
+                      follow_ups: { type: object }
+                      orders: { type: object }
+                      outstanding: { type: object }
+                      near_expiry: { type: object }
+                      sales_team: { type: object }
+
+  /admin/reports/{key}:
+    get:
+      summary: Stream analytical reports
+      tags: [Admin Reports]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string, enum: [lead-source, response-time, conversion, sales-team-productivity, territory-sales, party-sales, product-sales, scheme-utilization, order-status, dispatch-pending, batch-inventory, near-expiry, territory-violations, webhook-failures, whatsapp-delivery] }
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - $ref: '#/components/parameters/DateFromParam'
+        - $ref: '#/components/parameters/DateToParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortDirParam'
+      responses:
+        '200':
+          description: Paginated report data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { type: object }
+                  meta: { type: object }
+
+  /admin/onboarding:
+    get:
+      summary: List onboarding applications
+      tags: [Admin Parties & Onboarding]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Onboarding applications list. }
+
+  /portal/dcrs:
+    get:
+      summary: List Daily Call Reports (DCR)
+      tags: [Distributor Portal]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of DCRs. }
+
+  /admin/webhook-sources:
+    get:
+      summary: List webhook sources
+      tags: [Webhooks]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of webhook sources. }
+
+  /notifications:
+    get:
+      summary: List notifications
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: List of notifications. }
+
+  /portal/profile:
+    get:
+      summary: Get distributor profile
+      tags: [Distributor Portal]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Profile data. }
