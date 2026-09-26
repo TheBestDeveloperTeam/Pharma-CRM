@@ -137,3 +137,17 @@ Do not begin broad frontend API integration. A limited adapter design/review may
 ## TASK-010A Follow-up
 
 TASK-010A.1 added `ScopedAnalyticsService`, dashboard and report endpoints, and 15 registered non-financial report mappings. `payment-outstanding` remains blocked by the ageing/payment decision. Pagination/safe sort and full frontend DTO/OpenAPI alignment remain incomplete.
+
+TASK-010A.3 replaces the generic mappings with explicit frontend DTO aliases, including dashboard chart series, response duration/SLA result, rep productivity, territory state, and MRP-based stock value. The dashboard/report OpenAPI schemas now enumerate those response fields. Payment/outstanding remains the sole business-decision-blocked report.
+
+TASK-011D.4 finalizes the production invoice GST path: state-based jurisdiction, Product GST authority, component-rate/amount snapshots, immutable header totals, and static production-call-path verification. Invoice reservations remain untouched until Dispatch. PHP, Composer, and MySQL/MariaDB are unavailable for runtime validation.
+
+## Backend closure addendum
+
+The financial/dashboard/report closure is now implemented at source level. PDC list, count, direct detail, registration, realization, bounce, and cancellation use tenant predicates plus `PartyScopePredicate`; mutation targets are selected `FOR UPDATE`. Payment allocation is party-scoped, tenant-scoped, audited, and transaction-locked with partial/multi-invoice/multi-payment support and deterministic over-allocation rejection. Payment reversal remains the reverse-allocation authority.
+
+`OutstandingService` supplies the only invoice-wise balance calculation for outstanding API, dashboard, and `payment-outstanding`. It respects active allocations, reversal state, fully paid invoice exclusion, due-date-only ageing, ALL/OWN/TEAM/TERRITORY/NONE, pagination, and a sorting allow-list. `payment-outstanding` is the sixteenth analytics report, returns the frontend row fields `invoiceNumber`, `partyName`, `dueDate`, `balance`, `bucket`, and `status`, and is protected by `payments.view`.
+
+Credit exposure uses authoritative opening balance, posted invoice open balance, uninvoiced confirmed/reserved orders, and realized unallocated advances without invoice/order double counting. The actual order-confirmation transaction locks and rechecks party exposure, blocking only a strict limit breach. Dashboard financial output is sourced from the same service and is hidden from callers without `payments.view`.
+
+OpenAPI now documents outstanding and payment-outstanding DTOs, ageing filters/sort fields, and the order-confirmation credit-limit response. Source contracts cover PDC scope, allocation/invariants, outstanding/ageing/report/dashboard wiring, credit enforcement, and route/OpenAPI DTO parity. Runtime validation remains BLOCKED only because PHP, Composer, and MySQL/MariaDB executables are absent in this environment.

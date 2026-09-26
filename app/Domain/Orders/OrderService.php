@@ -181,7 +181,8 @@ final class OrderService
             $facts = $this->validateAuthoritative($franchiseRef, $order, true);
             if ($facts['territory_status'] === TerritoryResolver::UNASSIGNED) throw new ValidationException('TERRITORY_POLICY_PENDING', 'Territory is UNASSIGNED; Order behavior requires approved policy.');
             if ($facts['territory_status'] === TerritoryResolver::CONFLICT) throw new ValidationException('TERRITORY_CONFLICT', 'Territory resolution returned CONFLICT.');
-            if ($facts['credit']['credit_breached']) throw new ValidationException('CREDIT_POLICY_PENDING', 'Credit breach detected; breach action requires approved policy.');
+            $credit = $this->partyCreditService->checkForConfirmation($franchiseRef, $order['party_ref'], (string)$order['grand_total']);
+            if ($credit['credit_breached']) throw new ValidationException('CREDIT_LIMIT_EXCEEDED', 'Projected exposure exceeds the party credit limit.');
             $allocLines = [];
             foreach ($facts['items'] as $it) $allocLines[] = ['order_item_ref' => $it['item_ref'], 'product_ref' => $it['product_ref'], 'qty' => (int)$it['paid_qty'] + (int)$it['free_qty'], 'min_shelf_days' => (int)($it['shelf_life_days'] ?? 0)];
             $reservations = $this->fefoAllocator->allocate($orgRef, $franchiseRef, $orderRef, $allocLines, $actorRef, false);
@@ -198,7 +199,6 @@ final class OrderService
         $facts = $this->validateAuthoritative($franchiseRef, $order, false);
         if ($facts['territory_status'] === TerritoryResolver::UNASSIGNED) throw new ValidationException('TERRITORY_POLICY_PENDING', 'Territory is UNASSIGNED; Order behavior requires approved policy.');
         if ($facts['territory_status'] === TerritoryResolver::CONFLICT) throw new ValidationException('TERRITORY_CONFLICT', 'Territory resolution returned CONFLICT.');
-        if ($facts['credit']['credit_breached']) throw new ValidationException('CREDIT_POLICY_PENDING', 'Credit breach detected; breach action requires approved policy.');
         if (!$this->orderRepo->updateStatusIfCurrent($franchiseRef, $orderRef, 'DRAFT', 'SUBMITTED', $actorRef, 'Order submitted')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order state changed concurrently.');
         return ['order_ref' => $orderRef, 'status' => 'SUBMITTED'];
     }
@@ -225,7 +225,6 @@ final class OrderService
     {
         $party = $this->partyRepo->findByRef($franchiseRef, $order['party_ref']); if (!$party || $party['status'] !== 'ACTIVE') throw new ValidationException('INVALID_PARTY', 'Party is inactive or does not exist.');
         $pincode = $order['shipping_pincode'] ?? $party['pincode']; $territory = $pincode ? $this->territoryResolver->resolve($franchiseRef, $order['party_ref'], $pincode, null, date('Y-m-d')) : ['status' => TerritoryResolver::UNASSIGNED];
-        $credit = $this->partyCreditService->check($franchiseRef, $order['party_ref'], (float)($order['grand_total'] ?? 0));
         $items = $this->orderRepo->getItems($franchiseRef, $order['order_ref']); if (!$items) throw new ValidationException('EMPTY_ORDER', 'Order has no items.');
         foreach ($items as $item) {
             $product = $this->productRepo->findByRef($franchiseRef, $item['product_ref']);
@@ -239,7 +238,7 @@ final class OrderService
                 throw new ValidationException('STALE_ORDER_SCHEME', 'Order scheme eligibility changed; refresh the draft before continuing.');
             }
         }
-        return ['party' => $party, 'territory_status' => $territory['status'], 'credit' => $credit, 'items' => $items];
+        return ['party' => $party, 'territory_status' => $territory['status'], 'items' => $items];
     }
 
     private function priceItems(string $franchiseRef, string $partyRef, ?string $tierRef, array $rawItems): array

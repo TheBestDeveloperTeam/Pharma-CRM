@@ -86,12 +86,12 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
         $this->db->transaction(function() use ($invoiceData, $items) {
             $sqlInv = "INSERT INTO invoices (
                 invoice_ref, invoice_no, org_ref, franchise_ref, order_ref,
-                party_ref, invoice_date, due_date, bill_to_snapshot, ship_to_snapshot,
+                party_ref, invoice_date, due_date, supplier_state_ref, place_of_supply_state_ref, bill_to_snapshot, ship_to_snapshot,
                 subtotal, discount_total, taxable_total, cgst_total, sgst_total, igst_total, gst_total,
                 rounding_adjustment, grand_total, tax_policy_code, paid_total, status, created_by_ref
             ) VALUES (
                 :invoice_ref, :invoice_no, :org_ref, :franchise_ref, :order_ref,
-                :party_ref, :invoice_date, :due_date, :bill_to_snapshot, :ship_to_snapshot,
+                :party_ref, :invoice_date, :due_date, :supplier_state_ref, :place_of_supply_state_ref, :bill_to_snapshot, :ship_to_snapshot,
                 :subtotal, :discount_total, :taxable_total, :cgst_total, :sgst_total, :igst_total, :gst_total,
                 :rounding_adjustment, :grand_total, :tax_policy_code, 0.00, 'POSTED', :created_by_ref
             )";
@@ -105,6 +105,8 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                 ':party_ref'         => $invoiceData['party_ref'],
                 ':invoice_date'      => $invoiceData['invoice_date'],
                 ':due_date'          => $invoiceData['due_date'] ?? null,
+                ':supplier_state_ref'=> $invoiceData['supplier_state_ref'] ?? null,
+                ':place_of_supply_state_ref'=> $invoiceData['place_of_supply_state_ref'] ?? null,
                 ':bill_to_snapshot'  => json_encode($invoiceData['bill_to_snapshot'], JSON_THROW_ON_ERROR),
                 ':ship_to_snapshot'  => json_encode($invoiceData['ship_to_snapshot'], JSON_THROW_ON_ERROR),
                 ':subtotal'          => $invoiceData['subtotal'],
@@ -124,12 +126,12 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                 item_ref, org_ref, franchise_ref, invoice_ref, order_item_ref,
                 product_ref, product_name_snapshot, sku_snapshot, hsn_snapshot,
                 batch_ref, batch_no_snapshot, expiry_snapshot, paid_qty,
-                free_qty, rate, discount, taxable_amount, gst_percent, cgst_amount, sgst_amount, igst_amount, total_tax, line_total
+                free_qty, rate, discount, taxable_amount, gst_percent, cgst_percent, sgst_percent, igst_percent, cgst_amount, sgst_amount, igst_amount, total_tax, line_total
             ) VALUES (
                 :item_ref, :org_ref, :franchise_ref, :invoice_ref, :order_item_ref,
                 :product_ref, :product_name_snapshot, :sku_snapshot, :hsn_snapshot,
                 :batch_ref, :batch_no_snapshot, :expiry_snapshot, :paid_qty,
-                :free_qty, :rate, :discount, :taxable_amount, :gst_percent, :cgst_amount, :sgst_amount, :igst_amount, :total_tax, :line_total
+                :free_qty, :rate, :discount, :taxable_amount, :gst_percent, :cgst_percent, :sgst_percent, :igst_percent, :cgst_amount, :sgst_amount, :igst_amount, :total_tax, :line_total
             )";
 
             $stmtItem = $this->db->prepare($sqlItem);
@@ -153,6 +155,9 @@ final class SqlInvoiceRepository implements InvoiceRepositoryInterface
                     ':discount'              => $it['discount'] ?? 0.00,
                     ':taxable_amount'        => $it['taxable_amount'] ?? $it['line_total'],
                     ':gst_percent'           => $it['gst_percent'] ?? 0.00,
+                    ':cgst_percent'          => $it['cgst_percent'] ?? 0.00,
+                    ':sgst_percent'          => $it['sgst_percent'] ?? 0.00,
+                    ':igst_percent'          => $it['igst_percent'] ?? 0.00,
                     ':cgst_amount'           => $it['cgst_amount'] ?? 0.00,
                     ':sgst_amount'           => $it['sgst_amount'] ?? 0.00,
                     ':igst_amount'           => $it['igst_amount'] ?? 0.00,

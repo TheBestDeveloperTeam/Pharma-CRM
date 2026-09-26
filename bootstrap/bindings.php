@@ -154,7 +154,7 @@ return function(\App\Core\Container $container): void {
         );
     });
     $container->singleton(\App\Domain\Parties\PartyCreditService::class, function($c) {
-        return new \App\Domain\Parties\PartyCreditService($c->make(\App\Repositories\Contracts\PartyRepositoryInterface::class));
+        return new \App\Domain\Parties\PartyCreditService(new \App\Core\Database($c->make(\PDO::class)));
     });
     $container->singleton(\App\Domain\Territory\TerritoryResolver::class, function($c) {
         return new \App\Domain\Territory\TerritoryResolver(
@@ -286,8 +286,12 @@ return function(\App\Core\Container $container): void {
         );
     });
     $container->singleton(\App\Domain\Payments\AllocationService::class, function($c) {
-        return new \App\Domain\Payments\AllocationService(new \App\Core\Database($c->make(\PDO::class)));
+        return new \App\Domain\Payments\AllocationService(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Authorization\PartyScopePredicate::class));
     });
+    $container->singleton(\App\Domain\Payments\OutstandingService::class, function($c) { return new \App\Domain\Payments\OutstandingService(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Authorization\PartyScopePredicate::class)); });
+    $container->singleton(\App\Domain\Payments\PaymentReversalService::class, function($c) { return new \App\Domain\Payments\PaymentReversalService(new \App\Core\Database($c->make(\PDO::class))); });
+    $container->singleton(\App\Domain\Authorization\PartyScopePredicate::class, function($c) { return new \App\Domain\Authorization\PartyScopePredicate(); });
+    $container->singleton(\App\Domain\Payments\PdcService::class, function($c) { return new \App\Domain\Payments\PdcService(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Core\SequenceService::class), $c->make(\App\Domain\Authorization\PartyScopePredicate::class)); });
 
     // P5: Notifications & Scanners
     $container->singleton(\App\Domain\Notifications\NotificationService::class, function($c) {
@@ -322,5 +326,5 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Domain\Audit\AuditService::class)
         );
     });
-    $container->singleton(\App\Domain\Reports\ScopedAnalyticsService::class, function($c) { return new \App\Domain\Reports\ScopedAnalyticsService(new \App\Core\Database($c->make(\PDO::class))); });
+    $container->singleton(\App\Domain\Reports\ScopedAnalyticsService::class, function($c) { return new \App\Domain\Reports\ScopedAnalyticsService(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Payments\OutstandingService::class)); });
 };
