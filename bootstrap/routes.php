@@ -212,6 +212,14 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/payments', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'store']);
     $router->get('/api/v1/admin/payments/{ref}', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'show']);
     $router->post('/api/v1/admin/payments/{ref}/allocations', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'allocate']);
+    $router->post('/api/v1/admin/payments/{ref}/reverse', [\App\Http\Controllers\Api\V1\Admin\PaymentsController::class, 'reverse']);
+    $router->get('/api/v1/admin/outstanding', [\App\Http\Controllers\Api\V1\Admin\OutstandingController::class, 'index']);
+    $router->get('/api/v1/admin/pdc', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'index']);
+    $router->post('/api/v1/admin/pdc', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'store']);
+    $router->get('/api/v1/admin/pdc/{ref}', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'show']);
+    $router->post('/api/v1/admin/pdc/{ref}/realize', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'realize']);
+    $router->post('/api/v1/admin/pdc/{ref}/bounce', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'bounce']);
+    $router->post('/api/v1/admin/pdc/{ref}/cancel', [\App\Http\Controllers\Api\V1\Admin\PdcsController::class, 'cancel']);
 
     // P7: Reports
     $router->get('/api/v1/admin/reports/{type}', [\App\Http\Controllers\Api\V1\Admin\ReportsController::class, 'show']);

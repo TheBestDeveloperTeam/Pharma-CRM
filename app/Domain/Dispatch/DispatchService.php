@@ -6,11 +6,12 @@ namespace App\Domain\Dispatch;
 use App\Core\{Database, RefGenerator, SequenceService};
 use App\Core\Exceptions\{ConflictException, ValidationException};
 use App\Domain\Orders\OrderStateMachine;
+use App\Domain\Inventory\FefoAllocator;
 use App\Repositories\Contracts\{DispatchRepositoryInterface, InvoiceRepositoryInterface, OrderRepositoryInterface};
 
 final class DispatchService
 {
-    public function __construct(private Database $db, private DispatchRepositoryInterface $dispatches, private InvoiceRepositoryInterface $invoices, private OrderRepositoryInterface $orders, private SequenceService $sequences) {}
+    public function __construct(private Database $db, private DispatchRepositoryInterface $dispatches, private InvoiceRepositoryInterface $invoices, private OrderRepositoryInterface $orders, private SequenceService $sequences, private FefoAllocator $fefo) {}
 
     public function create(string $orgRef, string $franchiseRef, string $invoiceRef, ?string $transporterRef, string $lrNumber, ?string $trackingUrl, int $boxes, ?string $remarks, string $actorRef): array
     {
@@ -26,6 +27,9 @@ final class DispatchService
             $order = $this->orders->findByRefForUpdate($franchiseRef, $invoice['order_ref']);
             if (!$order) throw new ValidationException('ORDER_NOT_FOUND', 'Linked order was not found.');
             OrderStateMachine::assertCanTransition($order['status'], 'DISPATCHED');
+            // Reservation remains intact through invoicing and is consumed once,
+            // inside this dispatch transaction, using the original FEFO allocation.
+            $this->fefo->consumeOrderStock($orgRef, $franchiseRef, $invoice['order_ref'], $actorRef);
             $ref = RefGenerator::generate('dsp'); $number = $this->sequences->next($franchiseRef, 'DISPATCH', date('Y-m-d'));
             $this->dispatches->create(['dispatch_ref' => $ref, 'dispatch_no' => $number, 'org_ref' => $orgRef, 'franchise_ref' => $franchiseRef, 'invoice_ref' => $invoiceRef, 'transporter_ref' => $transporterRef, 'lr_number' => $lrNumber, 'tracking_url' => $trackingUrl, 'dispatch_date' => date('Y-m-d'), 'boxes' => $boxes, 'status' => 'DISPATCHED', 'remarks' => $remarks, 'created_by_ref' => $actorRef]);
             if (!$this->orders->updateStatusNoTransaction($franchiseRef, $invoice['order_ref'], $order['status'], 'DISPATCHED', $actorRef, "Dispatch {$number}")) throw new ConflictException('ORDER_STATE_CHANGED', 'Order changed concurrently.');

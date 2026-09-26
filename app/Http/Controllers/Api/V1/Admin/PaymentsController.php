@@ -6,6 +6,7 @@ use App\Core\{Request, Response, Validation, TenantContext, QueryParams};
 use App\Core\Exceptions\NotFoundException;
 use App\Domain\Payments\PaymentService;
 use App\Domain\Payments\AllocationService;
+use App\Domain\Payments\PaymentReversalService;
 use App\Domain\Authorization\AuthorizationService;
 use App\Domain\Audit\AuditService;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -16,6 +17,7 @@ final class PaymentsController
         private PaymentRepositoryInterface $paymentRepo,
         private PaymentService $paymentService,
         private AllocationService $allocations,
+        private PaymentReversalService $reversals,
         private AuthorizationService $authorization,
         private AuditService $audit,
     ) {}
@@ -88,7 +90,18 @@ final class PaymentsController
     {
         $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'payments', 'allocate');
         $data = Validation::validate($r->all(), ['invoice_ref' => 'required|string', 'amount' => 'required|numeric']);
-        $paymentRef = (string)$r->param('ref'); $result = $this->allocations->allocate($ctx->requireFranchise(), $paymentRef, $data['invoice_ref'], (string)$data['amount'], $ctx->userRef);
+        $paymentRef = (string)$r->param('ref'); $result = $this->allocations->allocate($ctx, $paymentRef, $data['invoice_ref'], (string)$data['amount'], $ctx->userRef);
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.allocated', entityType: 'payment_allocation', entityRef: $result['allocation_ref'], after: $result); return Response::json(201, $result);
+    }
+
+    public function reverse(Request $r): Response
+    {
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'payments', 'reverse');
+        $data = Validation::validate($r->all(), ['reason' => 'required|string|min:2', 'idempotency_key' => 'required|string']);
+        $paymentRef = (string)$r->param('ref'); $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $paymentRef);
+        if (!$payment) throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
+        $result = $this->reversals->reverse($ctx->requireFranchise(), $paymentRef, $ctx->userRef, $data['reason'], $data['idempotency_key']);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.reversed', entityType: 'payment', entityRef: $paymentRef, before: $payment, after: $result, reason: $data['reason']);
+        return Response::json(201, $result);
     }
 }

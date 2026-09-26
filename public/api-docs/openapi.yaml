@@ -496,6 +496,8 @@ components:
           type: string
           format: date
           example: "2026-10-20"
+        supplier_state_ref: { type: string, nullable: true }
+        place_of_supply_state_ref: { type: string, nullable: true }
         subtotal:
           type: number
           format: float
@@ -510,6 +512,7 @@ components:
         igst_total: { type: number, format: float }
         rounding_adjustment: { type: number, format: float }
         tax_policy_code: { type: string, nullable: true }
+        items: { type: array, items: { $ref: '#/components/schemas/InvoiceLine' } }
         tax_breakdown:
           $ref: '#/components/schemas/TaxBreakdown'
         grand_total:
@@ -537,11 +540,55 @@ components:
         discount: { type: number, format: float }
         taxable_amount: { type: number, format: float }
         gst_percent: { type: number, format: float }
+        cgst_percent: { type: number, format: float }
+        sgst_percent: { type: number, format: float }
+        igst_percent: { type: number, format: float }
         cgst_amount: { type: number, format: float }
         sgst_amount: { type: number, format: float }
         igst_amount: { type: number, format: float }
         total_tax: { type: number, format: float }
         line_total: { type: number, format: float }
+
+    Pdc:
+      type: object
+      properties:
+        pdc_ref: { type: string }
+        party_ref: { type: string }
+        amount: { type: number, format: float }
+        cheque_number: { type: string }
+        bank_name: { type: string, nullable: true }
+        due_date: { type: string, format: date, nullable: true }
+        status: { type: string, enum: [PENDING, REALIZED, BOUNCED, CANCELLED] }
+        payment_ref: { type: string, nullable: true }
+        realized_at: { type: string, format: date-time, nullable: true }
+        bounced_at: { type: string, format: date-time, nullable: true }
+
+    OutstandingInvoice:
+      type: object
+      required: [invoiceRef, invoiceNumber, partyRef, partyName, invoiceAmount, allocatedAmount, balance, bucket, status]
+      properties:
+        invoiceRef: { type: string }
+        invoiceNumber: { type: string }
+        partyRef: { type: string }
+        partyName: { type: string }
+        invoiceAmount: { type: number, format: float }
+        allocatedAmount: { type: number, format: float }
+        balance: { type: number, format: float }
+        dueDate: { type: string, format: date, nullable: true, description: Authoritative invoice due date; never inferred by the API. }
+        daysOverdue: { type: integer, nullable: true }
+        bucket: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] }
+        status: { type: string, enum: [Unpaid, Partial] }
+
+    PaymentOutstandingRow:
+      type: object
+      required: [invoiceNumber, partyName, dueDate, balance, bucket, status]
+      properties:
+        invoiceNumber: { type: string }
+        partyName: { type: string }
+        dueDate: { type: string, format: date, nullable: true }
+        balance: { type: number, format: float }
+        bucket: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] }
+        status: { type: string, enum: [Unpaid, Partial] }
 
     Notification:
       type: object
@@ -586,6 +633,60 @@ components:
 
 security:
   - bearerAuth: []
+
+    DashboardResponse:
+      type: object
+      required: [leads, follow_ups, orders, outstanding, near_expiry, sales_team]
+      properties:
+        leads: { $ref: '#/components/schemas/DashboardLeads' }
+        follow_ups: { $ref: '#/components/schemas/DashboardFollowUps' }
+        orders: { $ref: '#/components/schemas/DashboardOrders' }
+        outstanding: { $ref: '#/components/schemas/DashboardOutstanding' }
+        near_expiry: { $ref: '#/components/schemas/DashboardNearExpiry' }
+        sales_team: { $ref: '#/components/schemas/DashboardSalesTeam' }
+    DashboardLeads:
+      type: object
+      properties: { newToday: {type: integer}, unassignedCount: {type: integer}, slaBreachedCount: {type: integer}, slaThresholdHours: {type: integer}, slaTrend: {type: array, items: {type: object, properties: {date: {type: string}, totalCount: {type: integer}, breachedCount: {type: integer}}}}, conversionSeries: {type: array, items: {type: object, properties: {status: {type: string}, count: {type: integer}}}} }
+    DashboardFollowUps:
+      type: object
+      properties: { dueTodayCount: {type: integer}, overdueCount: {type: integer} }
+    DashboardOrders:
+      type: object
+      properties: { activeCount: {type: integer}, territoryViolationCount: {type: integer}, cancelledCount: {type: integer}, dispatchPendingCount: {type: integer}, salesTrend: {type: array, items: {type: object, properties: {month: {type: string}, total: {type: number}, orderCount: {type: integer}}}} }
+    DashboardOutstanding:
+      type: object
+      properties: { available: {type: boolean}, reason: {type: string, nullable: true}, total: {type: number, nullable: true}, buckets: {type: array, items: {type: object}} }
+    DashboardNearExpiry:
+      type: object
+      properties: { count: {type: integer}, stockValue: {type: number} }
+    DashboardSalesTeam:
+      type: object
+      properties: { available: {type: boolean}, rows: {type: array, items: {$ref: '#/components/schemas/SalesTeamProductivityRow'}} }
+    ReportMeta:
+      type: object
+      required: [report_key, page, per_page, total, total_pages]
+      properties: { report_key: {type: string}, page: {type: integer}, per_page: {type: integer}, total: {type: integer}, total_pages: {type: integer} }
+    ReportResponse:
+      type: object
+      required: [rows, meta]
+      properties:
+        rows: {type: array, items: {oneOf: [{$ref: '#/components/schemas/LeadSourceRow'}, {$ref: '#/components/schemas/ResponseTimeRow'}, {$ref: '#/components/schemas/ConversionRow'}, {$ref: '#/components/schemas/SalesTeamProductivityRow'}, {$ref: '#/components/schemas/TerritorySalesRow'}, {$ref: '#/components/schemas/PartySalesRow'}, {$ref: '#/components/schemas/ProductSalesRow'}, {$ref: '#/components/schemas/SchemeUtilizationRow'}, {$ref: '#/components/schemas/OrderStatusRow'}, {$ref: '#/components/schemas/DispatchPendingRow'}, {$ref: '#/components/schemas/BatchInventoryRow'}, {$ref: '#/components/schemas/NearExpiryRow'}, {$ref: '#/components/schemas/TerritoryViolationRow'}, {$ref: '#/components/schemas/WebhookFailureRow'}, {$ref: '#/components/schemas/WhatsappDeliveryRow'}, {$ref: '#/components/schemas/PaymentOutstandingRow'}]}}
+        meta: {$ref: '#/components/schemas/ReportMeta'}
+    LeadSourceRow: {type: object, properties: {source: {type: string}, totalLeads: {type: integer}, converted: {type: integer}, conversionPct: {type: number}}}
+    ResponseTimeRow: {type: object, properties: {leadRef: {type: string}, leadName: {type: string}, source: {type: string}, createdDate: {type: string, format: date-time}, respondedAt: {type: string, format: date-time, nullable: true}, durationHours: {type: number}, breached: {type: string, enum: ['Yes', 'No']}}}
+    ConversionRow: {type: object, properties: {stage: {type: string}, count: {type: integer}}}
+    SalesTeamProductivityRow: {type: object, properties: {userId: {type: string}, name: {type: string}, leadsCount: {type: integer}, convertedCount: {type: integer}, ordersCount: {type: integer}, ordersValue: {type: number}}}
+    TerritorySalesRow: {type: object, properties: {state: {type: string}, district: {type: string}, orders: {type: integer}, totalSales: {type: number}}}
+    PartySalesRow: {type: object, properties: {partyId: {type: string}, partyName: {type: string}, orders: {type: integer}, totalSales: {type: number}}}
+    ProductSalesRow: {type: object, properties: {productId: {type: string}, productName: {type: string}, qtySold: {type: integer}, freeQty: {type: integer}, netSales: {type: number}}}
+    SchemeUtilizationRow: {type: object, properties: {schemeId: {type: string}, schemeName: {type: string}, timesApplied: {type: integer}, freeQtyGiven: {type: integer}, netSales: {type: number}}}
+    OrderStatusRow: {type: object, properties: {status: {type: string}, count: {type: integer}, totalValue: {type: number}}}
+    DispatchPendingRow: {type: object, properties: {invoiceNo: {type: string}, partyName: {type: string}, status: {type: string}, orderDate: {type: string, format: date}, total: {type: number}}}
+    BatchInventoryRow: {type: object, properties: {productName: {type: string}, batchNo: {type: string}, expiryDate: {type: string, format: date}, availableQty: {type: integer}, status: {type: string}, stockValue: {type: number}}}
+    NearExpiryRow: {type: object, properties: {productName: {type: string}, batchNo: {type: string}, expiryDate: {type: string, format: date}, daysLeft: {type: integer}, availableQty: {type: integer}, stockValue: {type: number}}}
+    TerritoryViolationRow: {type: object, properties: {invoiceNo: {type: string}, partyName: {type: string}, reason: {type: string}, orderDate: {type: string, format: date}}}
+    WebhookFailureRow: {type: object, properties: {source: {type: string}, eventType: {type: string}, receivedAt: {type: string, format: date-time}, status: {type: string}, errorMessage: {type: string, nullable: true}}}
+    WhatsappDeliveryRow: {type: object, properties: {recipientName: {type: string}, templateName: {type: string}, status: {type: string}, sentAt: {type: string, format: date-time}}}
 
 paths:
   # ============================================================================
@@ -1216,7 +1317,7 @@ paths:
       summary: Scope-aware dashboard widget DTO
       tags: [Admin Users]
       security: [{ bearerAuth: [] }]
-      responses: { '200': { description: Named leads, follow_ups, orders, outstanding, near_expiry and sales_team groups. }, '403': { description: Missing dashboard permission. } }
+      responses: { '200': { description: Named dashboard widget groups., content: { application/json: { schema: { $ref: '#/components/schemas/DashboardResponse' } } } }, '403': { description: Missing dashboard permission. } }
   /admin/analytics/reports/{key}:
     get:
       summary: Scope-aware frontend report adapter
@@ -1230,7 +1331,7 @@ paths:
         - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
         - { name: from, in: query, schema: { type: string, format: date } }
         - { name: to, in: query, schema: { type: string, format: date } }
-      responses: { '200': { description: Report rows with canonical pagination metadata. }, '403': { description: Missing underlying-module permission. }, '422': { description: Invalid key or business-decision-blocked report. } }
+      responses: { '200': { description: Exact report row DTO and pagination metadata., content: { application/json: { schema: { $ref: '#/components/schemas/ReportResponse' } } } }, '403': { description: Missing underlying-module permission. }, '422': { description: Invalid key or business-decision-blocked report. } }
   /admin/onboarding/{ref}:
     get:
       summary: Get onboarding registration and redacted KYC metadata
@@ -1454,7 +1555,7 @@ paths:
       tags: [Admin Orders]
       parameters:
         - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Order confirmed and reservations returned. } }
+      responses: { '200': { description: Order confirmed and reservations returned. }, '422': { description: CREDIT_LIMIT_EXCEEDED when projected exposure is greater than the stored credit limit; equality is allowed. } }
 
   /admin/orders/{ref}/cancel:
     post:
@@ -1568,7 +1669,7 @@ paths:
   /admin/invoices/generate:
     post:
       summary: Generate gapless tax invoice from confirmed order
-      description: Validates order/reservation state and creates an immutable tax invoice only after the configured GST place-of-supply policy resolves. Until then it returns GST_POLICY_PENDING before consuming stock or allocating an invoice number.
+      description: Resolves supplier and normalized delivery states, calculates GST from authoritative product rates, and creates an immutable tax invoice. Missing supplier or delivery state fails before invoice persistence.
       tags: [Admin Billing & Invoices]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
@@ -1602,6 +1703,67 @@ paths:
               required: [reason]
               properties: { reason: { type: string, minLength: 2 } }
       responses: { '200': { description: Invoice cancelled. } }
+
+  /admin/pdc:
+    get:
+      summary: List tenant-scoped post-dated cheques
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: page, in: query, schema: { type: integer, minimum: 1 } }, { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }, { name: party_ref, in: query, schema: { type: string } }]
+      responses: { '200': { description: Paginated PDC DTOs, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Pdc' } } } } }, '403': { description: Missing payments view permission. } }
+    post:
+      summary: Register a pending post-dated cheque without financial effect
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [party_ref, amount, cheque_number], properties: { party_ref: { type: string }, amount: { type: number }, cheque_number: { type: string }, bank_name: { type: string }, due_date: { type: string, format: date } } } } } }
+      responses: { '201': { description: Pending PDC registered. }, '422': { description: Invalid PDC or inaccessible party. } }
+  /admin/pdc/{ref}:
+    get:
+      summary: Get a tenant- and scope-protected PDC
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: PDC detail., content: { application/json: { schema: { $ref: '#/components/schemas/Pdc' } } } }, '404': { description: Not found or inaccessible. } }
+  /admin/pdc/{ref}/realize:
+    post:
+      summary: Realize a pending PDC into one normal manual-allocation Payment
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: PDC realized and payment linked. }, '422': { description: Invalid transition or duplicate realization. } }
+  /admin/pdc/{ref}/bounce:
+    post:
+      summary: Bounce a pending PDC without financial effect
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 2 } } } } } }
+      responses: { '200': { description: PDC bounced. }, '422': { description: Invalid transition. } }
+  /admin/pdc/{ref}/cancel:
+    post:
+      summary: Cancel a pending PDC without financial effect
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 2 } } } } } }
+      responses: { '200': { description: PDC cancelled. }, '422': { description: Invalid transition. } }
+
+  /admin/outstanding:
+    get:
+      summary: List scope-protected invoice outstanding and ageing rows
+      description: Uses invoice due_date as the only due-date authority. Pending, bounced, and cancelled PDCs have no effect; only active allocations on non-reversed payments reduce a balance.
+      tags: [Admin Payments]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: party_ref, in: query, schema: { type: string } }
+        - { name: bucket, in: query, schema: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: sort_by, in: query, schema: { type: string, enum: [invoiceNumber, partyName, dueDate, balance, bucket, daysOverdue, status] } }
+        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
+      responses: { '200': { description: Scoped, paginated open-invoice rows., content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OutstandingInvoice' } } } } }, '403': { description: Missing payments view permission. } }
 
   # ============================================================================
   # Franchise Admin: Dispatches & Payments

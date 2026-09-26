@@ -76,3 +76,27 @@ Dashboard: source-ready with all six named groups (outstanding exposes a safe un
 1. Per-widget dashboard aggregation service that applies each source module's effective scope.
 2. Central report adapter/query layer covering the 15 non-financial report definitions with safe filters/search/sort/pagination.
 3. `payment-outstanding` ageing contract after its business authority is approved.
+
+## TASK-010A.3 exact DTO coverage
+
+The scoped adapter now emits explicit public aliases for every frontend report accessor. First-response duration is a nullable raw hour value (`created_at` to `first_response_at`, rounded to one decimal); the FRS/frontend SLA constant is four hours. Inventory valuation is the approved frontend formula `availableQty × products.mrp`, performed as a DECIMAL SQL expression. Unknown source data remains `NULL`, not zero.
+
+| Contract | Required Fields | Ready | Derived | Decision Blocked | Missing Source | Coverage |
+|---|---:|---:|---:|---:|---:|---:|
+| Dashboard | 25 | 24 | 1 | 0 | 0 | 25/25 |
+| lead-source | 4 | 3 | 1 | 0 | 0 | 4/4 |
+| response-time | 6 | 4 | 2 | 0 | 0 | 6/6 |
+| conversion | 2 | 2 | 0 | 0 | 0 | 2/2 |
+| sales-team-productivity | 5 | 2 | 3 | 0 | 0 | 5/5 |
+| territory-sales | 4 | 4 | 0 | 0 | 0 | 4/4 |
+| party-sales | 3 | 3 | 0 | 0 | 0 | 3/3 |
+| product-sales | 4 | 4 | 0 | 0 | 0 | 4/4 |
+| scheme-utilization | 4 | 4 | 0 | 0 | 0 | 4/4 |
+| order-status | 3 | 3 | 0 | 0 | 0 | 3/3 |
+| dispatch-pending | 5 | 5 | 0 | 0 | 0 | 5/5 |
+| batch-inventory | 6 | 5 | 1 | 0 | 0 | 6/6 |
+| near-expiry | 6 | 5 | 1 | 0 | 0 | 6/6 |
+| territory-violations | 4 | 4 | 0 | 0 | 0 | 4/4 |
+| webhook-failures | 5 | 5 | 0 | 0 | 0 | 5/5 |
+| whatsapp-delivery | 4 | 4 | 0 | 0 | 0 | 4/4 |
+| payment-outstanding | 6 | 0 | 0 | 6 | 0 | BLOCKED |
