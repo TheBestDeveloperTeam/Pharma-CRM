@@ -1380,9 +1380,11 @@ paths:
       summary: List distributor onboarding registrations
       tags: [Admin Parties & Onboarding]
       security: [bearerAuth: []]
-      responses: {'200': {description: Paginated registrations, server-filtered 
-            by effective ALL: null, OWN: null, TEAM: null, TERRITORY: null, or 
-            NONE scope.: null}, '403': {description: Missing permission.}}
+      responses:
+        '200':
+          description: "Paginated registrations, server-filtered by effective ALL, OWN, TEAM, TERRITORY, or NONE scope."
+        '403':
+          description: "Missing permission."
   /admin/audit:
     get:
       summary: List tenant audit events
