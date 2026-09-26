@@ -1,7 +1,7 @@
 -- TASK-009: distributor onboarding, KYC metadata and online DCR workflow.
 -- This migration is additive; it deliberately contains no KYC retention/deletion job.
 
-ALTER TABLE onboarding_invites ADD COLUMN IF NOT EXISTS assigned_user_ref VARCHAR(24) NULL AFTER lead_ref;
+ALTER TABLE onboarding_invites ADD COLUMN assigned_user_ref VARCHAR(24) NULL AFTER lead_ref;
 
 CREATE TABLE IF NOT EXISTS onboarding_registrations (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS dcr_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Permission catalogue only. Roles are assigned by the existing TASK-001 role management flow.
-INSERT IGNORE INTO auth_permission_catalogue (module_key, action_key, action_label, is_sensitive) VALUES
+INSERT IGNORE INTO auth_permission_catalogue (module_key, action_key, label, is_sensitive) VALUES
 ('distributorOnboarding','create','Create registration',0),('distributorOnboarding','edit','Edit registration',0),('distributorOnboarding','convert','Convert to Party',1),
 ('kyc','view','View KYC',1),('kyc','upload','Register KYC document',1),('kyc','verify','Verify KYC document',1),('kyc','reject','Reject KYC document',1),
 ('dcr','view','View DCR',0),('dcr','create','Create DCR',0),('dcr','edit','Edit DCR',0),('dcr','submit','Submit DCR',0),('dcr','approve','Approve DCR',1),('dcr','reject','Reject DCR',0);

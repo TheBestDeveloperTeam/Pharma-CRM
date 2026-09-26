@@ -1,13 +1,13 @@
 -- TASK-011A: additive financial history and authoritative GST/PDC support.
-ALTER TABLE franchises ADD COLUMN IF NOT EXISTS state_ref VARCHAR(24) NULL AFTER address;
+ALTER TABLE franchises ADD COLUMN state_ref VARCHAR(24) NULL AFTER address;
 ALTER TABLE invoices
-  ADD COLUMN IF NOT EXISTS supplier_state_ref VARCHAR(24) NULL AFTER due_date,
-  ADD COLUMN IF NOT EXISTS place_of_supply_state_ref VARCHAR(24) NULL AFTER supplier_state_ref,
+  ADD COLUMN supplier_state_ref VARCHAR(24) NULL AFTER due_date,
+  ADD COLUMN place_of_supply_state_ref VARCHAR(24) NULL AFTER supplier_state_ref,
   ADD INDEX idx_inv_due_open (franchise_ref, status, due_date);
 ALTER TABLE invoice_items
-  ADD COLUMN IF NOT EXISTS cgst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER gst_percent,
-  ADD COLUMN IF NOT EXISTS sgst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER cgst_percent,
-  ADD COLUMN IF NOT EXISTS igst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER sgst_percent;
+  ADD COLUMN cgst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER gst_percent,
+  ADD COLUMN sgst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER cgst_percent,
+  ADD COLUMN igst_percent DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER sgst_percent;
 CREATE TABLE IF NOT EXISTS payment_reversals (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   reversal_ref VARCHAR(24) NOT NULL, org_ref VARCHAR(24) NOT NULL, franchise_ref VARCHAR(24) NOT NULL,
@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS pdcs (
   realized_by_ref VARCHAR(24) NULL, realized_at DATETIME NULL, bounced_by_ref VARCHAR(24) NULL, bounced_at DATETIME NULL,
   UNIQUE KEY uq_pdc_ref (franchise_ref,pdc_ref), UNIQUE KEY uq_pdc_payment (franchise_ref,payment_ref), INDEX idx_pdc_party (franchise_ref,party_ref,status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-ALTER TABLE pdcs ADD COLUMN IF NOT EXISTS cancel_reason VARCHAR(255) NULL AFTER bounce_reason,
-  ADD COLUMN IF NOT EXISTS cancelled_by_ref VARCHAR(24) NULL AFTER bounced_by_ref,
-  ADD COLUMN IF NOT EXISTS cancelled_at DATETIME NULL AFTER bounced_at;
+ALTER TABLE pdcs ADD COLUMN cancel_reason VARCHAR(255) NULL AFTER bounce_reason,
+  ADD COLUMN cancelled_by_ref VARCHAR(24) NULL AFTER bounced_by_ref,
+  ADD COLUMN cancelled_at DATETIME NULL AFTER bounced_at;
 INSERT IGNORE INTO auth_permission_catalogue (module_key,action_key,label,is_sensitive) VALUES
  ('payments','reverse','Reverse posted payment',1),('payments','pdc','Operate PDC lifecycle',1),('billing','outstanding','View outstanding and ageing',1);

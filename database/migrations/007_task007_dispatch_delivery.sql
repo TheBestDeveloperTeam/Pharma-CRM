@@ -1,7 +1,7 @@
 -- TASK-007 additive dispatch/delivery history and delivery metadata.
 ALTER TABLE dispatches
-  ADD COLUMN IF NOT EXISTS delivered_at DATETIME NULL AFTER dispatch_date,
-  ADD COLUMN IF NOT EXISTS delivery_remarks VARCHAR(255) NULL AFTER remarks,
+  ADD COLUMN delivered_at DATETIME NULL AFTER dispatch_date,
+  ADD COLUMN delivery_remarks VARCHAR(255) NULL AFTER remarks,
   ADD INDEX idx_dsp_status (franchise_ref, status, dispatch_date);
 
 CREATE TABLE IF NOT EXISTS dispatch_status_history (

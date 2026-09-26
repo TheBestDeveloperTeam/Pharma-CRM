@@ -4,7 +4,7 @@ info:
   version: 3.0.0
   description: |
     Comprehensive, enterprise-grade RESTful API documentation for Pharma CRM & Sales Force Automation.
-    
+
     ### Architecture & Golden Rules
     - **Multi-Tenancy:** Row-level tenancy enforced via `org_ref` and `franchise_ref`.
     - **Authentication:** OAuth 2.0 style Bearer JWT access tokens (15-minute expiry) and rotating refresh tokens with reuse detection.
@@ -12,7 +12,7 @@ info:
     - **Deterministic Numbering:** Sequential gapless numbering for Orders, Invoices, Dispatches, and Payments via atomic sequence counters.
     - **Inventory & Pricing:** Strict server-side First-Expiry-First-Out (FEFO) allocation and hierarchical priority pricing (Party > Tier > Default).
     - **Auditability:** Immutable, append-only audit trail on all business and security transactions.
-    
+
     ### The 9 Complete User Journeys (E2E)
     This specification strictly implements the 9 core workflows across all roles:
     1. **Platform Provisioning (Super Admin):** Organization and franchise setup, auditing.
@@ -25,54 +25,71 @@ info:
     8. **Logistics & Dispatch (Admin):** Transporter assignment and delivery tracking (LR).
     9. **Payments & Ledger (Admin):** Payment recording, invoice allocation, and outstanding sync.
 servers:
-  - url: https://crm.easysolutins24.in/api/v1
-    description: Production Cloud Server (cPanel Shared Hosting)
-  - url: http://crm/api/v1
-    description: Local Development Server (XAMPP / Core PHP)
-  - url: http://localhost:8000/api/v1
-    description: Local PHP CLI Dev Server
+- url: https://crm.easysolutins24.in/api/v1
+  description: Production Cloud Server (cPanel Shared Hosting)
+- url: http://crm/api/v1
+  description: Local Development Server (XAMPP / Core PHP)
+- url: http://localhost:8000/api/v1
+  description: Local PHP CLI Dev Server
 
 tags:
-  - name: Health
-    description: Platform and database readiness probes
-  - name: Auth
-    description: OAuth 2.0 token issuance, refresh rotation, revocation, and identity
-  - name: Geo
-    description: Public India geographic hierarchy (States, Districts, Pincodes)
-  - name: Super Admin
-    description: Multi-tenant organization and franchise management, impersonation, audit & platform stats
-  - name: Admin Users
-    description: User management within a franchise (Admin, Sales, Distributor)
-  - name: Admin Masters
-    description: Product categories, pricing tiers, transporters, templates, settings
-  - name: Admin Products
-    description: Pharmaceutical catalogue, SKU, HSN, packing, and composition CRUD
-  - name: Admin Pricing & Schemes
-    description: Hierarchical pricing rules, quantity schemes (10+1), and calculation endpoints
-  - name: Admin Leads & Follow-ups
-    description: Lead acquisition, assignment, state machine, and mandatory follow-up tracking
-  - name: Admin Parties & Onboarding
-    description: PCD franchise partners, distributors, customer onboarding invites, and ledger
-  - name: Admin Territories
-    description: District/pincode territory allocations, exclusive locks, pre-billing validator & overrides
-  - name: Admin Inventory
-    description: Batch receipts, FEFO allocations, physical stock adjustments, and near-expiry alerts
-  - name: Admin Orders
-    description: Order status contract (DRAFT -> SUBMITTED -> CONFIRMED -> PROCESSING -> DISPATCHED -> DELIVERED / CANCELLED); transition authority is module-specific.
-  - name: Admin Billing & Invoices
-    description: Tax invoice generation with price/party snapshots, gapless sequence numbers, and GST breakdown
-  - name: Admin Dispatches
-    description: Transporter assignment, Lorry Receipt (LR) tracking, and dispatch delivery confirmation
-  - name: Admin Payments
-    description: Payment recording, invoice allocation, payment reversal, and outstanding balance sync
-  - name: Admin Reports
-    description: 12 comprehensive analytical, operational, and financial reports with JSON/CSV streaming
-  - name: Webhooks
-    description: B2B lead generation webhook sources (HMAC-SHA256 verified) and ingestion
-  - name: Notifications
-    description: In-app, Email, WhatsApp, and SMS notification dispatch, bell polling, and read tracking
-  - name: Distributor Portal
-    description: Distributor self-service portal for catalogue browsing, server-side cart pricing, order placement, and invoice tracking
+- name: Health
+  description: Platform and database readiness probes
+- name: Auth
+  description: OAuth 2.0 token issuance, refresh rotation, revocation, and 
+    identity
+- name: Geo
+  description: Public India geographic hierarchy (States, Districts, Pincodes)
+- name: Super Admin
+  description: Multi-tenant organization and franchise management, 
+    impersonation, audit & platform stats
+- name: Admin Users
+  description: User management within a franchise (Admin, Sales, Distributor)
+- name: Admin Masters
+  description: Product categories, pricing tiers, transporters, templates, 
+    settings
+- name: Admin Products
+  description: Pharmaceutical catalogue, SKU, HSN, packing, and composition CRUD
+- name: Admin Pricing & Schemes
+  description: Hierarchical pricing rules, quantity schemes (10+1), and 
+    calculation endpoints
+- name: Admin Leads & Follow-ups
+  description: Lead acquisition, assignment, state machine, and mandatory 
+    follow-up tracking
+- name: Admin Parties & Onboarding
+  description: PCD franchise partners, distributors, customer onboarding 
+    invites, and ledger
+- name: Admin Territories
+  description: District/pincode territory allocations, exclusive locks, 
+    pre-billing validator & overrides
+- name: Admin Inventory
+  description: Batch receipts, FEFO allocations, physical stock adjustments, and
+    near-expiry alerts
+- name: Admin Orders
+  description: Order status contract (DRAFT -> SUBMITTED -> CONFIRMED -> 
+    PROCESSING -> DISPATCHED -> DELIVERED / CANCELLED); transition authority is 
+    module-specific.
+- name: Admin Billing & Invoices
+  description: Tax invoice generation with price/party snapshots, gapless 
+    sequence numbers, and GST breakdown
+- name: Admin Dispatches
+  description: Transporter assignment, Lorry Receipt (LR) tracking, and dispatch
+    delivery confirmation
+- name: Admin Payments
+  description: Payment recording, invoice allocation, payment reversal, and 
+    outstanding balance sync
+- name: Admin Reports
+  description: 12 comprehensive analytical, operational, and financial reports 
+    with JSON/CSV streaming
+- name: Webhooks
+  description: B2B lead generation webhook sources (HMAC-SHA256 verified) and 
+    ingestion
+- name: Notifications
+  description: In-app, Email, WhatsApp, and SMS notification dispatch, bell 
+    polling, and read tracking
+- name: Distributor Portal
+  description: Distributor self-service portal for catalogue browsing, 
+    server-side cart pricing, order placement, and invoice tracking
 
 components:
   securitySchemes:
@@ -86,7 +103,8 @@ components:
     IdempotencyKeyHeader:
       name: Idempotency-Key
       in: header
-      description: Unique idempotency UUID string preventing duplicate mutating writes.
+      description: Unique idempotency UUID string preventing duplicate mutating 
+        writes.
       required: false
       schema:
         type: string
@@ -94,7 +112,8 @@ components:
     XFranchiseRefHeader:
       name: X-Franchise-Ref
       in: header
-      description: Optional tenant reference check. If provided, must match the authenticated JWT franchise claim.
+      description: Optional tenant reference check. If provided, must match the 
+        authenticated JWT franchise claim.
       required: false
       schema:
         type: string
@@ -120,24 +139,24 @@ components:
       name: search
       in: query
       required: false
-      schema: { type: string }
+      schema: {type: string}
     DateFromParam:
       name: date_from
       in: query
       required: false
       description: Inclusive date filter in YYYY-MM-DD format.
-      schema: { type: string, format: date }
+      schema: {type: string, format: date}
     DateToParam:
       name: date_to
       in: query
       required: false
       description: Inclusive date filter in YYYY-MM-DD format.
-      schema: { type: string, format: date }
+      schema: {type: string, format: date}
     SortByParam:
       name: sort_by
       in: query
       required: false
-      schema: { type: string }
+      schema: {type: string}
     SortDirParam:
       name: sort_dir
       in: query
@@ -156,8 +175,8 @@ components:
           example: true
         data:
           oneOf:
-            - type: object
-            - type: array
+          - type: object
+          - type: array
           nullable: true
         meta:
           type: object
@@ -180,18 +199,20 @@ components:
 
     PublicRef:
       type: string
-      description: Stable public resource reference. Internal numeric IDs are not exposed.
+      description: Stable public resource reference. Internal numeric IDs are 
+        not exposed.
       example: "ORD-01J9XKZ"
 
     ValidationFields:
       type: object
       additionalProperties:
         type: array
-        items: { type: string }
+        items: {type: string}
 
     OrderStatus:
       type: string
-      enum: [DRAFT, SUBMITTED, CONFIRMED, PROCESSING, DISPATCHED, DELIVERED, CANCELLED]
+      enum: [DRAFT, SUBMITTED, CONFIRMED, PROCESSING, DISPATCHED, DELIVERED, 
+          CANCELLED]
 
     PermissionScope:
       type: string
@@ -199,7 +220,12 @@ components:
 
     ApiErrorCode:
       type: string
-      enum: [VALIDATION_FAILED, INVALID_REFERENCE, INVALID_ENUM, INVALID_DATE, INVALID_PAGINATION, INVALID_SORT, UNAUTHORIZED, FORBIDDEN, PERMISSION_DENIED, SCOPE_DENIED, USER_INACTIVE, NOT_FOUND, CONFLICT, DUPLICATE, INVALID_STATE_TRANSITION, TENANT_MISMATCH, IDEMPOTENCY_MISMATCH, REQUEST_IN_PROGRESS, BUSINESS_RULE_VIOLATION, INTERNAL_ERROR]
+      enum: [VALIDATION_FAILED, INVALID_REFERENCE, INVALID_ENUM, INVALID_DATE, 
+          INVALID_PAGINATION, INVALID_SORT, UNAUTHORIZED, FORBIDDEN, 
+          PERMISSION_DENIED, SCOPE_DENIED, USER_INACTIVE, NOT_FOUND, CONFLICT, 
+          DUPLICATE, INVALID_STATE_TRANSITION, TENANT_MISMATCH, 
+          IDEMPOTENCY_MISMATCH, REQUEST_IN_PROGRESS, BUSINESS_RULE_VIOLATION, 
+          INTERNAL_ERROR]
 
     ErrorEnvelope:
       type: object
@@ -269,9 +295,9 @@ components:
     AuthMeResponse:
       type: object
       properties:
-        user_ref: { type: string, example: "USR-01J9XKZ" }
-        name: { type: string }
-        email: { type: string, format: email }
+        user_ref: {type: string, example: "USR-01J9XKZ"}
+        name: {type: string}
+        email: {type: string, format: email}
         status:
           type: string
           enum: [ACTIVE, INACTIVE]
@@ -280,21 +306,21 @@ components:
           enum: [SUPER_ADMIN, FRANCHISE_ADMIN, SALES, DISTRIBUTOR]
         roles:
           type: array
-          items: { type: string }
+          items: {type: string}
         permissions:
           type: object
           additionalProperties:
             type: array
-            items: { type: string }
+            items: {type: string}
         scopes:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/PermissionScope'
-        scope: { type: string }
-        org_ref: { type: string }
-        franchise_ref: { type: string, nullable: true }
-        party_ref: { type: string, nullable: true }
-        impersonator_ref: { type: string, nullable: true }
+        scope: {type: string}
+        org_ref: {type: string}
+        franchise_ref: {type: string, nullable: true}
+        party_ref: {type: string, nullable: true}
+        impersonator_ref: {type: string, nullable: true}
 
     Product:
       type: object
@@ -359,42 +385,35 @@ components:
         firm_name:
           type: string
           example: "Apex Distributors Pvt Ltd"
-        contact_name: { type: string }
-        mobile: { type: string }
-        whatsapp: { type: string }
-        email: { type: string, format: email }
-        party_type: { type: string }
-        gstin: { type: string }
-        drug_license_no: { type: string }
-        drug_license_validity: { type: string, format: date }
-        area: { type: string }
-        billing_address: { type: string }
-        shipping_address: { type: string }
-        pincode: { type: string }
-        tier_ref: { type: string }
-        credit_limit: { type: number, format: float }
-        payment_terms_days: { type: integer }
-        opening_outstanding: { type: number, format: float }
-        status: { type: string, enum: [ACTIVE, INACTIVE, ARCHIVED] }
         contact_name:
           type: string
           example: "Rajesh Sharma"
         mobile:
           type: string
           example: "9876543210"
+        whatsapp: {type: string}
         email:
           type: string
           example: "rajesh@apexdist.com"
+        party_type: {type: string}
         gstin:
           type: string
           example: "27AAAAA0000A1Z5"
         drug_license_no:
           type: string
           example: "DL-MH-2023-998811"
+        drug_license_validity: {type: string, format: date}
+        area: {type: string}
+        billing_address: {type: string}
+        shipping_address: {type: string}
+        pincode: {type: string}
+        tier_ref: {type: string}
         credit_limit:
           type: number
           format: float
           example: 250000.00
+        payment_terms_days: {type: integer}
+        opening_outstanding: {type: number, format: float}
         status:
           type: string
           enum: [ACTIVE, INACTIVE, ARCHIVED]
@@ -416,7 +435,8 @@ components:
           example: "9822011223"
         status:
           type: string
-          enum: [NEW, ASSIGNED, CONTACTED, INTERESTED, FOLLOW_UP, DOCUMENTS_PENDING, QUALIFIED, CONVERTED, LOST, REJECTED, ARCHIVED]
+          enum: [NEW, ASSIGNED, CONTACTED, INTERESTED, FOLLOW_UP, 
+              DOCUMENTS_PENDING, QUALIFIED, CONVERTED, LOST, REJECTED, ARCHIVED]
         priority:
           type: string
           enum: [LOW, NORMAL, HIGH, URGENT]
@@ -441,7 +461,8 @@ components:
           example: "PTY-01J9XKZ"
         status:
           type: string
-          enum: [DRAFT, SUBMITTED, CONFIRMED, PROCESSING, DISPATCHED, DELIVERED, CANCELLED]
+          enum: [DRAFT, SUBMITTED, CONFIRMED, PROCESSING, DISPATCHED, DELIVERED, 
+              CANCELLED]
         subtotal:
           type: number
           format: float
@@ -463,15 +484,16 @@ components:
 
     TaxBreakdown:
       type: object
-      description: Transport structure only; GST jurisdiction and rounding rules remain module decisions.
+      description: Transport structure only; GST jurisdiction and rounding rules
+        remain module decisions.
       properties:
-        taxable_value: { type: number, format: float }
-        cgst: { type: number, format: float }
-        sgst: { type: number, format: float }
-        igst: { type: number, format: float }
-        tax_total: { type: number, format: float }
-        grand_total: { type: number, format: float }
-        rounding_adjustment: { type: number, format: float, nullable: true }
+        taxable_value: {type: number, format: float}
+        cgst: {type: number, format: float}
+        sgst: {type: number, format: float}
+        igst: {type: number, format: float}
+        tax_total: {type: number, format: float}
+        grand_total: {type: number, format: float}
+        rounding_adjustment: {type: number, format: float, nullable: true}
 
     Invoice:
       type: object
@@ -496,8 +518,8 @@ components:
           type: string
           format: date
           example: "2026-10-20"
-        supplier_state_ref: { type: string, nullable: true }
-        place_of_supply_state_ref: { type: string, nullable: true }
+        supplier_state_ref: {type: string, nullable: true}
+        place_of_supply_state_ref: {type: string, nullable: true}
         subtotal:
           type: number
           format: float
@@ -506,13 +528,13 @@ components:
           type: number
           format: float
           example: 2160.00
-        taxable_total: { type: number, format: float }
-        cgst_total: { type: number, format: float }
-        sgst_total: { type: number, format: float }
-        igst_total: { type: number, format: float }
-        rounding_adjustment: { type: number, format: float }
-        tax_policy_code: { type: string, nullable: true }
-        items: { type: array, items: { $ref: '#/components/schemas/InvoiceLine' } }
+        taxable_total: {type: number, format: float}
+        cgst_total: {type: number, format: float}
+        sgst_total: {type: number, format: float}
+        igst_total: {type: number, format: float}
+        rounding_adjustment: {type: number, format: float}
+        tax_policy_code: {type: string, nullable: true}
+        items: {type: array, items: {$ref: '#/components/schemas/InvoiceLine'}}
         tax_breakdown:
           $ref: '#/components/schemas/TaxBreakdown'
         grand_total:
@@ -530,65 +552,69 @@ components:
     InvoiceLine:
       type: object
       properties:
-        item_ref: { type: string }
-        product_ref: { type: string }
-        product_name_snapshot: { type: string }
-        batch_no_snapshot: { type: string }
-        paid_qty: { type: integer }
-        free_qty: { type: integer }
-        rate: { type: number, format: float }
-        discount: { type: number, format: float }
-        taxable_amount: { type: number, format: float }
-        gst_percent: { type: number, format: float }
-        cgst_percent: { type: number, format: float }
-        sgst_percent: { type: number, format: float }
-        igst_percent: { type: number, format: float }
-        cgst_amount: { type: number, format: float }
-        sgst_amount: { type: number, format: float }
-        igst_amount: { type: number, format: float }
-        total_tax: { type: number, format: float }
-        line_total: { type: number, format: float }
+        item_ref: {type: string}
+        product_ref: {type: string}
+        product_name_snapshot: {type: string}
+        batch_no_snapshot: {type: string}
+        paid_qty: {type: integer}
+        free_qty: {type: integer}
+        rate: {type: number, format: float}
+        discount: {type: number, format: float}
+        taxable_amount: {type: number, format: float}
+        gst_percent: {type: number, format: float}
+        cgst_percent: {type: number, format: float}
+        sgst_percent: {type: number, format: float}
+        igst_percent: {type: number, format: float}
+        cgst_amount: {type: number, format: float}
+        sgst_amount: {type: number, format: float}
+        igst_amount: {type: number, format: float}
+        total_tax: {type: number, format: float}
+        line_total: {type: number, format: float}
 
     Pdc:
       type: object
       properties:
-        pdc_ref: { type: string }
-        party_ref: { type: string }
-        amount: { type: number, format: float }
-        cheque_number: { type: string }
-        bank_name: { type: string, nullable: true }
-        due_date: { type: string, format: date, nullable: true }
-        status: { type: string, enum: [PENDING, REALIZED, BOUNCED, CANCELLED] }
-        payment_ref: { type: string, nullable: true }
-        realized_at: { type: string, format: date-time, nullable: true }
-        bounced_at: { type: string, format: date-time, nullable: true }
+        pdc_ref: {type: string}
+        party_ref: {type: string}
+        amount: {type: number, format: float}
+        cheque_number: {type: string}
+        bank_name: {type: string, nullable: true}
+        due_date: {type: string, format: date, nullable: true}
+        status: {type: string, enum: [PENDING, REALIZED, BOUNCED, CANCELLED]}
+        payment_ref: {type: string, nullable: true}
+        realized_at: {type: string, format: date-time, nullable: true}
+        bounced_at: {type: string, format: date-time, nullable: true}
 
     OutstandingInvoice:
       type: object
-      required: [invoiceRef, invoiceNumber, partyRef, partyName, invoiceAmount, allocatedAmount, balance, bucket, status]
+      required: [invoiceRef, invoiceNumber, partyRef, partyName, invoiceAmount, 
+          allocatedAmount, balance, bucket, status]
       properties:
-        invoiceRef: { type: string }
-        invoiceNumber: { type: string }
-        partyRef: { type: string }
-        partyName: { type: string }
-        invoiceAmount: { type: number, format: float }
-        allocatedAmount: { type: number, format: float }
-        balance: { type: number, format: float }
-        dueDate: { type: string, format: date, nullable: true, description: Authoritative invoice due date; never inferred by the API. }
-        daysOverdue: { type: integer, nullable: true }
-        bucket: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] }
-        status: { type: string, enum: [Unpaid, Partial] }
+        invoiceRef: {type: string}
+        invoiceNumber: {type: string}
+        partyRef: {type: string}
+        partyName: {type: string}
+        invoiceAmount: {type: number, format: float}
+        allocatedAmount: {type: number, format: float}
+        balance: {type: number, format: float}
+        dueDate: {type: string, format: date, nullable: true, description: 
+            Authoritative invoice due date; never inferred by the API.}
+        daysOverdue: {type: integer, nullable: true}
+        bucket: {type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, 
+              UNCLASSIFIED]}
+        status: {type: string, enum: [Unpaid, Partial]}
 
     PaymentOutstandingRow:
       type: object
       required: [invoiceNumber, partyName, dueDate, balance, bucket, status]
       properties:
-        invoiceNumber: { type: string }
-        partyName: { type: string }
-        dueDate: { type: string, format: date, nullable: true }
-        balance: { type: number, format: float }
-        bucket: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] }
-        status: { type: string, enum: [Unpaid, Partial] }
+        invoiceNumber: {type: string}
+        partyName: {type: string}
+        dueDate: {type: string, format: date, nullable: true}
+        balance: {type: number, format: float}
+        bucket: {type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, 
+              UNCLASSIFIED]}
+        status: {type: string, enum: [Unpaid, Partial]}
 
     Notification:
       type: object
@@ -613,8 +639,8 @@ components:
       type: object
       required: [name, default_scope]
       properties:
-        name: { type: string, maxLength: 120 }
-        description: { type: string, nullable: true, maxLength: 500 }
+        name: {type: string, maxLength: 120}
+        description: {type: string, nullable: true, maxLength: 500}
         default_scope:
           type: string
           enum: [ALL, TERRITORY, TEAM, OWN, NONE]
@@ -622,7 +648,7 @@ components:
           type: object
           additionalProperties:
             type: array
-            items: { type: string }
+            items: {type: string}
           example:
             leads: [view, create, edit]
         scope_overrides:
@@ -632,61 +658,110 @@ components:
             enum: [ALL, TERRITORY, TEAM, OWN, NONE]
 
 security:
-  - bearerAuth: []
+- bearerAuth: []
 
-    DashboardResponse:
-      type: object
-      required: [leads, follow_ups, orders, outstanding, near_expiry, sales_team]
-      properties:
-        leads: { $ref: '#/components/schemas/DashboardLeads' }
-        follow_ups: { $ref: '#/components/schemas/DashboardFollowUps' }
-        orders: { $ref: '#/components/schemas/DashboardOrders' }
-        outstanding: { $ref: '#/components/schemas/DashboardOutstanding' }
-        near_expiry: { $ref: '#/components/schemas/DashboardNearExpiry' }
-        sales_team: { $ref: '#/components/schemas/DashboardSalesTeam' }
-    DashboardLeads:
-      type: object
-      properties: { newToday: {type: integer}, unassignedCount: {type: integer}, slaBreachedCount: {type: integer}, slaThresholdHours: {type: integer}, slaTrend: {type: array, items: {type: object, properties: {date: {type: string}, totalCount: {type: integer}, breachedCount: {type: integer}}}}, conversionSeries: {type: array, items: {type: object, properties: {status: {type: string}, count: {type: integer}}}} }
-    DashboardFollowUps:
-      type: object
-      properties: { dueTodayCount: {type: integer}, overdueCount: {type: integer} }
-    DashboardOrders:
-      type: object
-      properties: { activeCount: {type: integer}, territoryViolationCount: {type: integer}, cancelledCount: {type: integer}, dispatchPendingCount: {type: integer}, salesTrend: {type: array, items: {type: object, properties: {month: {type: string}, total: {type: number}, orderCount: {type: integer}}}} }
-    DashboardOutstanding:
-      type: object
-      properties: { available: {type: boolean}, reason: {type: string, nullable: true}, total: {type: number, nullable: true}, buckets: {type: array, items: {type: object}} }
-    DashboardNearExpiry:
-      type: object
-      properties: { count: {type: integer}, stockValue: {type: number} }
-    DashboardSalesTeam:
-      type: object
-      properties: { available: {type: boolean}, rows: {type: array, items: {$ref: '#/components/schemas/SalesTeamProductivityRow'}} }
-    ReportMeta:
-      type: object
-      required: [report_key, page, per_page, total, total_pages]
-      properties: { report_key: {type: string}, page: {type: integer}, per_page: {type: integer}, total: {type: integer}, total_pages: {type: integer} }
-    ReportResponse:
-      type: object
-      required: [rows, meta]
-      properties:
-        rows: {type: array, items: {oneOf: [{$ref: '#/components/schemas/LeadSourceRow'}, {$ref: '#/components/schemas/ResponseTimeRow'}, {$ref: '#/components/schemas/ConversionRow'}, {$ref: '#/components/schemas/SalesTeamProductivityRow'}, {$ref: '#/components/schemas/TerritorySalesRow'}, {$ref: '#/components/schemas/PartySalesRow'}, {$ref: '#/components/schemas/ProductSalesRow'}, {$ref: '#/components/schemas/SchemeUtilizationRow'}, {$ref: '#/components/schemas/OrderStatusRow'}, {$ref: '#/components/schemas/DispatchPendingRow'}, {$ref: '#/components/schemas/BatchInventoryRow'}, {$ref: '#/components/schemas/NearExpiryRow'}, {$ref: '#/components/schemas/TerritoryViolationRow'}, {$ref: '#/components/schemas/WebhookFailureRow'}, {$ref: '#/components/schemas/WhatsappDeliveryRow'}, {$ref: '#/components/schemas/PaymentOutstandingRow'}]}}
-        meta: {$ref: '#/components/schemas/ReportMeta'}
-    LeadSourceRow: {type: object, properties: {source: {type: string}, totalLeads: {type: integer}, converted: {type: integer}, conversionPct: {type: number}}}
-    ResponseTimeRow: {type: object, properties: {leadRef: {type: string}, leadName: {type: string}, source: {type: string}, createdDate: {type: string, format: date-time}, respondedAt: {type: string, format: date-time, nullable: true}, durationHours: {type: number}, breached: {type: string, enum: ['Yes', 'No']}}}
-    ConversionRow: {type: object, properties: {stage: {type: string}, count: {type: integer}}}
-    SalesTeamProductivityRow: {type: object, properties: {userId: {type: string}, name: {type: string}, leadsCount: {type: integer}, convertedCount: {type: integer}, ordersCount: {type: integer}, ordersValue: {type: number}}}
-    TerritorySalesRow: {type: object, properties: {state: {type: string}, district: {type: string}, orders: {type: integer}, totalSales: {type: number}}}
-    PartySalesRow: {type: object, properties: {partyId: {type: string}, partyName: {type: string}, orders: {type: integer}, totalSales: {type: number}}}
-    ProductSalesRow: {type: object, properties: {productId: {type: string}, productName: {type: string}, qtySold: {type: integer}, freeQty: {type: integer}, netSales: {type: number}}}
-    SchemeUtilizationRow: {type: object, properties: {schemeId: {type: string}, schemeName: {type: string}, timesApplied: {type: integer}, freeQtyGiven: {type: integer}, netSales: {type: number}}}
-    OrderStatusRow: {type: object, properties: {status: {type: string}, count: {type: integer}, totalValue: {type: number}}}
-    DispatchPendingRow: {type: object, properties: {invoiceNo: {type: string}, partyName: {type: string}, status: {type: string}, orderDate: {type: string, format: date}, total: {type: number}}}
-    BatchInventoryRow: {type: object, properties: {productName: {type: string}, batchNo: {type: string}, expiryDate: {type: string, format: date}, availableQty: {type: integer}, status: {type: string}, stockValue: {type: number}}}
-    NearExpiryRow: {type: object, properties: {productName: {type: string}, batchNo: {type: string}, expiryDate: {type: string, format: date}, daysLeft: {type: integer}, availableQty: {type: integer}, stockValue: {type: number}}}
-    TerritoryViolationRow: {type: object, properties: {invoiceNo: {type: string}, partyName: {type: string}, reason: {type: string}, orderDate: {type: string, format: date}}}
-    WebhookFailureRow: {type: object, properties: {source: {type: string}, eventType: {type: string}, receivedAt: {type: string, format: date-time}, status: {type: string}, errorMessage: {type: string, nullable: true}}}
-    WhatsappDeliveryRow: {type: object, properties: {recipientName: {type: string}, templateName: {type: string}, status: {type: string}, sentAt: {type: string, format: date-time}}}
+  DashboardResponse:
+    type: object
+    required: [leads, follow_ups, orders, outstanding, near_expiry, sales_team]
+    properties:
+      leads: {$ref: '#/components/schemas/DashboardLeads'}
+      follow_ups: {$ref: '#/components/schemas/DashboardFollowUps'}
+      orders: {$ref: '#/components/schemas/DashboardOrders'}
+      outstanding: {$ref: '#/components/schemas/DashboardOutstanding'}
+      near_expiry: {$ref: '#/components/schemas/DashboardNearExpiry'}
+      sales_team: {$ref: '#/components/schemas/DashboardSalesTeam'}
+  DashboardLeads:
+    type: object
+    properties: {newToday: {type: integer}, unassignedCount: {type: integer}, 
+        slaBreachedCount: {type: integer}, slaThresholdHours: {type: integer}, 
+        slaTrend: {type: array, items: {type: object, properties: {date: {type: 
+                string}, totalCount: {type: integer}, breachedCount: {type: 
+                integer}}}}, conversionSeries: {type: array, items: {type: 
+            object, properties: {status: {type: string}, count: {type: integer}}}}}
+  DashboardFollowUps:
+    type: object
+    properties: {dueTodayCount: {type: integer}, overdueCount: {type: integer}}
+  DashboardOrders:
+    type: object
+    properties: {activeCount: {type: integer}, territoryViolationCount: {type: 
+          integer}, cancelledCount: {type: integer}, dispatchPendingCount: {type: 
+          integer}, salesTrend: {type: array, items: {type: object, properties: {
+            month: {type: string}, total: {type: number}, orderCount: {type: 
+                integer}}}}}
+  DashboardOutstanding:
+    type: object
+    properties: {available: {type: boolean}, reason: {type: string, nullable: 
+          true}, total: {type: number, nullable: true}, buckets: {type: array, 
+          items: {type: object}}}
+  DashboardNearExpiry:
+    type: object
+    properties: {count: {type: integer}, stockValue: {type: number}}
+  DashboardSalesTeam:
+    type: object
+    properties: {available: {type: boolean}, rows: {type: array, items: {$ref: '#/components/schemas/SalesTeamProductivityRow'}}}
+  ReportMeta:
+    type: object
+    required: [report_key, page, per_page, total, total_pages]
+    properties: {report_key: {type: string}, page: {type: integer}, per_page: {
+          type: integer}, total: {type: integer}, total_pages: {type: integer}}
+  ReportResponse:
+    type: object
+    required: [rows, meta]
+    properties:
+      rows: {type: array, items: {oneOf: [$ref: '#/components/schemas/LeadSourceRow',
+            $ref: '#/components/schemas/ResponseTimeRow', $ref: '#/components/schemas/ConversionRow',
+            $ref: '#/components/schemas/SalesTeamProductivityRow', $ref: '#/components/schemas/TerritorySalesRow',
+            $ref: '#/components/schemas/PartySalesRow', $ref: '#/components/schemas/ProductSalesRow',
+            $ref: '#/components/schemas/SchemeUtilizationRow', $ref: '#/components/schemas/OrderStatusRow',
+            $ref: '#/components/schemas/DispatchPendingRow', $ref: '#/components/schemas/BatchInventoryRow',
+            $ref: '#/components/schemas/NearExpiryRow', $ref: '#/components/schemas/TerritoryViolationRow',
+            $ref: '#/components/schemas/WebhookFailureRow', $ref: '#/components/schemas/WhatsappDeliveryRow',
+            $ref: '#/components/schemas/PaymentOutstandingRow']}}
+      meta: {$ref: '#/components/schemas/ReportMeta'}
+  LeadSourceRow: {type: object, properties: {source: {type: string}, totalLeads: {
+        type: integer}, converted: {type: integer}, conversionPct: {type: number}}}
+  ResponseTimeRow: {type: object, properties: {leadRef: {type: string}, leadName: {
+        type: string}, source: {type: string}, createdDate: {type: string, 
+          format: date-time}, respondedAt: {type: string, format: date-time, 
+          nullable: true}, durationHours: {type: number}, breached: {type: 
+          string, enum: ['Yes', 'No']}}}
+  ConversionRow: {type: object, properties: {stage: {type: string}, count: {type: 
+          integer}}}
+  SalesTeamProductivityRow: {type: object, properties: {userId: {type: string}, 
+        name: {type: string}, leadsCount: {type: integer}, convertedCount: {type: 
+          integer}, ordersCount: {type: integer}, ordersValue: {type: number}}}
+  TerritorySalesRow: {type: object, properties: {state: {type: string}, district: {
+        type: string}, orders: {type: integer}, totalSales: {type: number}}}
+  PartySalesRow: {type: object, properties: {partyId: {type: string}, partyName: {
+        type: string}, orders: {type: integer}, totalSales: {type: number}}}
+  ProductSalesRow: {type: object, properties: {productId: {type: string}, 
+        productName: {type: string}, qtySold: {type: integer}, freeQty: {type: 
+          integer}, netSales: {type: number}}}
+  SchemeUtilizationRow: {type: object, properties: {schemeId: {type: string}, 
+        schemeName: {type: string}, timesApplied: {type: integer}, freeQtyGiven: {
+        type: integer}, netSales: {type: number}}}
+  OrderStatusRow: {type: object, properties: {status: {type: string}, count: {
+          type: integer}, totalValue: {type: number}}}
+  DispatchPendingRow: {type: object, properties: {invoiceNo: {type: string}, 
+        partyName: {type: string}, status: {type: string}, orderDate: {type: 
+          string, format: date}, total: {type: number}}}
+  BatchInventoryRow: {type: object, properties: {productName: {type: string}, 
+        batchNo: {type: string}, expiryDate: {type: string, format: date}, 
+        availableQty: {type: integer}, status: {type: string}, stockValue: {type: 
+          number}}}
+  NearExpiryRow: {type: object, properties: {productName: {type: string}, 
+        batchNo: {type: string}, expiryDate: {type: string, format: date}, 
+        daysLeft: {type: integer}, availableQty: {type: integer}, stockValue: {
+          type: number}}}
+  TerritoryViolationRow: {type: object, properties: {invoiceNo: {type: string}, 
+        partyName: {type: string}, reason: {type: string}, orderDate: {type: 
+          string, format: date}}}
+  WebhookFailureRow: {type: object, properties: {source: {type: string}, 
+        eventType: {type: string}, receivedAt: {type: string, format: date-time},
+      status: {type: string}, errorMessage: {type: string, nullable: true}}}
+  WhatsappDeliveryRow: {type: object, properties: {recipientName: {type: string},
+      templateName: {type: string}, status: {type: string}, sentAt: {type: 
+          string, format: date-time}}}
 
 paths:
   # ============================================================================
@@ -706,13 +781,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  status: { type: string, example: "ok" }
-                  timestamp: { type: string, example: "2026-09-20T18:47:00Z" }
+                  status: {type: string, example: "ok"}
+                  timestamp: {type: string, example: "2026-09-20T18:47:00Z"}
 
   /ready:
     get:
       summary: Readiness probe
-      description: Verifies database connectivity, storage write permissions, and active encryption keys.
+      description: Verifies database connectivity, storage write permissions, 
+        and active encryption keys.
       tags: [Health]
       security: []
       responses:
@@ -727,11 +803,12 @@ paths:
   /oauth/token:
     post:
       summary: Issue OAuth 2.0 access & refresh tokens
-      description: Authenticates user credentials per surface client or rotates a valid refresh token.
+      description: Authenticates user credentials per surface client or rotates 
+        a valid refresh token.
       tags: [Auth]
       security: []
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -764,13 +841,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  success: { type: boolean, example: true }
-                  data: { $ref: '#/components/schemas/AuthMeResponse' }
+                  success: {type: boolean, example: true}
+                  data: {$ref: '#/components/schemas/AuthMeResponse'}
         '401':
           description: Invalid credentials or token reuse detected.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              schema: {$ref: '#/components/schemas/ErrorEnvelope'}
 
   /oauth/revoke:
     post:
@@ -784,7 +861,8 @@ paths:
   /auth/me:
     get:
       summary: Get authenticated user profile
-      description: Returns verified identity, permissions, tenant claims, and surface role.
+      description: Returns verified identity, permissions, tenant claims, and 
+        surface role.
       tags: [Auth]
       responses:
         '200':
@@ -794,8 +872,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  success: { type: boolean, example: true }
-                  data: { $ref: '#/components/schemas/TokenResponse' }
+                  success: {type: boolean, example: true}
+                  data: {$ref: '#/components/schemas/TokenResponse'}
 
   # ============================================================================
   # India Geographic Reference
@@ -815,10 +893,10 @@ paths:
       tags: [Geo]
       security: []
       parameters:
-        - name: state_ref
-          in: query
-          required: false
-          schema: { type: string }
+      - name: state_ref
+        in: query
+        required: false
+        schema: {type: string}
       responses:
         '200':
           description: List of districts.
@@ -829,10 +907,10 @@ paths:
       tags: [Geo]
       security: []
       parameters:
-        - name: pin
-          in: path
-          required: true
-          schema: { type: string, example: "400001" }
+      - name: pin
+        in: path
+        required: true
+        schema: {type: string, example: "400001"}
       responses:
         '200':
           description: Resolved geographic details.
@@ -843,7 +921,8 @@ paths:
   /super/dashboard/stats:
     get:
       summary: Platform overview statistics
-      description: Returns multi-tenant counts, job queue status, and system health.
+      description: Returns multi-tenant counts, job queue status, and system 
+        health.
       tags: [Super Admin]
       responses:
         '200':
@@ -854,8 +933,8 @@ paths:
       summary: List organizations
       tags: [Super Admin]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PerPageParam'
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/PerPageParam'
       responses:
         '200':
           description: Organizations list.
@@ -870,8 +949,8 @@ paths:
               type: object
               required: [org_code, org_name]
               properties:
-                org_code: { type: string, example: "ACME" }
-                org_name: { type: string, example: "Acme Healthcare" }
+                org_code: {type: string, example: "ACME"}
+                org_name: {type: string, example: "Acme Healthcare"}
       responses:
         '201':
           description: Organization created.
@@ -894,9 +973,9 @@ paths:
               type: object
               required: [org_ref, franchise_code, franchise_name]
               properties:
-                org_ref: { type: string, example: "ORG-ACME" }
-                franchise_code: { type: string, example: "MUMBAI" }
-                franchise_name: { type: string, example: "Acme PCD Mumbai" }
+                org_ref: {type: string, example: "ORG-ACME"}
+                franchise_code: {type: string, example: "MUMBAI"}
+                franchise_name: {type: string, example: "Acme PCD Mumbai"}
       responses:
         '201':
           description: Franchise created.
@@ -904,13 +983,14 @@ paths:
   /super/impersonate/{ref}:
     post:
       summary: Impersonate a user with time-boxed audit
-      description: Issues a 15-minute impersonation JWT carrying original super admin identity.
+      description: Issues a 15-minute impersonation JWT carrying original super 
+        admin identity.
       tags: [Super Admin]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Impersonation token issued.
@@ -920,8 +1000,8 @@ paths:
       summary: Platform-wide audit trail
       tags: [Super Admin]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PerPageParam'
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/PerPageParam'
       responses:
         '200':
           description: Audit logs list.
@@ -955,10 +1035,10 @@ paths:
               type: object
               required: [email, name, role]
               properties:
-                email: { type: string, format: email }
-                name: { type: string }
-                role: { type: string, enum: [FRANCHISE_ADMIN, SALES, DISTRIBUTOR] }
-                phone: { type: string }
+                email: {type: string, format: email}
+                name: {type: string}
+                role: {type: string, enum: [FRANCHISE_ADMIN, SALES, DISTRIBUTOR]}
+                phone: {type: string}
       responses:
         '201':
           description: User created.
@@ -981,30 +1061,30 @@ paths:
               type: object
               required: [category_name]
               properties:
-                category_name: { type: string, example: "Antibiotics" }
+                category_name: {type: string, example: "Antibiotics"}
       responses:
         '201':
           description: Category created.
 
   /admin/categories/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get product category
       tags: [Admin Masters]
-      responses: { '200': { description: Category detail. } }
+      responses: {'200': {description: Category detail.}}
     patch:
       summary: Update product category
       tags: [Admin Masters]
-      responses: { '200': { description: Category updated. } }
+      responses: {'200': {description: Category updated.}}
 
   /admin/categories/{ref}/status:
     post:
       summary: Activate or deactivate product category
       tags: [Admin Masters]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Category status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Category status changed.}}
 
   /admin/tiers:
     get:
@@ -1016,23 +1096,23 @@ paths:
 
   /admin/tiers/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get pricing tier
       tags: [Admin Masters]
-      responses: { '200': { description: Pricing tier detail. } }
+      responses: {'200': {description: Pricing tier detail.}}
     patch:
       summary: Update pricing tier
       tags: [Admin Masters]
-      responses: { '200': { description: Pricing tier updated. } }
+      responses: {'200': {description: Pricing tier updated.}}
 
   /admin/tiers/{ref}/status:
     post:
       summary: Activate or deactivate pricing tier
       tags: [Admin Masters]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Pricing tier status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Pricing tier status changed.}}
 
   /admin/transporters:
     get:
@@ -1052,36 +1132,38 @@ paths:
               type: object
               required: [transporter_name]
               properties:
-                transporter_name: { type: string, example: "V-Trans Logistics" }
-                tracking_url_template: { type: string, example: "https://vtrans.com/track/{lr}" }
+                transporter_name: {type: string, example: "V-Trans Logistics"}
+                tracking_url_template: {type: string, example: "https://vtrans.com/track/{lr}"}
       responses:
         '201':
           description: Transporter created.
 
   /admin/catalog-masters/{category}:
     parameters:
-      - { name: category, in: path, required: true, schema: { type: string, enum: [dosageForms, schemeTypes] } }
+    - {name: category, in: path, required: true, schema: {type: string, enum: [
+            dosageForms, schemeTypes]}}
     get:
       summary: List product-related master values
       tags: [Admin Masters]
-      responses: { '200': { description: Master values list. } }
+      responses: {'200': {description: Master values list.}}
     post:
       summary: Create product-related master value
       tags: [Admin Masters]
-      responses: { '201': { description: Master value created. } }
+      responses: {'201': {description: Master value created.}}
 
   /admin/catalog-masters/{category}/{ref}:
     parameters:
-      - { name: category, in: path, required: true, schema: { type: string, enum: [dosageForms, schemeTypes] } }
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: category, in: path, required: true, schema: {type: string, enum: [
+            dosageForms, schemeTypes]}}
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get product-related master value
       tags: [Admin Masters]
-      responses: { '200': { description: Master value detail. } }
+      responses: {'200': {description: Master value detail.}}
     patch:
       summary: Update product-related master value
       tags: [Admin Masters]
-      responses: { '200': { description: Master value updated. } }
+      responses: {'200': {description: Master value updated.}}
 
   # ============================================================================
   # Franchise Admin: Products & Pricing
@@ -1108,45 +1190,45 @@ paths:
 
   /admin/products/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get product
       tags: [Admin Products]
-      responses: { '200': { description: Product detail. } }
+      responses: {'200': {description: Product detail.}}
     patch:
       summary: Update product
       tags: [Admin Products]
-      responses: { '200': { description: Product updated. } }
+      responses: {'200': {description: Product updated.}}
     delete:
       summary: Delete an unreferenced product
       tags: [Admin Products]
-      responses: { '200': { description: Product deleted. } }
+      responses: {'200': {description: Product deleted.}}
 
   /admin/prices:
     get:
       summary: List product prices
       tags: [Admin Pricing & Schemes]
-      responses: { '200': { description: Pricing rates list. } }
+      responses: {'200': {description: Pricing rates list.}}
     post:
       summary: Create product price
       tags: [Admin Pricing & Schemes]
-      responses: { '201': { description: Pricing rate created. } }
+      responses: {'201': {description: Pricing rate created.}}
 
   /admin/prices/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get product price
       tags: [Admin Pricing & Schemes]
-      responses: { '200': { description: Pricing rate detail. } }
+      responses: {'200': {description: Pricing rate detail.}}
 
   /admin/prices/{ref}/status:
     post:
       summary: Activate or deactivate product price
       tags: [Admin Pricing & Schemes]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Pricing rate status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Pricing rate status changed.}}
 
   /admin/pricing/resolve:
     post:
@@ -1161,10 +1243,10 @@ paths:
               type: object
               required: [product_ref]
               properties:
-                product_ref: { type: string }
-                party_ref: { type: string }
-                tier_ref: { type: string }
-                date: { type: string, format: date }
+                product_ref: {type: string}
+                party_ref: {type: string}
+                tier_ref: {type: string}
+                date: {type: string, format: date}
       responses:
         '200':
           description: Resolved rate and source.
@@ -1173,31 +1255,31 @@ paths:
     get:
       summary: List schemes
       tags: [Admin Pricing & Schemes]
-      responses: { '200': { description: Schemes list. } }
+      responses: {'200': {description: Schemes list.}}
     post:
       summary: Create scheme
       tags: [Admin Pricing & Schemes]
-      responses: { '201': { description: Scheme created. } }
+      responses: {'201': {description: Scheme created.}}
 
   /admin/schemes/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get scheme and rules
       tags: [Admin Pricing & Schemes]
-      responses: { '200': { description: Scheme detail. } }
+      responses: {'200': {description: Scheme detail.}}
     patch:
       summary: Update scheme and rules
       tags: [Admin Pricing & Schemes]
-      responses: { '200': { description: Scheme updated. } }
+      responses: {'200': {description: Scheme updated.}}
 
   /admin/schemes/{ref}/status:
     post:
       summary: Activate or deactivate scheme
       tags: [Admin Pricing & Schemes]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Scheme status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Scheme status changed.}}
 
   /admin/schemes/calculate:
     post:
@@ -1212,10 +1294,10 @@ paths:
               type: object
               required: [product_ref, ordered_qty]
               properties:
-                product_ref: { type: string }
-                ordered_qty: { type: integer, example: 25 }
-                tier_ref: { type: string }
-                date: { type: string, format: date }
+                product_ref: {type: string}
+                ordered_qty: {type: integer, example: 25}
+                tier_ref: {type: string}
+                date: {type: string, format: date}
       responses:
         '200':
           description: Calculation breakdown and free quantity.
@@ -1248,10 +1330,10 @@ paths:
       summary: Assign lead to sales representative
       tags: [Admin Leads & Follow-ups]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       requestBody:
         required: true
         content:
@@ -1260,7 +1342,7 @@ paths:
               type: object
               required: [sales_user_ref]
               properties:
-                sales_user_ref: { type: string }
+                sales_user_ref: {type: string}
       responses:
         '200':
           description: Lead assigned.
@@ -1283,9 +1365,9 @@ paths:
               type: object
               required: [lead_ref, next_action, next_follow_up_at]
               properties:
-                lead_ref: { type: string }
-                next_action: { type: string, example: "Call regarding catalogue" }
-                next_follow_up_at: { type: string, format: date-time }
+                lead_ref: {type: string}
+                next_action: {type: string, example: "Call regarding catalogue"}
+                next_follow_up_at: {type: string, format: date-time}
       responses:
         '201':
           description: Follow-up scheduled.
@@ -1297,81 +1379,110 @@ paths:
     get:
       summary: List distributor onboarding registrations
       tags: [Admin Parties & Onboarding]
-      security: [{ bearerAuth: [] }]
-      responses: { '200': { description: Paginated registrations, server-filtered by effective ALL, OWN, TEAM, TERRITORY, or NONE scope. }, '403': { description: Missing permission. } }
+      security: [bearerAuth: []]
+      responses: {'200': {description: Paginated registrations, server-filtered 
+            by effective ALL: null, OWN: null, TEAM: null, TERRITORY: null, or 
+            NONE scope.: null}, '403': {description: Missing permission.}}
   /admin/audit:
     get:
       summary: List tenant audit events
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
-        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
-        - { name: category, in: query, schema: { type: string } }
-        - { name: entity_type, in: query, schema: { type: string } }
-        - { name: actor_ref, in: query, schema: { type: string } }
-        - { name: search, in: query, schema: { type: string } }
-      responses: { '200': { description: Scope-filtered audit events. }, '403': { description: Missing audit permission. } }
+      - {name: page, in: query, schema: {type: integer, minimum: 1}}
+      - {name: per_page, in: query, schema: {type: integer, minimum: 1, maximum: 
+            100}}
+      - {name: category, in: query, schema: {type: string}}
+      - {name: entity_type, in: query, schema: {type: string}}
+      - {name: actor_ref, in: query, schema: {type: string}}
+      - {name: search, in: query, schema: {type: string}}
+      responses: {'200': {description: Scope-filtered audit events.}, '403': {
+            description: Missing audit permission.}}
   /admin/dashboard:
     get:
       summary: Scope-aware dashboard widget DTO
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
-      responses: { '200': { description: Named dashboard widget groups., content: { application/json: { schema: { $ref: '#/components/schemas/DashboardResponse' } } } }, '403': { description: Missing dashboard permission. } }
+      security: [bearerAuth: []]
+      responses: {'200': {description: Named dashboard widget groups., content: {
+            application/json: {schema: {$ref: '#/components/schemas/DashboardResponse'}}}},
+        '403': {description: Missing dashboard permission.}}
   /admin/analytics/reports/{key}:
     get:
       summary: Scope-aware frontend report adapter
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - { name: key, in: path, required: true, schema: { type: string, enum: [lead-source, response-time, conversion, sales-team-productivity, territory-sales, party-sales, product-sales, scheme-utilization, order-status, dispatch-pending, batch-inventory, near-expiry, territory-violations, webhook-failures, whatsapp-delivery, payment-outstanding] } }
-        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
-        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
-        - { name: sort_by, in: query, schema: { type: string } }
-        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
-        - { name: from, in: query, schema: { type: string, format: date } }
-        - { name: to, in: query, schema: { type: string, format: date } }
-      responses: { '200': { description: Exact report row DTO and pagination metadata., content: { application/json: { schema: { $ref: '#/components/schemas/ReportResponse' } } } }, '403': { description: Missing underlying-module permission. }, '422': { description: Invalid key or business-decision-blocked report. } }
+      - {name: key, in: path, required: true, schema: {type: string, enum: [
+              lead-source, response-time, conversion, sales-team-productivity, 
+              territory-sales, party-sales, product-sales, scheme-utilization, 
+              order-status, dispatch-pending, batch-inventory, near-expiry, 
+              territory-violations, webhook-failures, whatsapp-delivery, 
+              payment-outstanding]}}
+      - {name: page, in: query, schema: {type: integer, minimum: 1}}
+      - {name: per_page, in: query, schema: {type: integer, minimum: 1, maximum: 
+            100}}
+      - {name: sort_by, in: query, schema: {type: string}}
+      - {name: sort_dir, in: query, schema: {type: string, enum: [asc, desc]}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      responses: {'200': {description: Exact report row DTO and pagination 
+            metadata., content: {application/json: {schema: {$ref: '#/components/schemas/ReportResponse'}}}},
+        '403': {description: Missing underlying-module permission.}, '422': {
+            description: Invalid key or business-decision-blocked report.}}
   /admin/onboarding/{ref}:
     get:
       summary: Get onboarding registration and redacted KYC metadata
       tags: [Admin Parties & Onboarding]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      responses: { '200': { description: Registration detail. }, '403': { description: Missing permission. }, '404': { description: Not found in tenant or permitted scope. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Registration detail.}, '403': {
+            description: Missing permission.}, '404': {description: Not found in
+            tenant or permitted scope.}}
   /admin/onboarding/{ref}/approve:
     post:
       summary: Approve a submitted distributor registration
       tags: [Admin Parties & Onboarding]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      responses: { '200': { description: Approved registration. }, '422': { description: Invalid lifecycle transition. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Approved registration.}, '422': {
+            description: Invalid lifecycle transition.}}
   /admin/onboarding/{ref}/kyc-documents/{document_ref}/verify:
     post:
       summary: Verify or reject a pending KYC document
       tags: [Admin Parties & Onboarding]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }, { name: document_ref, in: path, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [VERIFIED, REJECTED] }, remarks: { type: string } } } } } }
-      responses: { '200': { description: KYC decision recorded. }, '403': { description: Missing KYC permission. }, '404': { description: Parent registration is not in permitted scope. }, '422': { description: Invalid KYC transition. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}},
+        {name: document_ref, in: path, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {type: 
+                object, required: [status], properties: {status: {type: string, 
+                    enum: [VERIFIED, REJECTED]}, remarks: {type: string}}}}}}
+      responses: {'200': {description: KYC decision recorded.}, '403': {
+            description: Missing KYC permission.}, '404': {description: Parent 
+            registration is not in permitted scope.}, '422': {description: 
+            Invalid KYC transition.}}
   /portal/dcrs:
     get:
       summary: List online DCRs in the authenticated distributor context
       tags: [Distributor Portal]
-      security: [{ bearerAuth: [] }]
-      responses: { '200': { description: DCR list filtered by effective scope. TEAM is derived only from TASK-001 direct reports. } }
+      security: [bearerAuth: []]
+      responses: {'200': {description: DCR list filtered by effective scope. 
+            TEAM is derived only from TASK-001 direct reports.}}
     post:
       summary: Create online DCR draft
       tags: [Distributor Portal]
-      security: [{ bearerAuth: [] }]
-      responses: { '201': { description: DCR draft created. }, '409': { description: Duplicate owner/date. } }
+      security: [bearerAuth: []]
+      responses: {'201': {description: DCR draft created.}, '409': {description: 
+            Duplicate owner/date.}}
   /portal/dcrs/{ref}/status:
     post:
       summary: Submit, approve, reject, or reopen an online DCR
       tags: [Distributor Portal]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      responses: { '200': { description: Lifecycle transition recorded. }, '403': { description: Missing action permission. }, '404': { description: DCR not in permitted scope. }, '422': { description: Invalid lifecycle or required remark missing. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Lifecycle transition recorded.}, '403': {
+            description: Missing action permission.}, '404': {description: DCR 
+            not in permitted scope.}, '422': {description: Invalid lifecycle or 
+            required remark missing.}}
   /admin/parties:
     get:
       summary: List customer parties / distributors
@@ -1397,85 +1508,86 @@ paths:
       summary: Get party financial ledger summary
       tags: [Admin Parties & Onboarding]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Ledger transactions and balance.
 
   /admin/parties/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get party detail, credit, interests and territory
       tags: [Admin Parties & Onboarding]
-      responses: { '200': { description: Party detail. } }
+      responses: {'200': {description: Party detail.}}
     patch:
       summary: Update party
       tags: [Admin Parties & Onboarding]
-      responses: { '200': { description: Party updated. } }
+      responses: {'200': {description: Party updated.}}
 
   /admin/parties/{ref}/status:
     post:
       summary: Activate or deactivate party
       tags: [Admin Parties & Onboarding]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Party status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Party status changed.}}
 
   /admin/parties/{ref}/archive:
     post:
       summary: Archive party without deleting history
       tags: [Admin Parties & Onboarding]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Party archived. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Party archived.}}
 
   /admin/parties/{ref}/restore:
     post:
       summary: Restore archived party
       tags: [Admin Parties & Onboarding]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Party restored. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Party restored.}}
 
   /admin/territories:
     get:
       summary: List territory allocations
       tags: [Admin Territories]
-      responses: { '200': { description: Territory allocation list. } }
+      responses: {'200': {description: Territory allocation list.}}
     post:
       summary: Create effective-dated territory allocation
       tags: [Admin Territories]
-      responses: { '201': { description: Territory allocation created. } }
+      responses: {'201': {description: Territory allocation created.}}
 
   /admin/territories/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get territory allocation
       tags: [Admin Territories]
-      responses: { '200': { description: Territory allocation detail. } }
+      responses: {'200': {description: Territory allocation detail.}}
     patch:
       summary: Update territory allocation dates/exclusivity
       tags: [Admin Territories]
-      responses: { '200': { description: Territory allocation updated. } }
+      responses: {'200': {description: Territory allocation updated.}}
 
   /admin/territories/{ref}/status:
     post:
       summary: Activate or deactivate territory allocation
       tags: [Admin Territories]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Territory allocation status changed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Territory allocation status changed.}}
 
   /admin/territories/resolve:
     post:
       summary: Resolve party territory for pincode and effective date
       tags: [Admin Territories]
-      responses: { '200': { description: MATCHED, UNASSIGNED or CONFLICT result. } }
+      responses: {'200': {description: MATCHED, UNASSIGNED or CONFLICT result.: 
+            null}}
 
   /admin/territories/validate:
     post:
@@ -1489,11 +1601,12 @@ paths:
               type: object
               required: [party_ref, pincode]
               properties:
-                party_ref: { type: string }
-                pincode: { type: string, example: "400001" }
+                party_ref: {type: string}
+                pincode: {type: string, example: "400001"}
       responses:
         '200':
-          description: Territory validation status (ALLOWED, BLOCKED, EXCLUSIVE_CONFLICT).
+          description: Territory validation status (ALLOWED, BLOCKED, 
+            EXCLUSIVE_CONFLICT).
 
   /admin/territories/override:
     post:
@@ -1507,10 +1620,10 @@ paths:
               type: object
               required: [order_ref, party_ref, pincode, reason]
               properties:
-                order_ref: { type: string }
-                party_ref: { type: string }
-                pincode: { type: string }
-                reason: { type: string, example: "Approved by Sales Director" }
+                order_ref: {type: string}
+                party_ref: {type: string}
+                pincode: {type: string}
+                reason: {type: string, example: "Approved by Sales Director"}
       responses:
         '200':
           description: Territory overridden and logged.
@@ -1519,112 +1632,118 @@ paths:
     get:
       summary: List orders
       tags: [Admin Orders]
-      responses: { '200': { description: Paginated order list. } }
+      responses: {'200': {description: Paginated order list.}}
     post:
       summary: Create order draft
       tags: [Admin Orders]
-      responses: { '201': { description: Draft created with server-calculated totals. } }
+      responses: {'201': {description: Draft created with server-calculated 
+            totals.}}
 
   /admin/orders/{ref}:
     parameters:
-      - { name: ref, in: path, required: true, schema: { type: string } }
+    - {name: ref, in: path, required: true, schema: {type: string}}
     get:
       summary: Get order detail, items and lifecycle history
       tags: [Admin Orders]
-      responses: { '200': { description: Order detail. } }
+      responses: {'200': {description: Order detail.}}
     patch:
       summary: Update draft order
       tags: [Admin Orders]
-      responses: { '200': { description: Draft updated. } }
+      responses: {'200': {description: Draft updated.}}
     delete:
       summary: Delete draft order
       tags: [Admin Orders]
-      responses: { '200': { description: Draft deleted. } }
+      responses: {'200': {description: Draft deleted.}}
 
   /admin/orders/{ref}/submit:
     post:
       summary: Submit draft order
       tags: [Admin Orders]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Order submitted. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Order submitted.}}
 
   /admin/orders/{ref}/confirm:
     post:
       summary: Confirm submitted order and reserve stock using FEFO
       tags: [Admin Orders]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Order confirmed and reservations returned. }, '422': { description: CREDIT_LIMIT_EXCEEDED when projected exposure is greater than the stored credit limit; equality is allowed. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Order confirmed and reservations 
+            returned.}, '422': {description: CREDIT_LIMIT_EXCEEDED when 
+            projected exposure is greater than the stored credit limit; equality
+            is allowed.}}
 
   /admin/orders/{ref}/cancel:
     post:
       summary: Cancel order and release owned reservations
       tags: [Admin Orders]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Order cancelled. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Order cancelled.}}
 
   /admin/inventory/batches:
     get:
       summary: List inventory batches and available stock
       tags: [Admin Inventory]
-      responses: { '200': { description: Paginated batch list. } }
+      responses: {'200': {description: Paginated batch list.}}
 
   /admin/inventory/batches/{ref}:
     get:
       summary: Get batch and movement history
       tags: [Admin Inventory]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Batch detail. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Batch detail.}}
 
   /admin/inventory/receive:
     post:
       summary: Receive a stock batch
       tags: [Admin Inventory]
-      responses: { '201': { description: Batch received. } }
+      responses: {'201': {description: Batch received.}}
 
   /admin/inventory/batches/{ref}/adjust:
     post:
       summary: Adjust batch stock with reason
       tags: [Admin Inventory]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Batch adjusted. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Batch adjusted.}}
 
   /admin/inventory/reservations/{order_ref}:
     get:
       summary: List order stock reservations
       tags: [Admin Inventory]
       parameters:
-        - { name: order_ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Reservation history. } }
+      - {name: order_ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Reservation history.}}
 
   /admin/inventory/reservations/{order_ref}/release:
     post:
       summary: Release active order reservations
       tags: [Admin Inventory]
       parameters:
-        - { name: order_ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Reservations released. } }
+      - {name: order_ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Reservations released.}}
 
   /admin/inventory/reservations/{order_ref}/consume:
     post:
-      summary: Consume active order reservations (future dispatch/billing foundation)
+      summary: Consume active order reservations (future dispatch/billing 
+        foundation)
       tags: [Admin Inventory]
       parameters:
-        - { name: order_ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Reservations consumed and stock movements recorded. } }
+      - {name: order_ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Reservations consumed and stock movements
+            recorded.}}
 
   /admin/inventory/near-expiry:
     get:
       summary: List near-expiry batches
       tags: [Admin Inventory]
       parameters:
-        - name: days
-          in: query
-          schema: { type: integer, default: 180 }
+      - name: days
+        in: query
+        schema: {type: integer, default: 180}
       responses:
         '200':
           description: Near-expiry batches list.
@@ -1634,14 +1753,14 @@ paths:
       summary: List tax invoices
       tags: [Admin Billing & Invoices]
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PerPageParam'
-        - name: party_ref
-          in: query
-          schema: { type: string }
-        - name: status
-          in: query
-          schema: { type: string, enum: [POSTED, CANCELLED] }
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/PerPageParam'
+      - name: party_ref
+        in: query
+        schema: {type: string}
+      - name: status
+        in: query
+        schema: {type: string, enum: [POSTED, CANCELLED]}
       responses:
         '200':
           description: Invoices list.
@@ -1651,10 +1770,10 @@ paths:
       summary: Get invoice details and line items
       tags: [Admin Billing & Invoices]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Invoice details.
@@ -1663,16 +1782,19 @@ paths:
       summary: Get the invoice generated for an order
       tags: [Admin Billing & Invoices]
       parameters:
-        - { name: order_ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Invoice detail. } }
+      - {name: order_ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Invoice detail.}}
 
   /admin/invoices/generate:
     post:
       summary: Generate gapless tax invoice from confirmed order
-      description: Resolves supplier and normalized delivery states, calculates GST from authoritative product rates, and creates an immutable tax invoice. Missing supplier or delivery state fails before invoice persistence.
+      description: Resolves supplier and normalized delivery states, calculates 
+        GST from authoritative product rates, and creates an immutable tax 
+        invoice. Missing supplier or delivery state fails before invoice 
+        persistence.
       tags: [Admin Billing & Invoices]
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1681,8 +1803,8 @@ paths:
               type: object
               required: [order_ref]
               properties:
-                order_ref: { type: string }
-                due_date: { type: string, format: date }
+                order_ref: {type: string}
+                due_date: {type: string, format: date}
       responses:
         '201':
           description: Tax invoice generated.
@@ -1692,8 +1814,8 @@ paths:
       summary: Cancel an unpaid, undispatched posted invoice
       tags: [Admin Billing & Invoices]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1701,69 +1823,95 @@ paths:
             schema:
               type: object
               required: [reason]
-              properties: { reason: { type: string, minLength: 2 } }
-      responses: { '200': { description: Invoice cancelled. } }
+              properties: {reason: {type: string, minLength: 2}}
+      responses: {'200': {description: Invoice cancelled.}}
 
   /admin/pdc:
     get:
       summary: List tenant-scoped post-dated cheques
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: page, in: query, schema: { type: integer, minimum: 1 } }, { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }, { name: party_ref, in: query, schema: { type: string } }]
-      responses: { '200': { description: Paginated PDC DTOs, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Pdc' } } } } }, '403': { description: Missing payments view permission. } }
+      security: [bearerAuth: []]
+      parameters: [{name: page, in: query, schema: {type: integer, minimum: 1}}, {
+          name: per_page, in: query, schema: {type: integer, minimum: 1, maximum: 
+              100}}, {name: party_ref, in: query, schema: {type: string}}]
+      responses: {'200': {description: Paginated PDC DTOs, content: {
+              application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Pdc'}}}}},
+        '403': {description: Missing payments view permission.}}
     post:
       summary: Register a pending post-dated cheque without financial effect
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [party_ref, amount, cheque_number], properties: { party_ref: { type: string }, amount: { type: number }, cheque_number: { type: string }, bank_name: { type: string }, due_date: { type: string, format: date } } } } } }
-      responses: { '201': { description: Pending PDC registered. }, '422': { description: Invalid PDC or inaccessible party. } }
+      security: [bearerAuth: []]
+      requestBody: {required: true, content: {application/json: {schema: {type: 
+                object, required: [party_ref, amount, cheque_number], properties: {
+                party_ref: {type: string}, amount: {type: number}, cheque_number: {
+                  type: string}, bank_name: {type: string}, due_date: {type: 
+                    string, format: date}}}}}}
+      responses: {'201': {description: Pending PDC registered.}, '422': {
+            description: Invalid PDC or inaccessible party.}}
   /admin/pdc/{ref}:
     get:
       summary: Get a tenant- and scope-protected PDC
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      responses: { '200': { description: PDC detail., content: { application/json: { schema: { $ref: '#/components/schemas/Pdc' } } } }, '404': { description: Not found or inaccessible. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: PDC detail., content: {application/json: {
+              schema: {$ref: '#/components/schemas/Pdc'}}}}, '404': {description: 
+            Not found or inaccessible.}}
   /admin/pdc/{ref}/realize:
     post:
       summary: Realize a pending PDC into one normal manual-allocation Payment
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      responses: { '200': { description: PDC realized and payment linked. }, '422': { description: Invalid transition or duplicate realization. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: PDC realized and payment linked.}, '422': {
+          description: Invalid transition or duplicate realization.}}
   /admin/pdc/{ref}/bounce:
     post:
       summary: Bounce a pending PDC without financial effect
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 2 } } } } } }
-      responses: { '200': { description: PDC bounced. }, '422': { description: Invalid transition. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {type: 
+                object, required: [reason], properties: {reason: {type: string, 
+                    minLength: 2}}}}}}
+      responses: {'200': {description: PDC bounced.}, '422': {description: 
+            Invalid transition.}}
   /admin/pdc/{ref}/cancel:
     post:
       summary: Cancel a pending PDC without financial effect
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
-      parameters: [{ name: ref, in: path, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [reason], properties: { reason: { type: string, minLength: 2 } } } } } }
-      responses: { '200': { description: PDC cancelled. }, '422': { description: Invalid transition. } }
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {type: 
+                object, required: [reason], properties: {reason: {type: string, 
+                    minLength: 2}}}}}}
+      responses: {'200': {description: PDC cancelled.}, '422': {description: 
+            Invalid transition.}}
 
   /admin/outstanding:
     get:
       summary: List scope-protected invoice outstanding and ageing rows
-      description: Uses invoice due_date as the only due-date authority. Pending, bounced, and cancelled PDCs have no effect; only active allocations on non-reversed payments reduce a balance.
+      description: Uses invoice due_date as the only due-date authority. 
+        Pending, bounced, and cancelled PDCs have no effect; only active 
+        allocations on non-reversed payments reduce a balance.
       tags: [Admin Payments]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - { name: party_ref, in: query, schema: { type: string } }
-        - { name: bucket, in: query, schema: { type: string, enum: [NOT_DUE, 0-30, 31-60, 61-90, 91-120, 120+, UNCLASSIFIED] } }
-        - { name: from, in: query, schema: { type: string, format: date } }
-        - { name: to, in: query, schema: { type: string, format: date } }
-        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
-        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
-        - { name: sort_by, in: query, schema: { type: string, enum: [invoiceNumber, partyName, dueDate, balance, bucket, daysOverdue, status] } }
-        - { name: sort_dir, in: query, schema: { type: string, enum: [asc, desc] } }
-      responses: { '200': { description: Scoped, paginated open-invoice rows., content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OutstandingInvoice' } } } } }, '403': { description: Missing payments view permission. } }
+      - {name: party_ref, in: query, schema: {type: string}}
+      - {name: bucket, in: query, schema: {type: string, enum: [NOT_DUE, 0-30, 
+              31-60, 61-90, 91-120, 120+, UNCLASSIFIED]}}
+      - {name: from, in: query, schema: {type: string, format: date}}
+      - {name: to, in: query, schema: {type: string, format: date}}
+      - {name: page, in: query, schema: {type: integer, minimum: 1}}
+      - {name: per_page, in: query, schema: {type: integer, minimum: 1, maximum: 
+            100}}
+      - {name: sort_by, in: query, schema: {type: string, enum: [invoiceNumber, 
+              partyName, dueDate, balance, bucket, daysOverdue, status]}}
+      - {name: sort_dir, in: query, schema: {type: string, enum: [asc, desc]}}
+      responses: {'200': {description: Scoped, paginated open-invoice rows.: 
+            null, content: {application/json: {schema: {type: array, items: {
+                    $ref: '#/components/schemas/OutstandingInvoice'}}}}}, '403': {
+          description: Missing payments view permission.}}
 
   # ============================================================================
   # Franchise Admin: Dispatches & Payments
@@ -1777,7 +1925,10 @@ paths:
           description: Dispatches list.
     post:
       summary: Create dispatch consignment
-      description: Requires a POSTED invoice with a resolved GST policy; otherwise returns `GST_DEPENDENCY_BLOCKED`. Partial dispatch and client-selected line quantities are not supported by the approved frontend flow.
+      description: Requires a POSTED invoice with a resolved GST policy; 
+        otherwise returns `GST_DEPENDENCY_BLOCKED`. Partial dispatch and 
+        client-selected line quantities are not supported by the approved 
+        frontend flow.
       tags: [Admin Dispatches]
       requestBody:
         required: true
@@ -1787,13 +1938,13 @@ paths:
               type: object
               required: [invoice_ref, transporter_ref, lr_number]
               properties:
-                invoice_ref: { type: string }
-                transporter_ref: { type: string }
-                lr_number: { type: string, example: "LR-998877" }
-                vehicle_no: { type: string }
-                tracking_url: { type: string }
-                boxes: { type: integer, minimum: 1 }
-                remarks: { type: string }
+                invoice_ref: {type: string}
+                transporter_ref: {type: string}
+                lr_number: {type: string, example: "LR-998877"}
+                vehicle_no: {type: string}
+                tracking_url: {type: string}
+                boxes: {type: integer, minimum: 1}
+                remarks: {type: string}
       responses:
         '201':
           description: Dispatch recorded.
@@ -1803,10 +1954,10 @@ paths:
       summary: Mark dispatch as delivered
       tags: [Admin Dispatches]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Dispatch delivered.
@@ -1816,8 +1967,8 @@ paths:
       summary: Get dispatch detail, delivery metadata, and lifecycle history
       tags: [Admin Dispatches]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-      responses: { '200': { description: Dispatch detail. } }
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Dispatch detail.}}
 
   /admin/payments:
     get:
@@ -1830,7 +1981,7 @@ paths:
       summary: Record payment collection and allocate to invoices
       tags: [Admin Payments]
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1839,18 +1990,19 @@ paths:
               type: object
               required: [party_ref, amount, payment_mode]
               properties:
-                party_ref: { type: string }
-                amount: { type: number, format: float, example: 20000.00 }
-                payment_mode: { type: string, enum: [NEFT, RTGS, CHEQUE, CASH, UPI] }
-                reference_no: { type: string }
+                party_ref: {type: string}
+                amount: {type: number, format: float, example: 20000.00}
+                payment_mode: {type: string, enum: [NEFT, RTGS, CHEQUE, CASH, 
+                      UPI]}
+                reference_no: {type: string}
                 allocations:
                   type: array
                   items:
                     type: object
                     required: [invoice_ref, allocated_amount]
                     properties:
-                      invoice_ref: { type: string }
-                      allocated_amount: { type: number, format: float }
+                      invoice_ref: {type: string}
+                      allocated_amount: {type: number, format: float}
       responses:
         '201':
           description: Payment recorded and allocated.
@@ -1858,11 +2010,12 @@ paths:
   /admin/payments/{ref}/allocations:
     post:
       summary: Manually allocate a payment to one invoice
-      description: Supports partial and multi-invoice allocation through explicit requests. Automatic allocation order is not assumed.
+      description: Supports partial and multi-invoice allocation through 
+        explicit requests. Automatic allocation order is not assumed.
       tags: [Admin Payments]
       parameters:
-        - { name: ref, in: path, required: true, schema: { type: string } }
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -1871,9 +2024,9 @@ paths:
               type: object
               required: [invoice_ref, amount]
               properties:
-                invoice_ref: { type: string }
-                amount: { type: number, format: float, minimum: 0.01 }
-      responses: { '201': { description: Allocation created. } }
+                invoice_ref: {type: string}
+                amount: {type: number, format: float, minimum: 0.01}
+      responses: {'201': {description: Allocation created.}}
 
   # ============================================================================
   # Franchise Admin: 12 Reports
@@ -1897,16 +2050,16 @@ paths:
         - `tenant-activity`
       tags: [Admin Reports]
       parameters:
-        - name: type
-          in: path
-          required: true
-          schema: { type: string }
-        - name: party_ref
-          in: query
-          schema: { type: string }
-        - name: days
-          in: query
-          schema: { type: integer }
+      - name: type
+        in: path
+        required: true
+        schema: {type: string}
+      - name: party_ref
+        in: query
+        schema: {type: string}
+      - name: days
+        in: query
+        schema: {type: integer}
       responses:
         '200':
           description: Report data rows.
@@ -1916,10 +2069,10 @@ paths:
       summary: Export report as CSV download
       tags: [Admin Reports]
       parameters:
-        - name: type
-          in: path
-          required: true
-          schema: { type: string }
+      - name: type
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Streamed CSV file download.
@@ -1936,9 +2089,9 @@ paths:
       summary: List in-app notifications
       tags: [Notifications]
       parameters:
-        - name: limit
-          in: query
-          schema: { type: integer, default: 20 }
+      - name: limit
+        in: query
+        schema: {type: integer, default: 20}
       responses:
         '200':
           description: Notifications list.
@@ -1956,10 +2109,10 @@ paths:
       summary: Mark specific notification as read
       tags: [Notifications]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Notification read confirmed.
@@ -1984,9 +2137,9 @@ paths:
             schema:
               type: object
               properties:
-                shipping_address: { type: string }
-                contact_name: { type: string }
-                mobile: { type: string }
+                shipping_address: {type: string}
+                contact_name: {type: string}
+                mobile: {type: string}
       responses:
         '200':
           description: Profile updated.
@@ -2002,7 +2155,8 @@ paths:
   /portal/cart/calculate:
     post:
       summary: Server-side cart calculation with schemes & tax
-      description: Prevents client-side price tampering by computing exact unit rates, free goods schemes, and GST.
+      description: Prevents client-side price tampering by computing exact unit 
+        rates, free goods schemes, and GST.
       tags: [Distributor Portal]
       requestBody:
         required: true
@@ -2018,11 +2172,12 @@ paths:
                     type: object
                     required: [product_ref, qty]
                     properties:
-                      product_ref: { type: string }
-                      qty: { type: integer, example: 20 }
+                      product_ref: {type: string}
+                      qty: {type: integer, example: 20}
       responses:
         '200':
-          description: Calculated cart item lines, subtotal, discounts, GST, and grand total.
+          description: Calculated cart item lines, subtotal, discounts, GST, and
+            grand total.
 
   /portal/orders:
     get:
@@ -2035,7 +2190,7 @@ paths:
       summary: Place distributor order
       tags: [Distributor Portal]
       parameters:
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -2044,17 +2199,17 @@ paths:
               type: object
               required: [client_order_ref, items]
               properties:
-                client_order_ref: { type: string, example: "WEB-ORD-001" }
-                shipping_address: { type: string }
-                remarks: { type: string }
+                client_order_ref: {type: string, example: "WEB-ORD-001"}
+                shipping_address: {type: string}
+                remarks: {type: string}
                 items:
                   type: array
                   items:
                     type: object
                     required: [product_ref, paid_qty]
                     properties:
-                      product_ref: { type: string }
-                      paid_qty: { type: integer, example: 50 }
+                      product_ref: {type: string}
+                      paid_qty: {type: integer, example: 50}
       responses:
         '201':
           description: Order placed.
@@ -2064,10 +2219,10 @@ paths:
       summary: Cancel distributor order (allowed pre-confirm only)
       tags: [Distributor Portal]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
         '200':
           description: Order cancelled.
@@ -2103,13 +2258,13 @@ paths:
     get:
       summary: List normalized roles in the current tenant
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       responses:
-        '200': { description: Roles returned with assigned user counts. }
+        '200': {description: Roles returned with assigned user counts.}
     post:
       summary: Create a configurable role
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       requestBody:
         required: true
         content:
@@ -2117,88 +2272,82 @@ paths:
             schema:
               $ref: '#/components/schemas/RoleMutation'
       responses:
-        '201': { description: Role created. }
-        '403': { description: Missing permission or privilege escalation. }
-        '422': { description: Validation failure. }
+        '201': {description: Role created.}
+        '403': {description: Missing permission or privilege escalation.}
+        '422': {description: Validation failure.}
 
   /admin/roles/{ref}:
     parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: { type: string, example: ROL-01JABCDEF1234567 }
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string, example: ROL-01JABCDEF1234567}
     get:
       summary: Get role detail, grants and scope overrides
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       responses:
-        '200': { description: Role detail. }
-        '404': { description: Role is outside the caller tenant or does not exist. }
+        '200': {description: Role detail.}
+        '404': {description: Role is outside the caller tenant or does not 
+            exist.}
     patch:
       summary: Update a configurable role
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       requestBody:
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RoleMutation' }
+            schema: {$ref: '#/components/schemas/RoleMutation'}
       responses:
-        '200': { description: Role updated. }
-        '403': { description: System/own role or unauthorized grant. }
-        '422': { description: Validation failure. }
+        '200': {description: Role updated.}
+        '403': {description: System/own role or unauthorized grant.}
+        '422': {description: Validation failure.}
     delete:
       summary: Delete an unused configurable role
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       responses:
-        '200': { description: Role deleted. }
-        '409': { description: Role still has assigned users. }
+        '200': {description: Role deleted.}
+        '409': {description: Role still has assigned users.}
 
   /admin/roles/{ref}/clone:
     post:
       summary: Clone a role within the current franchise
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              properties:
-                delivery_remarks: { type: string }
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties: { name: { type: string } }
+              properties: {name: {type: string}}
       responses:
-        '201': { description: Role cloned. }
+        '201': {description: Role cloned.}
 
   /admin/permissions:
     get:
       summary: Get the server-owned permission catalogue
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       responses:
-        '200': { description: Module/action catalogue with sensitive flags. }
+        '200': {description: Module/action catalogue with sensitive flags.}
 
   /admin/users/{ref}/roles:
     post:
       summary: Assign a normalized role to a user
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
       requestBody:
         required: true
         content:
@@ -2206,69 +2355,52 @@ paths:
             schema:
               type: object
               required: [role_ref]
-              properties: { role_ref: { type: string } }
+              properties: {role_ref: {type: string}}
       responses:
-        '200': { description: Role assigned. }
-        '403': { description: Unauthorized assignment or privilege escalation. }
+        '200': {description: Role assigned.}
+        '403': {description: Unauthorized assignment or privilege escalation.}
 
   /admin/users/{ref}/roles/{role_ref}:
     delete:
       summary: Revoke a normalized role from a user
       tags: [Admin Users]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - name: ref
-          in: path
-          required: true
-          schema: { type: string }
-        - name: role_ref
-          in: path
-          required: true
-          schema: { type: string }
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      - name: role_ref
+        in: path
+        required: true
+        schema: {type: string}
       responses:
-        '200': { description: Role revoked. }
-        '403': { description: Last privileged user protection or missing permission. }
+        '200': {description: Role revoked.}
+        '403': {description: Last privileged user protection or missing 
+            permission.}
 
-  /admin/dashboard:
-    get:
-      summary: Get scoped dashboard analytics
-      tags: [Admin Reports]
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200':
-          description: Dashboard data.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean, example: true }
-                  data:
-                    type: object
-                    properties:
-                      leads: { type: object }
-                      follow_ups: { type: object }
-                      orders: { type: object }
-                      outstanding: { type: object }
-                      near_expiry: { type: object }
-                      sales_team: { type: object }
+
 
   /admin/reports/{key}:
     get:
       summary: Stream analytical reports
       tags: [Admin Reports]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       parameters:
-        - name: key
-          in: path
-          required: true
-          schema: { type: string, enum: [lead-source, response-time, conversion, sales-team-productivity, territory-sales, party-sales, product-sales, scheme-utilization, order-status, dispatch-pending, batch-inventory, near-expiry, territory-violations, webhook-failures, whatsapp-delivery] }
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/PerPageParam'
-        - $ref: '#/components/parameters/DateFromParam'
-        - $ref: '#/components/parameters/DateToParam'
-        - $ref: '#/components/parameters/SortByParam'
-        - $ref: '#/components/parameters/SortDirParam'
+      - name: key
+        in: path
+        required: true
+        schema: {type: string, enum: [lead-source, response-time, conversion, 
+              sales-team-productivity, territory-sales, party-sales, 
+              product-sales, scheme-utilization, order-status, dispatch-pending, 
+              batch-inventory, near-expiry, territory-violations, 
+              webhook-failures, whatsapp-delivery]}
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/PerPageParam'
+      - $ref: '#/components/parameters/DateFromParam'
+      - $ref: '#/components/parameters/DateToParam'
+      - $ref: '#/components/parameters/SortByParam'
+      - $ref: '#/components/parameters/SortDirParam'
       responses:
         '200':
           description: Paginated report data.
@@ -2277,46 +2409,17 @@ paths:
               schema:
                 type: object
                 properties:
-                  success: { type: boolean, example: true }
-                  data: { type: object }
-                  meta: { type: object }
+                  success: {type: boolean, example: true}
+                  data: {type: object}
+                  meta: {type: object}
 
-  /admin/onboarding:
-    get:
-      summary: List onboarding applications
-      tags: [Admin Parties & Onboarding]
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200': { description: Onboarding applications list. }
 
-  /portal/dcrs:
-    get:
-      summary: List Daily Call Reports (DCR)
-      tags: [Distributor Portal]
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200': { description: List of DCRs. }
+
 
   /admin/webhook-sources:
     get:
       summary: List webhook sources
       tags: [Webhooks]
-      security: [{ bearerAuth: [] }]
+      security: [bearerAuth: []]
       responses:
-        '200': { description: List of webhook sources. }
-
-  /notifications:
-    get:
-      summary: List notifications
-      tags: [Notifications]
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200': { description: List of notifications. }
-
-  /portal/profile:
-    get:
-      summary: Get distributor profile
-      tags: [Distributor Portal]
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200': { description: Profile data. }
+        '200': {description: List of webhook sources.}

@@ -3,14 +3,14 @@
 -- compatibility field for surface authentication while auth_* tables become
 -- the source of truth for permissions and scopes.
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_code VARCHAR(64) NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_ref VARCHAR(24) NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(120) NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS designation VARCHAR(120) NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS assigned_region VARCHAR(191) NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS joining_date DATE NULL;
-ALTER TABLE users ADD UNIQUE KEY IF NOT EXISTS uq_user_employee_code (franchise_ref, employee_code);
-ALTER TABLE users ADD INDEX IF NOT EXISTS idx_user_manager (franchise_ref, reporting_manager_ref);
+ALTER TABLE users ADD COLUMN employee_code VARCHAR(64) NULL;
+ALTER TABLE users ADD COLUMN reporting_manager_ref VARCHAR(24) NULL;
+ALTER TABLE users ADD COLUMN department VARCHAR(120) NULL;
+ALTER TABLE users ADD COLUMN designation VARCHAR(120) NULL;
+ALTER TABLE users ADD COLUMN assigned_region VARCHAR(191) NULL;
+ALTER TABLE users ADD COLUMN joining_date DATE NULL;
+ALTER TABLE users ADD UNIQUE KEY uq_user_employee_code (franchise_ref, employee_code);
+ALTER TABLE users ADD INDEX idx_user_manager (franchise_ref, reporting_manager_ref);
 
 CREATE TABLE IF NOT EXISTS auth_roles (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
