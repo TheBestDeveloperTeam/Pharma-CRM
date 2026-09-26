@@ -6,6 +6,7 @@ declare(strict_types=1);
 require __DIR__ . '/../bootstrap/app.php';
 
 $pdo = \App\Core\Database::connection();
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 
 $seedFiles = [
     '001_admin_seed.sql',

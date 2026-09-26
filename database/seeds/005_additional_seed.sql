@@ -9,7 +9,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -------------------------------------------------------------
 
 -- 1. Extra Products
-INSERT INTO products (
+INSERT IGNORE INTO products (
   product_ref, org_ref, franchise_ref, sku, product_name, category_ref,
   composition, pack_size, dosage_form, mrp, pts, franchise_rate,
   gst_percent, hsn_code, shelf_life_days, storage_requirement, scheme_eligible, status, created_by_ref
@@ -28,7 +28,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 -- Extra Inventory Batches for Extra Products
-INSERT INTO inventory_batches (
+INSERT IGNORE INTO inventory_batches (
   batch_ref, org_ref, franchise_ref, product_ref,
   batch_no, manufacturing_date, expiry_date,
   received_qty, on_hand_qty, reserved_qty, damaged_qty,
@@ -45,7 +45,7 @@ INSERT INTO inventory_batches (
 ON DUPLICATE KEY UPDATE on_hand_qty = VALUES(on_hand_qty);
 
 -- 2. Extra Parties (Healthcare Providers & Retailers)
-INSERT INTO parties (
+INSERT IGNORE INTO parties (
   party_ref, org_ref, franchise_ref, party_code, firm_name, contact_name,
   mobile, email, gstin, drug_license_no,
   billing_address, shipping_address,
@@ -63,7 +63,7 @@ INSERT INTO parties (
 ON DUPLICATE KEY UPDATE firm_name = VALUES(firm_name);
 
 -- 3. CRM Leads
-INSERT INTO leads (
+INSERT IGNORE INTO leads (
   lead_ref, org_ref, franchise_ref, external_source_ref, external_lead_id,
   contact_name, firm_name, mobile, mobile_norm, email,
   state_ref, district_ref, city_ref, pincode,
@@ -87,7 +87,7 @@ INSERT INTO leads (
 ON DUPLICATE KEY UPDATE status = VALUES(status), priority = VALUES(priority);
 
 -- 4. Follow-ups
-INSERT INTO follow_ups (
+INSERT IGNORE INTO follow_ups (
   followup_ref, org_ref, franchise_ref, lead_ref, party_ref,
   assigned_user_ref, activity_type, next_action, next_follow_up_at,
   status, remark, created_by_ref
@@ -102,7 +102,7 @@ INSERT INTO follow_ups (
 ON DUPLICATE KEY UPDATE status = VALUES(status);
 
 -- 5. Lead Activity History
-INSERT INTO lead_activities (
+INSERT IGNORE INTO lead_activities (
   activity_ref, org_ref, franchise_ref, lead_ref, user_ref,
   activity_type, from_status, to_status, activity_note
 ) VALUES
@@ -110,7 +110,7 @@ INSERT INTO lead_activities (
  'INITIAL_CONTACT', 'NEW', 'CONTACTED', 'Introduced Acme PCD franchise product offerings. Doctor is warm to product portfolio.');
 
 -- 6. Sample Orders & Order Items
-INSERT INTO orders (
+INSERT IGNORE INTO orders (
   order_ref, order_no, org_ref, franchise_ref, client_order_ref,
   party_ref, sales_user_ref, channel, order_date,
   shipping_address, shipping_pincode, status, territory_status,
@@ -128,7 +128,7 @@ INSERT INTO orders (
 ON DUPLICATE KEY UPDATE status = VALUES(status), grand_total = VALUES(grand_total);
 
 -- Order Items for Order 1 (Apollo)
-INSERT INTO order_items (
+INSERT IGNORE INTO order_items (
   item_ref, org_ref, franchise_ref, order_ref, product_ref,
   paid_qty, free_qty, rate, rate_source, price_ref,
   discount, gst_percent, line_total, scheme_ref
@@ -144,7 +144,7 @@ INSERT INTO order_items (
 ON DUPLICATE KEY UPDATE line_total = VALUES(line_total);
 
 -- Order Items for Order 2 (Gupta Medicos)
-INSERT INTO order_items (
+INSERT IGNORE INTO order_items (
   item_ref, org_ref, franchise_ref, order_ref, product_ref,
   paid_qty, free_qty, rate, rate_source, price_ref,
   discount, gst_percent, line_total, scheme_ref
@@ -157,7 +157,7 @@ INSERT INTO order_items (
 ON DUPLICATE KEY UPDATE line_total = VALUES(line_total);
 
 -- 7. Order Status History
-INSERT INTO order_status_history (
+INSERT IGNORE INTO order_status_history (
   org_ref, franchise_ref, order_ref, from_status, to_status, actor_ref, reason
 ) VALUES
 ('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'ORD-APOLLO2026000001', 'DRAFT', 'SUBMITTED', 'USR-DISTRIBUTOR000001', 'Order submitted from distributor portal'),
