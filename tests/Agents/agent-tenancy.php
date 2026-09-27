@@ -25,7 +25,9 @@ return [
                 role: 'FRANCHISE_ADMIN',
                 scope: 'FRANCHISE',
                 partyRef: null,
-                requestId: 'REQ-TENANT-TEST-1'
+                requestId: 'REQ-TENANT-TEST-1',
+                permissions: ['internalUsers' => ['view', 'create', 'edit', 'delete']],
+                scopes: ['internalUsers' => 'ALL']
             );
             \App\Core\Container::getInstance()->instance(\App\Core\TenantContext::class, $ctx);
 

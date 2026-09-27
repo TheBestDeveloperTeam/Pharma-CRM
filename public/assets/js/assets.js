@@ -31,9 +31,12 @@ class AssetSystem {
         try {
             const res = await fetch('/assets/icons/sprite.svg');
             const text = await res.text();
-            const div = document.createElement('div');
-            div.innerHTML = text;
-            document.body.insertBefore(div, document.body.childNodes[0]);
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'image/svg+xml');
+            const svgEl = doc.documentElement;
+            if (svgEl) {
+                document.body.insertBefore(svgEl, document.body.childNodes[0]);
+            }
         } catch (e) {
             console.error('Failed to load SVG sprite', e);
         }
