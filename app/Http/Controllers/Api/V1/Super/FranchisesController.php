@@ -227,6 +227,11 @@ final class FranchisesController
 
         $this->userRepo->create($user);
 
+        // B1 — access comes from roles now, not users.role: seed this franchise's
+        // baseline roles (if new) and give the first admin the protected Admin role.
+        \App\Core\Container::getInstance()->make(\App\Domain\Authorization\SystemRoles::class)
+            ->assignForLegacyRole($userRef, 'FRANCHISE_ADMIN', $frn['org_ref'], $ref, $ctx->userRef);
+
         $this->audit->log(
             ctx: $ctx,
             category: 'BUSINESS',

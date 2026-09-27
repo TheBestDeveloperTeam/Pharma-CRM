@@ -4,7 +4,7 @@ namespace App\Repositories\Contracts;
 
 interface LeadRepositoryInterface
 {
-    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $assignedUserRef = null): array;
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $assignedUserRef = null, ?string $scopeSql = null, array $scopeParams = []): array;
     public function findByRef(string $franchiseRef, string $leadRef): ?array;
     public function findByMobile(string $franchiseRef, string $mobileNorm): ?array;
     public function create(array $data): string;

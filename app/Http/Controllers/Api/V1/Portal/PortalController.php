@@ -28,11 +28,17 @@ final class PortalController
         private SchemeCalculator $schemeCalculator,
     ) {}
 
-    private function getCtx(): TenantContext
+    /**
+     * B1 — portal access = the user is bound to a party (data identity) AND
+     * holds the portal.<action> permission; no longer users.role === 'DISTRIBUTOR'.
+     * Super Admin keeps its platform bypass, exactly as before.
+     */
+    private function getCtx(string $action = 'view'): TenantContext
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isSuperAdmin() && ($ctx->role !== 'DISTRIBUTOR' || empty($ctx->partyRef))) {
+        if ($ctx->isSuper()) return $ctx;
+        if (!$ctx->isPartyBound() || !$ctx->can('portal', $action)) {
             throw new ForbiddenException('PORTAL_ACCESS_DENIED', 'Distributor portal credentials required.');
         }
         return $ctx;
@@ -51,7 +57,7 @@ final class PortalController
 
     public function updateProfile(Request $r): Response
     {
-        $ctx = $this->getCtx();
+        $ctx = $this->getCtx('editProfile');
         $franchiseRef = $ctx->requireFranchise();
         $partyRef = $ctx->partyRef;
 
@@ -116,7 +122,7 @@ final class PortalController
 
     public function calculateCart(Request $r): Response
     {
-        $ctx = $this->getCtx();
+        $ctx = $this->getCtx('placeOrder');
         $franchiseRef = $ctx->requireFranchise();
         $party = $this->partyRepo->findByRef($franchiseRef, $ctx->partyRef);
         $tierRef = $party['tier_ref'] ?? null;
@@ -209,7 +215,7 @@ final class PortalController
 
     public function placeOrder(Request $r): Response
     {
-        $ctx = $this->getCtx();
+        $ctx = $this->getCtx('placeOrder');
         $franchiseRef = $ctx->requireFranchise();
         $partyRef = $ctx->partyRef;
 
@@ -237,7 +243,7 @@ final class PortalController
 
     public function cancelOrder(Request $r, string $ref): Response
     {
-        $ctx = $this->getCtx();
+        $ctx = $this->getCtx('placeOrder');
         $franchiseRef = $ctx->requireFranchise();
         $order = $this->orderRepo->findByRef($franchiseRef, $ref);
 

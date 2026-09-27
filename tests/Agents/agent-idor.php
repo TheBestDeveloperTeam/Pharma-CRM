@@ -13,7 +13,8 @@ return [
                 role: 'SALES',
                 scope: 'FRANCHISE',
                 partyRef: null,
-                requestId: 'REQ-01'
+                requestId: 'REQ-01',
+                scopes: ['leads' => 'OWN']
             );
 
             $leadAssignedToB = [
@@ -37,7 +38,8 @@ return [
                 role: 'SALES',
                 scope: 'FRANCHISE',
                 partyRef: null,
-                requestId: 'REQ-02'
+                requestId: 'REQ-02',
+                scopes: ['leads' => 'OWN']
             );
 
             $leadAssignedToA = [
@@ -58,7 +60,8 @@ return [
                 role: 'FRANCHISE_ADMIN',
                 scope: 'FRANCHISE',
                 partyRef: null,
-                requestId: 'REQ-03'
+                requestId: 'REQ-03',
+                scopes: ['leads' => 'ALL']
             );
 
             $leadAssignedToB = [
@@ -69,6 +72,37 @@ return [
 
             $canView = \App\Policies\SalesLeadPolicy::canView($ctxAdmin, $leadAssignedToB);
             \Tests\Support\Assert::true($canView, 'Franchise Admin CAN view all leads');
+        },
+        // 4. B1 — the decision follows the user's scope, not users.role: a custom
+        //    role (legacy role SALES) with ALL scope on leads sees everyone's leads…
+        function() {
+            $ctxCustomAll = new \App\Core\TenantContext(
+                orgRef: 'ORG-PLATFORM0000000001',
+                franchiseRef: 'FRN-MUMBAI000000000001',
+                userRef: 'USR-DISPATCH-TEAM',
+                role: 'SALES',
+                scope: 'FRANCHISE',
+                partyRef: null,
+                requestId: 'REQ-04',
+                scopes: ['leads' => 'ALL']
+            );
+            $leadAssignedToB = ['lead_ref' => 'LED-TEST00000000001', 'franchise_ref' => 'FRN-MUMBAI000000000001', 'assigned_user_ref' => 'USR-SALES-BETA'];
+            \Tests\Support\Assert::true(\App\Policies\SalesLeadPolicy::canView($ctxCustomAll, $leadAssignedToB), 'ALL-scope custom role CAN view any franchise lead');
+        },
+        // 5. …and a legacy FRANCHISE_ADMIN whose role only grants OWN scope does not.
+        function() {
+            $ctxOwnAdmin = new \App\Core\TenantContext(
+                orgRef: 'ORG-PLATFORM0000000001',
+                franchiseRef: 'FRN-MUMBAI000000000001',
+                userRef: 'USR-FRNADMIN000000002',
+                role: 'FRANCHISE_ADMIN',
+                scope: 'FRANCHISE',
+                partyRef: null,
+                requestId: 'REQ-05',
+                scopes: ['leads' => 'OWN']
+            );
+            $leadAssignedToB = ['lead_ref' => 'LED-TEST00000000001', 'franchise_ref' => 'FRN-MUMBAI000000000001', 'assigned_user_ref' => 'USR-SALES-BETA'];
+            \Tests\Support\Assert::true(!\App\Policies\SalesLeadPolicy::canView($ctxOwnAdmin, $leadAssignedToB), "OWN-scope user CANNOT view others' leads whatever users.role says");
         },
     ]
 ];

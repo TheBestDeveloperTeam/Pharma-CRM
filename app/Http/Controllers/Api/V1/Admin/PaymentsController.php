@@ -31,7 +31,7 @@ final class PaymentsController
         $page = $query['page'];
         $perPage = $query['per_page'];
 
-        $partyRef = ($ctx->role === 'DISTRIBUTOR') ? $ctx->partyRef : $r->query('party_ref');
+        $partyRef = $ctx->isPartyBound() ? $ctx->partyRef : $r->query('party_ref'); // B1 — party binding, not role name
 
         $filters = [
             'mode'   => $r->query('mode'),

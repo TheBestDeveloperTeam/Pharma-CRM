@@ -19,7 +19,7 @@ final class CatalogMastersController
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isAdmin() && !$ctx->isSuper()) throw new ForbiddenException('FORBIDDEN', 'Franchise Admin permission required.');
+        // B1 — no role-name gate: each action checks its masters.* permission key.
         return $ctx;
     }
 

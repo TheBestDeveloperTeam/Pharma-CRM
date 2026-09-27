@@ -48,7 +48,7 @@ final class DispatchesController
 
     private function visible(TenantContext $ctx, array $dispatch): bool
     {
-        if ($ctx->isDistributor() && ($dispatch['party_ref'] ?? null) !== $ctx->partyRef) return false;
+        if ($ctx->isPartyBound() && ($dispatch['party_ref'] ?? null) !== $ctx->partyRef) return false;
         try { $territory = $this->parties->findTerritoryRefs($ctx->requireFranchise(), (string)$dispatch['party_ref'])[0] ?? null; $this->authorization->requireRecordScope($ctx, 'dispatch', $dispatch['sales_user_ref'] ?? null, $territory, $dispatch['franchise_ref'] ?? null); return true; } catch (NotFoundException) { return false; }
     }
 }

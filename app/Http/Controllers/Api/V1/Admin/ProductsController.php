@@ -21,9 +21,7 @@ final class ProductsController
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isAdmin() && !$ctx->isSuper()) {
-            throw new ForbiddenException('FORBIDDEN', 'Franchise Admin permission required.');
-        }
+        // B1 — no role-name gate: every action below checks its masters/products/pricing/schemes permission key.
         return $ctx;
     }
 

@@ -8,39 +8,49 @@ use App\Core\Validation;
 use App\Core\TenantContext;
 use App\Core\Exceptions\ForbiddenException;
 use App\Core\Exceptions\NotFoundException;
+use App\Domain\Authorization\AuthorizationService;
 use App\Domain\Leads\LeadService;
 use App\Domain\Leads\MobileNormalizer;
 use App\Repositories\Contracts\LeadRepositoryInterface;
 use App\Policies\SalesLeadPolicy;
 
+/**
+ * B1 — authorization is permission keys (leads.view/create/edit/assign) and
+ * data scope is the user's `leads` scope (CrmScopePolicy via SalesLeadPolicy).
+ * users.role is no longer consulted here.
+ */
 final class LeadsController
 {
     public function __construct(
         private LeadRepositoryInterface $leads,
         private LeadService $leadService,
+        private AuthorizationService $authorization,
     ) {}
 
     public function index(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'view');
         $franchiseRef = $ctx->franchiseRef;
         $page = (int)$r->query('page', 1);
         $perPage = min((int)$r->query('per_page', 20), 100);
-
-        $assignedUser = ($ctx->role === 'SALES') ? $ctx->userRef : null;
 
         $filters = [
             'status' => $r->query('status'),
             'search' => $r->query('search'),
         ];
 
-        $res = $this->leads->list($franchiseRef, $filters, $page, $perPage, $assignedUser);
+        $scopeParams = [];
+        $scopeSql = SalesLeadPolicy::listClause($ctx, $scopeParams);
+
+        $res = $this->leads->list($franchiseRef, $filters, $page, $perPage, null, $scopeSql, $scopeParams);
         return Response::json(['data' => $res]);
     }
 
     public function show(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'view');
         $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
 
         if (!$lead) {
@@ -60,6 +70,7 @@ final class LeadsController
     public function store(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'create');
         $clean = Validation::validate($r->all(), [
             'contact_name' => 'required|string',
             'mobile'       => 'required|string',
@@ -71,7 +82,9 @@ final class LeadsController
             'created_by_ref' => $ctx->userRef,
         ]);
 
-        if ($ctx->role === 'SALES') {
+        // A user who can only see some leads keeps what they create; only an
+        // ALL-scope user may assign on create (or leave it to round-robin).
+        if (!$ctx->isSuper() && $ctx->scopeFor('leads') !== 'ALL') {
             $data['assigned_user_ref'] = $ctx->userRef;
         }
 
@@ -84,6 +97,7 @@ final class LeadsController
     public function update(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'edit');
         $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
 
         if (!$lead) {
@@ -107,6 +121,16 @@ final class LeadsController
     public function status(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        // B1 — previously this endpoint had no authorization at all.
+        $this->authorization->requirePermission($ctx, 'leads', 'edit');
+        $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
+        if (!$lead) {
+            throw new NotFoundException('LEAD_NOT_FOUND', 'Lead not found.');
+        }
+        if (!SalesLeadPolicy::canUpdate($ctx, $lead)) {
+            throw new ForbiddenException('FORBIDDEN_LEAD', 'You do not have permission to edit this lead.');
+        }
+
         $clean = Validation::validate($r->all(), [
             'status' => 'required|string',
         ]);
@@ -120,8 +144,8 @@ final class LeadsController
     public function assign(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
-        if (!$ctx->isFranchiseAdmin() && !$ctx->isSuperAdmin()) {
-            throw new ForbiddenException('FORBIDDEN', 'Only Franchise Admin can reassign leads.');
+        if (!$ctx->can('leads', 'assign')) {
+            throw new ForbiddenException('FORBIDDEN', 'Permission required: leads.assign');
         }
 
         $clean = Validation::validate($r->all(), [

@@ -30,9 +30,7 @@ final class MastersController
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isAdmin() && !$ctx->isSuper()) {
-            throw new ForbiddenException('FORBIDDEN', 'Franchise Admin permission required.');
-        }
+        // B1 — no role-name gate: every action below checks its masters/products/pricing/schemes permission key.
         return $ctx;
     }
 
@@ -206,6 +204,7 @@ final class MastersController
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'masters', 'view');
         $page = (int) $r->query('page', '1');
         $perPage = (int) $r->query('per_page', '50');
         $filters = [
@@ -221,6 +220,7 @@ final class MastersController
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'masters', 'create');
         $clean = Validation::validate($r->all(), [
             'transporter_name' => 'required|string',
         ]);
@@ -258,6 +258,7 @@ final class MastersController
     public function listSettings(Request $r): Response
     {
         $ctx = $this->getCtx();
+        $this->authorization->requirePermission($ctx, 'settings', 'view');
         $rows = $this->settings->list($ctx->requireFranchise());
         return Response::json(200, $rows);
     }
@@ -267,6 +268,7 @@ final class MastersController
     public function listTemplates(Request $r): Response
     {
         $ctx = $this->getCtx();
+        $this->authorization->requirePermission($ctx, 'notifications', 'manageTemplates');
         $rows = $this->templates->list($ctx->requireFranchise());
         return Response::json(200, $rows);
     }

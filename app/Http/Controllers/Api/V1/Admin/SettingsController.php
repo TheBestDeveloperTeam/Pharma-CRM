@@ -17,8 +17,9 @@ final class SettingsController
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        if (!$ctx->isAdmin() && !$ctx->isSuper()) {
-            throw new ForbiddenException('FORBIDDEN', 'Only Franchise Admin can update settings.');
+        // B1 — permission key instead of the FRANCHISE_ADMIN role name.
+        if (!$ctx->can('settings', 'edit')) {
+            throw new ForbiddenException('FORBIDDEN', 'Permission required: settings.edit');
         }
 
         $franchiseRef = $ctx->requireFranchise();

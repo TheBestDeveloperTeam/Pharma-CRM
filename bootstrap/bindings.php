@@ -125,7 +125,10 @@ return function(\App\Core\Container $container): void {
 
     $container->singleton(\App\Domain\Leads\LeadStateMachine::class, fn() => new \App\Domain\Leads\LeadStateMachine());
     $container->singleton(\App\Domain\Leads\LeadAssignmentService::class, function($c) {
-        return new \App\Domain\Leads\LeadAssignmentService(new \App\Core\Database($c->make(\PDO::class)));
+        return new \App\Domain\Leads\LeadAssignmentService(
+            new \App\Core\Database($c->make(\PDO::class)),
+            $c->make(\App\Domain\Authorization\AuthorizationService::class)
+        );
     });
     $container->singleton(\App\Domain\Leads\LeadService::class, function($c) {
         return new \App\Domain\Leads\LeadService(
@@ -262,6 +265,13 @@ return function(\App\Core\Container $container): void {
             $c->make(\App\Core\SequenceService::class),
             new \App\Domain\Billing\GstCalculator()
         );
+    });
+    // B1 — scope for leads/follow-ups from the user's data scope; baseline role provisioning.
+    $container->singleton(\App\Domain\Authorization\CrmScopePolicy::class, function($c) {
+        return new \App\Domain\Authorization\CrmScopePolicy(new \App\Core\Database($c->make(\PDO::class)));
+    });
+    $container->singleton(\App\Domain\Authorization\SystemRoles::class, function($c) {
+        return new \App\Domain\Authorization\SystemRoles(new \App\Core\Database($c->make(\PDO::class)));
     });
     $container->singleton(\App\Domain\Authorization\Task009ScopePolicy::class, function($c) {
         return new \App\Domain\Authorization\Task009ScopePolicy(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Authorization\AuthorizationService::class));

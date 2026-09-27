@@ -9,11 +9,17 @@ final class SqlFollowUpRepository implements FollowUpRepositoryInterface
 {
     public function __construct(private Database $db) {}
 
-    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $assignedUserRef = null): array
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $assignedUserRef = null, ?string $scopeSql = null, array $scopeParams = []): array
     {
         $offset = ($page - 1) * $perPage;
         $params = [':f' => $franchiseRef];
         $where = ["franchise_ref = :f"];
+
+        // B1 — data scope predicate from CrmScopePolicy (user's module scope, not role name).
+        if ($scopeSql !== null && $scopeSql !== '1=1') {
+            $where[] = "($scopeSql)";
+            $params = array_merge($params, $scopeParams);
+        }
 
         if ($assignedUserRef !== null) {
             $where[] = "assigned_user_ref = :assigned_user";

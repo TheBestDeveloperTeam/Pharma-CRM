@@ -49,7 +49,12 @@ final class AuthorizationController
              WHERE {$whereSql} GROUP BY r.role_ref ORDER BY r.role_name"
         );
         $rows->execute($params);
-        return Response::json(200, $rows->fetchAll(\PDO::FETCH_ASSOC));
+        $payload = array_map(function (array $role): array {
+            $role['permissions'] = $this->permissionsForRole((string)$role['role_ref']);
+            $role['scope_overrides'] = $this->scopesForRole((string)$role['role_ref']);
+            return $role;
+        }, $rows->fetchAll(\PDO::FETCH_ASSOC));
+        return Response::json(200, $payload);
     }
 
     public function role(Request $r): Response
@@ -86,6 +91,8 @@ final class AuthorizationController
         $permissions = $this->validatedPermissions($r->input('permissions', []), $ctx);
         $this->validateDefaultScope((string)$input['default_scope'], $permissions, $ctx);
         $scopes = $this->validatedScopes($r->input('scope_overrides', []), $ctx);
+        $status = strtoupper((string)$r->input('status', 'ACTIVE'));
+        if (!in_array($status, ['ACTIVE', 'INACTIVE'], true)) throw new ValidationException('INVALID_STATUS', 'Role status must be ACTIVE or INACTIVE.', ['status' => ['Role status must be ACTIVE or INACTIVE.']]);
         $slug = $this->slug((string)$input['name']);
         $franchiseRef = $ctx->requireFranchise();
         $this->assertUniqueSlug($franchiseRef, $slug);
@@ -96,12 +103,12 @@ final class AuthorizationController
             $stmt = $this->pdo->prepare(
                 "INSERT INTO auth_roles
                  (role_ref, org_ref, franchise_ref, role_name, role_slug, description, is_system, status, default_scope, created_by_ref)
-                 VALUES (:rr,:o,:f,:n,:s,:d,0,'ACTIVE',:scope,:actor)"
+                 VALUES (:rr,:o,:f,:n,:s,:d,0,:status,:scope,:actor)"
             );
             $stmt->execute([
                 ':rr' => $roleRef, ':o' => $ctx->orgRef, ':f' => $franchiseRef,
                 ':n' => trim((string)$input['name']), ':s' => $slug,
-                ':d' => $input['description'] ?? null, ':scope' => strtoupper((string)$input['default_scope']),
+                ':d' => $input['description'] ?? null, ':status' => $status, ':scope' => strtoupper((string)$input['default_scope']),
                 ':actor' => $ctx->userRef,
             ]);
             $this->replaceRoleGrants($roleRef, $permissions, $scopes, $ctx);

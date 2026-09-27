@@ -19,7 +19,7 @@ final class InvoicesController
         $ctx = TenantContext::get(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'billing', 'view');
         $q = QueryParams::fromRequest($r, ['created_at','invoice_date','grand_total','status']);
         if ($ctx->scopeFor('billing') === 'NONE') return Response::json(200, [], ['page' => $q['page'], 'per_page' => $q['per_page'], 'total' => 0, 'total_pages' => 0]);
-        $partyRef = $ctx->isDistributor() ? $ctx->partyRef : null;
+        $partyRef = $ctx->isPartyBound() ? $ctx->partyRef : null;
         $result = $this->invoices->list($f, ['status' => $q['status'], 'search' => $q['search']], $q['page'], $q['per_page'], $partyRef);
         // The repository cannot safely pre-filter OWN/TEAM/TERRITORY without
         // duplicating policy joins; enforce scope on every returned record.
@@ -65,7 +65,7 @@ final class InvoicesController
 
     private function canRead(TenantContext $ctx, array $invoice): bool
     {
-        if ($ctx->isDistributor() && ($invoice['party_ref'] ?? null) !== $ctx->partyRef) return false;
+        if ($ctx->isPartyBound() && ($invoice['party_ref'] ?? null) !== $ctx->partyRef) return false;
         try {
             $territory = $this->parties->findTerritoryRefs($ctx->requireFranchise(), (string)$invoice['party_ref'])[0] ?? null;
             $this->authorization->requireRecordScope($ctx, 'billing', $invoice['sales_user_ref'] ?? null, $territory, $invoice['franchise_ref'] ?? null);

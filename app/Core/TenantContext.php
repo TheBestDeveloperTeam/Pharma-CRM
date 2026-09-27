@@ -27,11 +27,27 @@ final class TenantContext
         public readonly array   $territoryRefs = [],
     ) {}
 
+    /**
+     * B1 — the ONLY role identity still used for authorization: Super Admin is
+     * a platform operator outside every franchise role and keeps its bypass.
+     */
     public function isSuper(): bool          { return $this->role === 'SUPER_ADMIN'; }
     public function isSuperAdmin(): bool     { return $this->role === 'SUPER_ADMIN'; }
+
+    /**
+     * B1 — data binding, not a role: a user linked to a party (a distributor
+     * portal account) only ever sees that party's records. Super Admin can carry
+     * a party via SignInAs and is deliberately excluded.
+     */
+    public function isPartyBound(): bool     { return !$this->isSuper() && $this->partyRef !== null && $this->partyRef !== ''; }
+
+    /** @deprecated B1 — authorize with can()/scopeFor(); users.role is only the login surface now. */
     public function isAdmin(): bool          { return $this->role === 'FRANCHISE_ADMIN'; }
+    /** @deprecated B1 — authorize with can()/scopeFor(). */
     public function isFranchiseAdmin(): bool { return $this->role === 'FRANCHISE_ADMIN'; }
+    /** @deprecated B1 — authorize with can()/scopeFor(). */
     public function isSales(): bool          { return $this->role === 'SALES'; }
+    /** @deprecated B1 — use isPartyBound() for party data scoping. */
     public function isDistributor(): bool    { return $this->role === 'DISTRIBUTOR'; }
 
     public function can(string $module, string $action): bool

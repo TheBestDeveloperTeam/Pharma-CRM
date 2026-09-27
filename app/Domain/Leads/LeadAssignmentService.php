@@ -3,27 +3,49 @@ declare(strict_types=1);
 namespace App\Domain\Leads;
 
 use App\Core\Database;
+use App\Domain\Authorization\AuthorizationService;
 
 final class LeadAssignmentService
 {
-    public function __construct(private Database $db) {}
+    public function __construct(private Database $db, private AuthorizationService $authorization) {}
 
     /**
-     * Round-robin assign lead to active sales user in franchise
+     * Round-robin assign lead to an active field user in the franchise.
+     *
+     * B1 — "field user" is no longer users.role = 'SALES'. It is anyone who can
+     * work a lead (an ACTIVE role granting leads.edit) without franchise-wide
+     * lead scope (effective leads scope ≠ ALL), i.e. people who own their leads.
+     * For the seeded roles this is the same set as before (Sales Team → OWN;
+     * Admin → ALL, excluded), and it now includes custom field roles too.
      */
     public function assignNext(string $orgRef, string $franchiseRef): ?string
     {
-        // 1. Fetch active sales users ordered by user_ref
-        $salesUsers = $this->db->fetchAll(
-            "SELECT user_ref FROM users WHERE franchise_ref = :f AND role = 'SALES' AND status = 'ACTIVE' ORDER BY user_ref ASC",
+        // 1. Candidates: active users holding leads.edit through an active role.
+        $candidates = $this->db->fetchAll(
+            "SELECT DISTINCT u.user_ref
+             FROM users u
+             JOIN auth_user_roles ur ON ur.user_ref = u.user_ref
+             JOIN auth_roles r ON r.role_ref = ur.role_ref AND r.status = 'ACTIVE' AND r.franchise_ref = u.franchise_ref
+             JOIN auth_role_permissions rp ON rp.role_ref = r.role_ref
+             JOIN auth_permissions p ON p.permission_ref = rp.permission_ref AND p.module_key = 'leads' AND p.action_key = 'edit'
+             WHERE u.franchise_ref = :f AND u.status = 'ACTIVE'
+             ORDER BY u.user_ref ASC",
             [':f' => $franchiseRef]
         );
 
-        if (empty($salesUsers)) {
+        // 2. Keep only users whose effective leads scope is narrower than ALL.
+        $userRefs = [];
+        foreach (array_column($candidates, 'user_ref') as $userRef) {
+            $effective = $this->authorization->effectiveForUser($userRef, $franchiseRef);
+            if (($effective['scopes']['leads'] ?? 'NONE') !== 'ALL') {
+                $userRefs[] = $userRef;
+            }
+        }
+
+        if (empty($userRefs)) {
             return null;
         }
 
-        $userRefs = array_column($salesUsers, 'user_ref');
         $count = count($userRefs);
 
         // 2. Fetch current pointer from system_settings

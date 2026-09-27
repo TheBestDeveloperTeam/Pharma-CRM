@@ -17,7 +17,7 @@ final class OrdersController
     {
         $ctx = TenantContext::get(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'orders', 'view'); $q = QueryParams::fromRequest($r, ['created_at','order_date','grand_total','status']); $scope = $ctx->scopeFor('orders');
         if ($scope === 'NONE') return Response::json(200, [], ['page' => $q['page'], 'per_page' => $q['per_page'], 'total' => 0, 'total_pages' => 0]);
-        $filters = ['status' => $q['status'], 'search' => $q['search'], 'sort_by' => $q['sort_by'], 'sort_dir' => $q['sort_dir']]; $partyRef = $ctx->isDistributor() ? $ctx->partyRef : null;
+        $filters = ['status' => $q['status'], 'search' => $q['search'], 'sort_by' => $q['sort_by'], 'sort_dir' => $q['sort_dir']]; $partyRef = $ctx->isPartyBound() ? $ctx->partyRef : null;
         if ($scope === 'OWN') $filters['sales_user_ref'] = $ctx->userRef;
         if ($scope === 'TEAM') $filters['sales_user_refs'] = array_values(array_unique(array_merge([$ctx->userRef], $ctx->teamUserRefs)));
         if ($scope === 'TERRITORY') { if (!$ctx->territoryRefs) return Response::json(200, [], ['page' => $q['page'], 'per_page' => $q['per_page'], 'total' => 0, 'total_pages' => 0]); $filters['territory_refs'] = $ctx->territoryRefs; }
@@ -33,7 +33,7 @@ final class OrdersController
     public function store(Request $r): Response
     {
         $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'orders', 'create'); $clean = Validation::validate($r->all(), ['party_ref' => 'required|string', 'client_order_ref' => 'required|string|min:1', 'channel' => 'required|enum:PORTAL,SALES,ADMIN', 'items' => 'required|array|min:1']);
-        $sales = $ctx->scopeFor('orders') === 'ALL' ? ($r->input('sales_user_ref') ?: ($ctx->isSales() ? $ctx->userRef : null)) : $ctx->userRef;
+        $sales = $ctx->scopeFor('orders') === 'ALL' ? ($r->input('sales_user_ref') ?: null) : $ctx->userRef; // B1 — scope decides, not users.role
         $res = $this->orderService->createOrder($ctx->orgRef, $ctx->requireFranchise(), $clean['party_ref'], $clean['client_order_ref'], $clean['channel'], $clean['items'], $sales, $r->input('shipping_address'), $r->input('shipping_pincode'), $r->input('remarks'), $ctx->userRef);
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'order.draft_created', entityType: 'order', entityRef: $res['order_ref'], after: $res); return Response::json(201, $res);
     }
@@ -66,7 +66,7 @@ final class OrdersController
 
     private function checkScope(TenantContext $ctx, array $order): void
     {
-        if ($ctx->isDistributor() && ($order['party_ref'] ?? null) !== $ctx->partyRef) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        if ($ctx->isPartyBound() && ($order['party_ref'] ?? null) !== $ctx->partyRef) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
         $territory = $this->parties->findTerritoryRefs($ctx->requireFranchise(), (string)$order['party_ref'])[0] ?? null;
         $this->authorization->requireRecordScope($ctx, 'orders', $order['sales_user_ref'] ?? null, $territory, $ctx->franchiseRef);
     }

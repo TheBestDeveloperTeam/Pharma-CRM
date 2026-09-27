@@ -7,6 +7,7 @@ use App\Core\Security\PasswordHasher;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Domain\Audit\AuditService;
 use App\Domain\Authorization\AuthorizationService;
+use App\Domain\Authorization\SystemRoles;
 use App\Core\Exceptions\{NotFoundException, ConflictException, ForbiddenException, ValidationException};
 
 final class UsersController
@@ -47,7 +48,8 @@ final class UsersController
         }
 
         $res = $this->userRepo->list($filters, $page, $perPage);
-        return Response::json(200, $res['data'], $res['meta']);
+        $rows = array_map(fn(array $row) => $this->userPayload($row), $res['data']);
+        return Response::json(200, $rows, $res['meta']);
     }
 
     public function show(Request $r): Response
@@ -65,11 +67,7 @@ final class UsersController
         }
 
         unset($user['password_hash']);
-        $effective = $this->authorization->effectiveForUser($user['user_ref'], $user['franchise_ref']);
-        $user['roles'] = $effective['roles'];
-        $user['permissions'] = $effective['permissions'];
-        $user['scopes'] = $effective['scopes'];
-        return Response::json(200, $user);
+        return Response::json(200, $this->userPayload($user));
     }
 
     public function create(Request $r): Response
@@ -112,16 +110,34 @@ final class UsersController
             'designation'         => $r->input('designation'),
             'assigned_region'     => $r->input('assigned_region'),
             'joining_date'        => $r->input('joining_date'),
+            'reporting_manager_ref' => $r->input('reporting_manager_ref'),
             'password_hash'        => $hash,
             'must_change_password' => $r->input('must_change_password', 0) ? 1 : 0,
-            'status'               => 'ACTIVE',
+            'status'               => strtoupper((string)$r->input('status', 'ACTIVE')) === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
             'created_by_ref'       => $ctx->userRef,
             'created_at'           => date('Y-m-d H:i:s'),
         ];
 
+        if ($roleRef === '' && !$ctx->isSuper()) {
+            // B1 — a legacy role now means "the franchise's baseline role for that
+            // surface", so creating one is a role grant and gets the same escalation check.
+            $baselineSlug = ['FRANCHISE_ADMIN' => SystemRoles::ADMIN, 'SALES' => SystemRoles::SALES_TEAM, 'DISTRIBUTOR' => SystemRoles::DISTRIBUTOR][$legacyRole] ?? null;
+            if ($baselineSlug !== null) {
+                $stmt = $this->pdo->prepare('SELECT role_ref FROM auth_roles WHERE franchise_ref = ? AND role_slug = ? LIMIT 1');
+                $stmt->execute([$franchiseRef, $baselineSlug]);
+                $baselineRoleRef = $stmt->fetchColumn();
+                if ($baselineRoleRef) $this->authorization->assertCanGrantRole($ctx, (string)$baselineRoleRef);
+            }
+        }
+
         $this->userRepo->create($user);
         $this->setReportingManager($ctx, $userRef, $r->input('reporting_manager_ref'));
-        if ($roleRef !== '') $this->assignNormalizedRole($ctx, $userRef, $roleRef);
+        if ($roleRef !== '') {
+            $this->assignNormalizedRole($ctx, $userRef, $roleRef);
+        } else {
+            // B1 — access comes from roles, not users.role: give the baseline role for the legacy surface.
+            Container::getInstance()->make(SystemRoles::class)->assignForLegacyRole($userRef, $legacyRole, $ctx->orgRef, (string)$franchiseRef, $ctx->userRef);
+        }
 
         $this->audit->log(
             ctx: $ctx,
@@ -133,11 +149,7 @@ final class UsersController
         );
 
         unset($user['password_hash']);
-        $effective = $this->authorization->effectiveForUser($userRef, $franchiseRef);
-        $user['roles'] = $effective['roles'];
-        $user['permissions'] = $effective['permissions'];
-        $user['scopes'] = $effective['scopes'];
-        return Response::json(201, $user);
+        return Response::json(201, $this->userPayload($user));
     }
 
     public function update(Request $r): Response
@@ -156,12 +168,26 @@ final class UsersController
 
         $updates = [];
         if ($r->has('full_name')) $updates['full_name'] = trim((string)$r->input('full_name'));
+        if ($r->has('email')) {
+            $email = strtolower(trim((string)$r->input('email')));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new ValidationException('VALIDATION_FAILED', 'Email is invalid.', ['email' => ['Must be a valid email address.']]);
+            }
+            $duplicate = $this->userRepo->findByEmailAndTenant($email, (string)$user['franchise_ref']);
+            if ($duplicate && $duplicate['user_ref'] !== $ref) {
+                throw new ConflictException('USER_EMAIL_EXISTS', "User with email {$email} already exists in this franchise.");
+            }
+            $updates['email'] = $email;
+        }
         if ($r->has('mobile'))    $updates['mobile'] = $r->input('mobile');
         if ($r->has('party_ref')) $updates['party_ref'] = $r->input('party_ref');
         foreach (['employee_code', 'department', 'designation', 'assigned_region', 'joining_date'] as $field) {
             if ($r->has($field)) $updates[$field] = $r->input($field);
         }
-        if ($r->has('reporting_manager_ref')) $this->setReportingManager($ctx, $ref, $r->input('reporting_manager_ref'));
+        if ($r->has('reporting_manager_ref')) {
+            $updates['reporting_manager_ref'] = $r->input('reporting_manager_ref') ?: null;
+            $this->setReportingManager($ctx, $ref, $r->input('reporting_manager_ref'));
+        }
 
         if (!empty($updates)) {
             $this->userRepo->update($ref, $updates);
@@ -175,10 +201,27 @@ final class UsersController
                 after: array_merge($user, $updates)
             );
         }
+        if ($r->has('role_ref')) {
+            $this->authorization->requirePermission($ctx, 'rolesAndPermissions', 'assignToUser');
+            $this->setSingleNormalizedRole($ctx, $ref, (string)$r->input('role_ref'));
+        }
+        if ($r->has('status')) {
+            $this->authorization->requirePermission($ctx, 'internalUsers', 'activateDeactivate');
+            $status = strtoupper((string)$r->input('status'));
+            if (!in_array($status, ['ACTIVE', 'INACTIVE'], true)) {
+                throw new ValidationException('INVALID_STATUS', 'Status must be ACTIVE or INACTIVE.', ['status' => ['Status must be ACTIVE or INACTIVE.']]);
+            }
+            if ($status === 'INACTIVE') {
+                $this->assertNotLastRoleManager($ctx, $ref);
+                $this->pdo->prepare("UPDATE user_sessions SET revoked_at = NOW(), revoke_reason = 'USER_DEACTIVATED' WHERE user_ref = :u AND revoked_at IS NULL")
+                    ->execute([':u' => $ref]);
+            }
+            $this->userRepo->setStatus($ref, $status);
+        }
 
         $updated = $this->userRepo->findByRef($ref);
         unset($updated['password_hash']);
-        return Response::json(200, $updated);
+        return Response::json(200, $this->userPayload($updated));
     }
 
     public function activate(Request $r): Response
@@ -304,6 +347,27 @@ final class UsersController
         $this->audit->log($ctx, 'SECURITY', 'user.role_assigned', 'user', $userRef, null, ['role_ref' => $roleRef]);
     }
 
+    private function setSingleNormalizedRole(TenantContext $ctx, string $userRef, string $roleRef): void
+    {
+        if ($userRef === $ctx->userRef) throw new ForbiddenException('OWN_ROLE_PROTECTED', 'You cannot change your own role assignment.');
+        $stmt = $this->pdo->prepare("SELECT status, franchise_ref FROM auth_roles WHERE role_ref=:r LIMIT 1");
+        $stmt->execute([':r' => $roleRef]);
+        $role = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$role || (!$ctx->isSuper() && $role['franchise_ref'] !== $ctx->franchiseRef)) throw new ValidationException('INVALID_ROLE', 'Role is not available in this franchise.');
+        if ($role['status'] !== 'ACTIVE') throw new ValidationException('ROLE_INACTIVE', 'Cannot assign an inactive role.');
+        $this->authorization->assertCanGrantRole($ctx, $roleRef);
+
+        $current = $this->pdo->prepare("SELECT role_ref FROM auth_user_roles WHERE user_ref=:u");
+        $current->execute([':u' => $userRef]);
+        foreach ($current->fetchAll(\PDO::FETCH_COLUMN) as $currentRoleRef) {
+            if ((string)$currentRoleRef !== $roleRef) $this->assertNotLastPrivilegedAssignment($userRef, (string)$currentRoleRef, $ctx);
+        }
+        $this->pdo->prepare("DELETE FROM auth_user_roles WHERE user_ref=:u AND role_ref<>:r")->execute([':u' => $userRef, ':r' => $roleRef]);
+        $this->pdo->prepare("INSERT IGNORE INTO auth_user_roles (user_ref, role_ref, assigned_by_ref) VALUES (:u,:r,:a)")
+            ->execute([':u' => $userRef, ':r' => $roleRef, ':a' => $ctx->userRef]);
+        $this->audit->log($ctx, 'SECURITY', 'user.role_replaced', 'user', $userRef, null, ['role_ref' => $roleRef]);
+    }
+
     private function assertNotLastRoleManager(TenantContext $ctx, string $userRef): void
     {
         if ($userRef === $ctx->userRef) throw new ForbiddenException('SELF_DEACTIVATION', 'You cannot deactivate your own account.');
@@ -335,5 +399,30 @@ final class UsersController
             "INSERT INTO auth_user_hierarchy (user_ref, manager_ref, assigned_by_ref) VALUES (:u,:m,:a)
              ON DUPLICATE KEY UPDATE manager_ref=VALUES(manager_ref), assigned_by_ref=VALUES(assigned_by_ref)"
         )->execute([':u' => $userRef, ':m' => (string)$managerRef, ':a' => $ctx->userRef]);
+    }
+
+    private function assertNotLastPrivilegedAssignment(string $userRef, string $roleRef, TenantContext $ctx): void
+    {
+        $stmt = $this->pdo->prepare("SELECT 1 FROM auth_role_permissions WHERE role_ref=:r AND permission_ref=(SELECT permission_ref FROM auth_permissions WHERE module_key='rolesAndPermissions' AND action_key='edit')");
+        $stmt->execute([':r' => $roleRef]);
+        if (!$stmt->fetchColumn()) return;
+        $count = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM auth_user_roles ur JOIN users u ON u.user_ref=ur.user_ref
+             JOIN auth_role_permissions rp ON rp.role_ref=ur.role_ref JOIN auth_permissions p ON p.permission_ref=rp.permission_ref
+             WHERE u.franchise_ref=:f AND u.status='ACTIVE' AND p.module_key='rolesAndPermissions' AND p.action_key='edit'
+             AND NOT (ur.user_ref=:u AND ur.role_ref=:r)"
+        );
+        $count->execute([':f' => $ctx->requireFranchise(), ':u' => $userRef, ':r' => $roleRef]);
+        if ((int)$count->fetchColumn() === 0) throw new ForbiddenException('LAST_PRIVILEGED_USER', 'Cannot remove the last active Roles and Permissions administrator.');
+    }
+
+    private function userPayload(array $user): array
+    {
+        unset($user['password_hash']);
+        $effective = $this->authorization->effectiveForUser((string)$user['user_ref'], $user['franchise_ref'] ?? null);
+        $user['roles'] = $effective['roles'];
+        $user['permissions'] = $effective['permissions'];
+        $user['scopes'] = $effective['scopes'];
+        return $user;
     }
 }

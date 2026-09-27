@@ -8,25 +8,31 @@ use App\Core\Validation;
 use App\Core\TenantContext;
 use App\Core\Exceptions\ForbiddenException;
 use App\Core\Exceptions\NotFoundException;
+use App\Domain\Authorization\AuthorizationService;
 use App\Domain\FollowUps\FollowUpService;
 use App\Repositories\Contracts\FollowUpRepositoryInterface;
 use App\Policies\SalesFollowUpPolicy;
 
+/**
+ * B1 — authorization is permission keys (followUps.view/create/complete/
+ * reschedule) and data scope is the user's `followUps` scope. users.role is
+ * no longer consulted here.
+ */
 final class FollowUpsController
 {
     public function __construct(
         private FollowUpRepositoryInterface $followups,
         private FollowUpService $followUpService,
+        private AuthorizationService $authorization,
     ) {}
 
     public function index(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'view');
         $franchiseRef = $ctx->franchiseRef;
         $page = (int)$r->query('page', 1);
         $perPage = min((int)$r->query('per_page', 20), 100);
-
-        $assignedUser = ($ctx->role === 'SALES') ? $ctx->userRef : null;
 
         $filters = [
             'status'   => $r->query('status'),
@@ -34,23 +40,30 @@ final class FollowUpsController
             'overdue'  => $r->query('overdue'),
         ];
 
-        $res = $this->followups->list($franchiseRef, $filters, $page, $perPage, $assignedUser);
+        $scopeParams = [];
+        $scopeSql = SalesFollowUpPolicy::listClause($ctx, $scopeParams);
+
+        $res = $this->followups->list($franchiseRef, $filters, $page, $perPage, null, $scopeSql, $scopeParams);
         return Response::json(['data' => $res]);
     }
 
     public function store(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'create');
         $clean = Validation::validate($r->all(), [
             'activity_type'     => 'required|string',
             'next_action'       => 'required|string',
             'next_follow_up_at' => 'required|string',
         ]);
 
+        // Only an ALL-scope user may schedule a follow-up for someone else.
+        $canAssignOthers = $ctx->isSuper() || $ctx->scopeFor('followUps') === 'ALL';
+
         $data = array_merge($r->all(), [
             'org_ref'           => $ctx->orgRef,
             'franchise_ref'     => $ctx->franchiseRef,
-            'assigned_user_ref' => ($ctx->role === 'SALES') ? $ctx->userRef : ($r->input('assigned_user_ref') ?? $ctx->userRef),
+            'assigned_user_ref' => $canAssignOthers ? ($r->input('assigned_user_ref') ?? $ctx->userRef) : $ctx->userRef,
             'created_by_ref'    => $ctx->userRef,
         ]);
 
@@ -61,6 +74,7 @@ final class FollowUpsController
     public function complete(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'complete');
         $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
 
         if (!$fu) {
@@ -80,6 +94,7 @@ final class FollowUpsController
     public function reschedule(Request $r, string $ref): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'reschedule');
         $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
 
         if (!$fu) {
