@@ -19,16 +19,32 @@ return [
             $orgRef = 'ORG-PLATFORM0000000001';
             $prodRef = 'PRD-TEST000000000001';
 
+            $pc = '400' . rand(100, 999);
             $partyRef = $partyService->create([
                 'org_ref'        => $orgRef,
                 'franchise_ref'  => $frnRef,
                 'party_code'     => 'PTY-DSP-' . bin2hex(random_bytes(4)),
                 'firm_name'      => 'Apex Dispatch Pharma',
-                'pincode'        => '411001',
+                'pincode'        => $pc,
                 'credit_limit'   => 500000.00,
                 'status'         => 'ACTIVE',
                 'created_by_ref' => 'USR-FRNADMIN000000001',
             ]);
+
+            $c->make(\App\Domain\Territory\TerritoryService::class)->create([
+                'org_ref' => $orgRef,
+                'franchise_ref' => $frnRef,
+                'party_ref' => $partyRef,
+                'level' => 'PINCODE',
+                'pincode' => $pc,
+                'effective_from' => '2026-01-01',
+                'is_exclusive' => 1,
+                'created_by_ref' => 'USR-FRNADMIN000000001',
+            ]);
+
+            $db = $c->make(\App\Core\Database::class);
+            $db->prepare("UPDATE franchises SET state_ref = 'STA-MAH' WHERE franchise_ref = ?")->execute([$frnRef]);
+            $db->prepare("INSERT IGNORE INTO pincodes (pincode, state_ref, district_ref) VALUES (?, 'STA-MAH', 'DST-PNE')")->execute([$pc]);
 
             // Add stock
             $invService->receiveGoods(
@@ -42,12 +58,13 @@ return [
                 [['product_ref' => $prodRef, 'paid_qty' => 5]],
                 null, null, null, null, 'USR-FRNADMIN000000001'
             );
+            $orderService->submitOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
             $orderService->confirmOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
             $inv = $billingService->generateInvoice($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
 
             // Create Dispatch
             $lr = 'VRL-MUM-' . rand(100000, 999999);
-            $dsp = $dispatchService->createDispatch(
+            $dsp = $dispatchService->create(
                 $orgRef,
                 $frnRef,
                 $inv['invoice_ref'],
@@ -67,7 +84,7 @@ return [
             \Tests\Support\Assert::eq('DISPATCHED', $orderRow['status'], 'Order status is DISPATCHED');
 
             // Deliver
-            $dispatchService->markDelivered($frnRef, $dsp['dispatch_ref'], 'USR-FRNADMIN000000001');
+            $dispatchService->deliver($orgRef, $frnRef, $dsp['dispatch_ref'], 'USR-FRNADMIN000000001', 'Delivered');
             $dspRow = $dispatchRepo->findByRef($frnRef, $dsp['dispatch_ref']);
             \Tests\Support\Assert::eq('DELIVERED', $dspRow['status'], 'Dispatch is DELIVERED');
 

@@ -114,9 +114,9 @@ final class SqlDispatchRepository implements DispatchRepositoryInterface
 
     public function updateStatusIfCurrent(string $franchiseRef, string $dispatchRef, string $fromStatus, string $toStatus, ?string $deliveryRemarks = null): bool
     {
-        $sql = "UPDATE dispatches SET status = :s, delivery_remarks = :remarks, delivered_at = CASE WHEN :s = 'DELIVERED' THEN NOW() ELSE delivered_at END, updated_at = NOW() WHERE franchise_ref = :f AND dispatch_ref = :r AND status = :from";
+        $sql = "UPDATE dispatches SET status = :s, delivery_remarks = :remarks, delivered_at = CASE WHEN :s2 = 'DELIVERED' THEN NOW() ELSE delivered_at END, updated_at = NOW() WHERE franchise_ref = :f AND dispatch_ref = :r AND status = :from";
         $statement = $this->db->prepare($sql); $statement->execute([
-            ':s' => $toStatus, ':remarks' => $deliveryRemarks,
+            ':s' => $toStatus, ':s2' => $toStatus, ':remarks' => $deliveryRemarks,
             ':f' => $franchiseRef,
             ':r' => $dispatchRef,
             ':from' => $fromStatus,

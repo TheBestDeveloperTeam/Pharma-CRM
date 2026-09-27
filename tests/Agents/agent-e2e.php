@@ -19,16 +19,32 @@ return [
             $orgRef = 'ORG-PLATFORM0000000001';
             $prodRef = 'PRD-TEST000000000001';
 
+            $pc = '400' . rand(100, 999);
             $partyRef = $partyService->create([
                 'org_ref'        => $orgRef,
                 'franchise_ref'  => $frnRef,
                 'party_code'     => 'PTY-E2E-' . bin2hex(random_bytes(4)),
                 'firm_name'      => 'Apex E2E Pharma',
-                'pincode'        => '411001',
+                'pincode'        => $pc,
                 'credit_limit'   => 500000.00,
                 'status'         => 'ACTIVE',
                 'created_by_ref' => 'USR-FRNADMIN000000001',
             ]);
+
+            $c->make(\App\Domain\Territory\TerritoryService::class)->create([
+                'org_ref' => $orgRef,
+                'franchise_ref' => $frnRef,
+                'party_ref' => $partyRef,
+                'level' => 'PINCODE',
+                'pincode' => $pc,
+                'effective_from' => '2026-01-01',
+                'is_exclusive' => 1,
+                'created_by_ref' => 'USR-FRNADMIN000000001',
+            ]);
+
+            $db = $c->make(\App\Core\Database::class);
+            $db->prepare("UPDATE franchises SET state_ref = 'STA-MAH' WHERE franchise_ref = ?")->execute([$frnRef]);
+            $db->prepare("INSERT IGNORE INTO pincodes (pincode, state_ref, district_ref) VALUES (?, 'STA-MAH', 'DST-PNE')")->execute([$pc]);
 
             // 1. Inward goods
             $invService->receiveGoods(
@@ -43,7 +59,9 @@ return [
                 [['product_ref' => $prodRef, 'paid_qty' => 10]],
                 null, null, null, null, 'USR-FRNADMIN000000001'
             );
-            \Tests\Support\Assert::eq('SUBMITTED', $ord['status'], 'Step 2: Order submitted');
+            \Tests\Support\Assert::eq('DRAFT', $ord['status'], 'Step 2: Order created as draft');
+            $ord = $orderService->submitOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
+            \Tests\Support\Assert::eq('SUBMITTED', $ord['status'], 'Step 2.5: Order submitted');
 
             // 3. Confirm Order (FEFO Reservation)
             $confirmed = $orderService->confirmOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
@@ -55,13 +73,13 @@ return [
 
             // 5. Dispatch Goods
             $lr = 'LR-E2E-' . rand(100000, 999999);
-            $dsp = $dispatchService->createDispatch(
+            $dsp = $dispatchService->create(
                 $orgRef, $frnRef, $inv['invoice_ref'], null, $lr, null, 1, 'E2E test shipment', 'USR-FRNADMIN000000001'
             );
             \Tests\Support\Assert::eq('DISPATCHED', $dsp['status'], 'Step 5: Consignment dispatched');
 
             // 6. Deliver Goods
-            $dispatchService->markDelivered($frnRef, $dsp['dispatch_ref'], 'USR-FRNADMIN000000001');
+            $dispatchService->deliver($orgRef, $frnRef, $dsp['dispatch_ref'], 'USR-FRNADMIN000000001', 'Delivered');
 
             // 7. Receive Payment
             $invRow = $invoiceRepo->findByRef($frnRef, $inv['invoice_ref']);

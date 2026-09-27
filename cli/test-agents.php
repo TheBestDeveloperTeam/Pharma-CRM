@@ -50,6 +50,7 @@ foreach ($toRun as [$file, $agent]) {
             echo "  [OK] Step $stepCount\n";
         } catch (\Throwable $e) {
             echo "  [FAIL] Step $stepCount: " . $e->getMessage() . "\n";
+            echo "  Trace: " . $e->getFile() . ':' . $e->getLine() . "\n";
             $agentPassed = false;
             $failures++;
             if ($failFast) {

@@ -19,16 +19,32 @@ return [
             $orgRef = 'ORG-PLATFORM0000000001';
             $prodRef = 'PRD-TEST000000000001';
 
+            $pc = '400' . rand(100, 999);
             $partyRef = $partyService->create([
                 'org_ref'        => $orgRef,
                 'franchise_ref'  => $frnRef,
                 'party_code'     => 'PTY-PAY-' . bin2hex(random_bytes(4)),
                 'firm_name'      => 'Apex Payments Pharma',
-                'pincode'        => '411001',
+                'pincode'        => $pc,
                 'credit_limit'   => 500000.00,
                 'status'         => 'ACTIVE',
                 'created_by_ref' => 'USR-FRNADMIN000000001',
             ]);
+
+            $c->make(\App\Domain\Territory\TerritoryService::class)->create([
+                'org_ref' => $orgRef,
+                'franchise_ref' => $frnRef,
+                'party_ref' => $partyRef,
+                'level' => 'PINCODE',
+                'pincode' => $pc,
+                'effective_from' => '2026-01-01',
+                'is_exclusive' => 1,
+                'created_by_ref' => 'USR-FRNADMIN000000001',
+            ]);
+
+            $db = $c->make(\App\Core\Database::class);
+            $db->prepare("UPDATE franchises SET state_ref = 'STA-MAH' WHERE franchise_ref = ?")->execute([$frnRef]);
+            $db->prepare("INSERT IGNORE INTO pincodes (pincode, state_ref, district_ref) VALUES (?, 'STA-MAH', 'DST-PNE')")->execute([$pc]);
 
             // Add stock
             $invService->receiveGoods(
@@ -42,6 +58,7 @@ return [
                 [['product_ref' => $prodRef, 'paid_qty' => 2]],
                 null, null, null, null, 'USR-FRNADMIN000000001'
             );
+            $orderService->submitOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
             $orderService->confirmOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
             $inv = $billingService->generateInvoice($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
 

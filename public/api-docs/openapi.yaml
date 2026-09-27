@@ -2642,6 +2642,19 @@ paths:
       parameters:
       - {name: ref, in: path, required: true, schema: {type: string}}
       - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice_ref, amount]
+              properties:
+                invoice_ref: {type: string}
+                amount: {type: number, format: float, minimum: 0.01}
+      responses:
+        '201':
+          description: Allocation created.
 
   /admin/payments/{ref}/reverse:
     post:
@@ -2664,17 +2677,6 @@ paths:
           description: Payment reversed.
         '404':
           description: Payment not found.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [invoice_ref, amount]
-              properties:
-                invoice_ref: {type: string}
-                amount: {type: number, format: float, minimum: 0.01}
-      responses: {'201': {description: Allocation created.}}
 
   # ============================================================================
   # Franchise Admin: 12 Reports
@@ -2913,6 +2915,10 @@ paths:
       responses:
         '200':
           description: Outstanding balance breakdown.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOutstanding'
 
   # ============================================================================
   # TASK-001 — Roles, Permissions & Scope

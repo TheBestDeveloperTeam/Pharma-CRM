@@ -31,16 +31,32 @@ return [
                 'created_by_ref' => 'USR-FRNADMIN000000001',
             ]);
 
+            $pc = '400' . rand(100, 999);
             $partyRef = $partyService->create([
                 'org_ref'        => $orgRef,
                 'franchise_ref'  => $frnRef,
                 'party_code'     => 'PTY-BILL-' . bin2hex(random_bytes(4)),
                 'firm_name'      => 'Apex Billing Pharma',
-                'pincode'        => '411001',
+                'pincode'        => $pc,
                 'credit_limit'   => 500000.00,
                 'status'         => 'ACTIVE',
                 'created_by_ref' => 'USR-FRNADMIN000000001',
             ]);
+
+            $c->make(\App\Domain\Territory\TerritoryService::class)->create([
+                'org_ref' => $orgRef,
+                'franchise_ref' => $frnRef,
+                'party_ref' => $partyRef,
+                'level' => 'PINCODE',
+                'pincode' => $pc,
+                'effective_from' => '2026-01-01',
+                'is_exclusive' => 1,
+                'created_by_ref' => 'USR-FRNADMIN000000001',
+            ]);
+
+            $db = $c->make(\App\Core\Database::class);
+            $db->prepare("UPDATE franchises SET state_ref = 'STA-MAH' WHERE franchise_ref = ?")->execute([$frnRef]);
+            $db->prepare("INSERT IGNORE INTO pincodes (pincode, state_ref, district_ref) VALUES (?, 'STA-MAH', 'DST-PNE')")->execute([$pc]);
 
             // Add stock
             $batchRef = $invService->receiveGoods(
@@ -54,6 +70,7 @@ return [
                 [['product_ref' => $prodRef, 'paid_qty' => 10]],
                 null, null, null, null, 'USR-FRNADMIN000000001'
             );
+            $orderService->submitOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
             $orderService->confirmOrder($orgRef, $frnRef, $ord['order_ref'], 'USR-FRNADMIN000000001');
 
             // Generate invoice
@@ -70,10 +87,10 @@ return [
             \Tests\Support\Assert::true(!empty($items[0]['batch_no_snapshot']), 'Batch snapshot frozen');
             \Tests\Support\Assert::true(!empty($items[0]['expiry_snapshot']), 'Expiry snapshot frozen');
 
-            // Verify physical stock was decremented from batch
+            // Verify physical stock was NOT decremented yet (it happens at dispatch)
             $batch = $batchRepo->findByRef($frnRef, $batchRef);
-            \Tests\Support\Assert::eq(40, (int)$batch['on_hand_qty'], 'On hand physical stock decremented from 50 to 40 upon billing');
-            \Tests\Support\Assert::eq(0, (int)$batch['reserved_qty'], 'Reserved stock is released/consumed to 0');
+            \Tests\Support\Assert::eq(50, (int)$batch['on_hand_qty'], 'On hand physical stock remains 50 upon billing');
+            \Tests\Support\Assert::eq(10, (int)$batch['reserved_qty'], 'Reserved stock remains 10 upon billing');
         }
     ]
 ];

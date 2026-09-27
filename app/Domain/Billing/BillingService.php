@@ -41,6 +41,7 @@ final class BillingService
                 'ship_to_snapshot' => ['address' => $order['shipping_address'] ?? $party['shipping_address'] ?? null, 'pincode' => $order['shipping_pincode'] ?? $party['pincode'] ?? null],
                 'subtotal' => $tax['taxable_total'], 'discount_total' => '0.00', 'taxable_total' => $tax['taxable_total'], 'cgst_total' => $tax['cgst_total'], 'sgst_total' => $tax['sgst_total'], 'igst_total' => $tax['igst_total'], 'gst_total' => $tax['tax_total'], 'rounding_adjustment' => '0.00', 'grand_total' => $tax['grand_total'], 'tax_policy_code' => $jurisdiction, 'supplier_state_ref'=>$supplierState,'place_of_supply_state_ref'=>$placeState,'created_by_ref' => $actorRef,
             ], $items);
+            $this->orderRepo->updateStatusNoTransaction($franchiseRef, $orderRef, $order['status'], 'PROCESSING', $actorRef, 'Invoice generated');
             return ['invoice_ref' => $invoiceRef, 'invoice_no' => $invoiceNo, 'status' => 'POSTED'];
         });
     }
