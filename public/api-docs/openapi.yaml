@@ -657,111 +657,111 @@ components:
             type: string
             enum: [ALL, TERRITORY, TEAM, OWN, NONE]
 
-security:
-- bearerAuth: []
+    DashboardResponse:
+      type: object
+      required: [leads, follow_ups, orders, outstanding, near_expiry, sales_team]
+      properties:
+        leads: {$ref: '#/components/schemas/DashboardLeads'}
+        follow_ups: {$ref: '#/components/schemas/DashboardFollowUps'}
+        orders: {$ref: '#/components/schemas/DashboardOrders'}
+        outstanding: {$ref: '#/components/schemas/DashboardOutstanding'}
+        near_expiry: {$ref: '#/components/schemas/DashboardNearExpiry'}
+        sales_team: {$ref: '#/components/schemas/DashboardSalesTeam'}
+    DashboardLeads:
+      type: object
+      properties: {newToday: {type: integer}, unassignedCount: {type: integer}, 
+          slaBreachedCount: {type: integer}, slaThresholdHours: {type: integer}, 
+          slaTrend: {type: array, items: {type: object, properties: {date: {type: 
+                  string}, totalCount: {type: integer}, breachedCount: {type: 
+                  integer}}}}, conversionSeries: {type: array, items: {type: 
+              object, properties: {status: {type: string}, count: {type: integer}}}}}
+    DashboardFollowUps:
+      type: object
+      properties: {dueTodayCount: {type: integer}, overdueCount: {type: integer}}
+    DashboardOrders:
+      type: object
+      properties: {activeCount: {type: integer}, territoryViolationCount: {type: 
+            integer}, cancelledCount: {type: integer}, dispatchPendingCount: {type: 
+            integer}, salesTrend: {type: array, items: {type: object, properties: {
+              month: {type: string}, total: {type: number}, orderCount: {type: 
+                  integer}}}}}
+    DashboardOutstanding:
+      type: object
+      properties: {available: {type: boolean}, reason: {type: string, nullable: 
+            true}, total: {type: number, nullable: true}, buckets: {type: array, 
+            items: {type: object}}}
+    DashboardNearExpiry:
+      type: object
+      properties: {count: {type: integer}, stockValue: {type: number}}
+    DashboardSalesTeam:
+      type: object
+      properties: {available: {type: boolean}, rows: {type: array, items: {$ref: '#/components/schemas/SalesTeamProductivityRow'}}}
+    ReportMeta:
+      type: object
+      required: [report_key, page, per_page, total, total_pages]
+      properties: {report_key: {type: string}, page: {type: integer}, per_page: {
+            type: integer}, total: {type: integer}, total_pages: {type: integer}}
+    ReportResponse:
+      type: object
+      required: [rows, meta]
+      properties:
+        rows: {type: array, items: {oneOf: [$ref: '#/components/schemas/LeadSourceRow',
+              $ref: '#/components/schemas/ResponseTimeRow', $ref: '#/components/schemas/ConversionRow',
+              $ref: '#/components/schemas/SalesTeamProductivityRow', $ref: '#/components/schemas/TerritorySalesRow',
+              $ref: '#/components/schemas/PartySalesRow', $ref: '#/components/schemas/ProductSalesRow',
+              $ref: '#/components/schemas/SchemeUtilizationRow', $ref: '#/components/schemas/OrderStatusRow',
+              $ref: '#/components/schemas/DispatchPendingRow', $ref: '#/components/schemas/BatchInventoryRow',
+              $ref: '#/components/schemas/NearExpiryRow', $ref: '#/components/schemas/TerritoryViolationRow',
+              $ref: '#/components/schemas/WebhookFailureRow', $ref: '#/components/schemas/WhatsappDeliveryRow',
+              $ref: '#/components/schemas/PaymentOutstandingRow']}}
+        meta: {$ref: '#/components/schemas/ReportMeta'}
+    LeadSourceRow: {type: object, properties: {source: {type: string}, totalLeads: {
+          type: integer}, converted: {type: integer}, conversionPct: {type: number}}}
+    ResponseTimeRow: {type: object, properties: {leadRef: {type: string}, leadName: {
+          type: string}, source: {type: string}, createdDate: {type: string, 
+            format: date-time}, respondedAt: {type: string, format: date-time, 
+            nullable: true}, durationHours: {type: number}, breached: {type: 
+            string, enum: ['Yes', 'No']}}}
+    ConversionRow: {type: object, properties: {stage: {type: string}, count: {type: 
+            integer}}}
+    SalesTeamProductivityRow: {type: object, properties: {userId: {type: string}, 
+          name: {type: string}, leadsCount: {type: integer}, convertedCount: {type: 
+            integer}, ordersCount: {type: integer}, ordersValue: {type: number}}}
+    TerritorySalesRow: {type: object, properties: {state: {type: string}, district: {
+          type: string}, orders: {type: integer}, totalSales: {type: number}}}
+    PartySalesRow: {type: object, properties: {partyId: {type: string}, partyName: {
+          type: string}, orders: {type: integer}, totalSales: {type: number}}}
+    ProductSalesRow: {type: object, properties: {productId: {type: string}, 
+          productName: {type: string}, qtySold: {type: integer}, freeQty: {type: 
+            integer}, netSales: {type: number}}}
+    SchemeUtilizationRow: {type: object, properties: {schemeId: {type: string}, 
+          schemeName: {type: string}, timesApplied: {type: integer}, freeQtyGiven: {
+          type: integer}, netSales: {type: number}}}
+    OrderStatusRow: {type: object, properties: {status: {type: string}, count: {
+            type: integer}, totalValue: {type: number}}}
+    DispatchPendingRow: {type: object, properties: {invoiceNo: {type: string}, 
+          partyName: {type: string}, status: {type: string}, orderDate: {type: 
+            string, format: date}, total: {type: number}}}
+    BatchInventoryRow: {type: object, properties: {productName: {type: string}, 
+          batchNo: {type: string}, expiryDate: {type: string, format: date}, 
+          availableQty: {type: integer}, status: {type: string}, stockValue: {type: 
+            number}}}
+    NearExpiryRow: {type: object, properties: {productName: {type: string}, 
+          batchNo: {type: string}, expiryDate: {type: string, format: date}, 
+          daysLeft: {type: integer}, availableQty: {type: integer}, stockValue: {
+            type: number}}}
+    TerritoryViolationRow: {type: object, properties: {invoiceNo: {type: string}, 
+          partyName: {type: string}, reason: {type: string}, orderDate: {type: 
+            string, format: date}}}
+    WebhookFailureRow: {type: object, properties: {source: {type: string}, 
+          eventType: {type: string}, receivedAt: {type: string, format: date-time},
+        status: {type: string}, errorMessage: {type: string, nullable: true}}}
+    WhatsappDeliveryRow: {type: object, properties: {recipientName: {type: string},
+        templateName: {type: string}, status: {type: string}, sentAt: {type: 
+            string, format: date-time}}}
 
-  DashboardResponse:
-    type: object
-    required: [leads, follow_ups, orders, outstanding, near_expiry, sales_team]
-    properties:
-      leads: {$ref: '#/components/schemas/DashboardLeads'}
-      follow_ups: {$ref: '#/components/schemas/DashboardFollowUps'}
-      orders: {$ref: '#/components/schemas/DashboardOrders'}
-      outstanding: {$ref: '#/components/schemas/DashboardOutstanding'}
-      near_expiry: {$ref: '#/components/schemas/DashboardNearExpiry'}
-      sales_team: {$ref: '#/components/schemas/DashboardSalesTeam'}
-  DashboardLeads:
-    type: object
-    properties: {newToday: {type: integer}, unassignedCount: {type: integer}, 
-        slaBreachedCount: {type: integer}, slaThresholdHours: {type: integer}, 
-        slaTrend: {type: array, items: {type: object, properties: {date: {type: 
-                string}, totalCount: {type: integer}, breachedCount: {type: 
-                integer}}}}, conversionSeries: {type: array, items: {type: 
-            object, properties: {status: {type: string}, count: {type: integer}}}}}
-  DashboardFollowUps:
-    type: object
-    properties: {dueTodayCount: {type: integer}, overdueCount: {type: integer}}
-  DashboardOrders:
-    type: object
-    properties: {activeCount: {type: integer}, territoryViolationCount: {type: 
-          integer}, cancelledCount: {type: integer}, dispatchPendingCount: {type: 
-          integer}, salesTrend: {type: array, items: {type: object, properties: {
-            month: {type: string}, total: {type: number}, orderCount: {type: 
-                integer}}}}}
-  DashboardOutstanding:
-    type: object
-    properties: {available: {type: boolean}, reason: {type: string, nullable: 
-          true}, total: {type: number, nullable: true}, buckets: {type: array, 
-          items: {type: object}}}
-  DashboardNearExpiry:
-    type: object
-    properties: {count: {type: integer}, stockValue: {type: number}}
-  DashboardSalesTeam:
-    type: object
-    properties: {available: {type: boolean}, rows: {type: array, items: {$ref: '#/components/schemas/SalesTeamProductivityRow'}}}
-  ReportMeta:
-    type: object
-    required: [report_key, page, per_page, total, total_pages]
-    properties: {report_key: {type: string}, page: {type: integer}, per_page: {
-          type: integer}, total: {type: integer}, total_pages: {type: integer}}
-  ReportResponse:
-    type: object
-    required: [rows, meta]
-    properties:
-      rows: {type: array, items: {oneOf: [$ref: '#/components/schemas/LeadSourceRow',
-            $ref: '#/components/schemas/ResponseTimeRow', $ref: '#/components/schemas/ConversionRow',
-            $ref: '#/components/schemas/SalesTeamProductivityRow', $ref: '#/components/schemas/TerritorySalesRow',
-            $ref: '#/components/schemas/PartySalesRow', $ref: '#/components/schemas/ProductSalesRow',
-            $ref: '#/components/schemas/SchemeUtilizationRow', $ref: '#/components/schemas/OrderStatusRow',
-            $ref: '#/components/schemas/DispatchPendingRow', $ref: '#/components/schemas/BatchInventoryRow',
-            $ref: '#/components/schemas/NearExpiryRow', $ref: '#/components/schemas/TerritoryViolationRow',
-            $ref: '#/components/schemas/WebhookFailureRow', $ref: '#/components/schemas/WhatsappDeliveryRow',
-            $ref: '#/components/schemas/PaymentOutstandingRow']}}
-      meta: {$ref: '#/components/schemas/ReportMeta'}
-  LeadSourceRow: {type: object, properties: {source: {type: string}, totalLeads: {
-        type: integer}, converted: {type: integer}, conversionPct: {type: number}}}
-  ResponseTimeRow: {type: object, properties: {leadRef: {type: string}, leadName: {
-        type: string}, source: {type: string}, createdDate: {type: string, 
-          format: date-time}, respondedAt: {type: string, format: date-time, 
-          nullable: true}, durationHours: {type: number}, breached: {type: 
-          string, enum: ['Yes', 'No']}}}
-  ConversionRow: {type: object, properties: {stage: {type: string}, count: {type: 
-          integer}}}
-  SalesTeamProductivityRow: {type: object, properties: {userId: {type: string}, 
-        name: {type: string}, leadsCount: {type: integer}, convertedCount: {type: 
-          integer}, ordersCount: {type: integer}, ordersValue: {type: number}}}
-  TerritorySalesRow: {type: object, properties: {state: {type: string}, district: {
-        type: string}, orders: {type: integer}, totalSales: {type: number}}}
-  PartySalesRow: {type: object, properties: {partyId: {type: string}, partyName: {
-        type: string}, orders: {type: integer}, totalSales: {type: number}}}
-  ProductSalesRow: {type: object, properties: {productId: {type: string}, 
-        productName: {type: string}, qtySold: {type: integer}, freeQty: {type: 
-          integer}, netSales: {type: number}}}
-  SchemeUtilizationRow: {type: object, properties: {schemeId: {type: string}, 
-        schemeName: {type: string}, timesApplied: {type: integer}, freeQtyGiven: {
-        type: integer}, netSales: {type: number}}}
-  OrderStatusRow: {type: object, properties: {status: {type: string}, count: {
-          type: integer}, totalValue: {type: number}}}
-  DispatchPendingRow: {type: object, properties: {invoiceNo: {type: string}, 
-        partyName: {type: string}, status: {type: string}, orderDate: {type: 
-          string, format: date}, total: {type: number}}}
-  BatchInventoryRow: {type: object, properties: {productName: {type: string}, 
-        batchNo: {type: string}, expiryDate: {type: string, format: date}, 
-        availableQty: {type: integer}, status: {type: string}, stockValue: {type: 
-          number}}}
-  NearExpiryRow: {type: object, properties: {productName: {type: string}, 
-        batchNo: {type: string}, expiryDate: {type: string, format: date}, 
-        daysLeft: {type: integer}, availableQty: {type: integer}, stockValue: {
-          type: number}}}
-  TerritoryViolationRow: {type: object, properties: {invoiceNo: {type: string}, 
-        partyName: {type: string}, reason: {type: string}, orderDate: {type: 
-          string, format: date}}}
-  WebhookFailureRow: {type: object, properties: {source: {type: string}, 
-        eventType: {type: string}, receivedAt: {type: string, format: date-time},
-      status: {type: string}, errorMessage: {type: string, nullable: true}}}
-  WhatsappDeliveryRow: {type: object, properties: {recipientName: {type: string},
-      templateName: {type: string}, status: {type: string}, sentAt: {type: 
-          string, format: date-time}}}
+security:
+  - bearerAuth: []
 
 paths:
   # ============================================================================
@@ -955,6 +955,39 @@ paths:
         '201':
           description: Organization created.
 
+  /super/organizations/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get organization details
+      tags: [Super Admin]
+      responses:
+        '200':
+          description: Organization details.
+        '404':
+          description: Organization not found.
+    patch:
+      summary: Update organization
+      tags: [Super Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                org_name: {type: string}
+                brand_primary_hex: {type: string, example: "#0D9488"}
+                brand_accent_hex: {type: string, example: "#FF7A00"}
+      responses:
+        '200':
+          description: Organization updated.
+        '404':
+          description: Organization not found.
+
   /super/franchises:
     get:
       summary: List franchises
@@ -979,6 +1012,97 @@ paths:
       responses:
         '201':
           description: Franchise created.
+
+  /super/franchises/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get franchise details
+      tags: [Super Admin]
+      responses:
+        '200':
+          description: Franchise details.
+        '404':
+          description: Franchise not found.
+    patch:
+      summary: Update franchise
+      tags: [Super Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                franchise_name: {type: string}
+                brand_accent_hex: {type: string, example: "#FF7A00"}
+      responses:
+        '200':
+          description: Franchise updated.
+        '404':
+          description: Franchise not found.
+
+  /super/franchises/{ref}/suspend:
+    post:
+      summary: Suspend a franchise
+      tags: [Super Admin]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Franchise suspended.
+        '404':
+          description: Franchise not found.
+
+  /super/franchises/{ref}/activate:
+    post:
+      summary: Activate a suspended franchise
+      tags: [Super Admin]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Franchise activated.
+        '404':
+          description: Franchise not found.
+
+  /super/franchises/{ref}/admins:
+    post:
+      summary: Create initial franchise admin user
+      tags: [Super Admin]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [full_name, email, password]
+              properties:
+                full_name: {type: string}
+                email: {type: string, format: email}
+                password: {type: string, format: password}
+                mobile: {type: string}
+      responses:
+        '201':
+          description: Franchise admin created.
+        '404':
+          description: Franchise not found.
+        '409':
+          description: Email already in use.
 
   /super/impersonate/{ref}:
     post:
@@ -1043,6 +1167,117 @@ paths:
         '201':
           description: User created.
 
+  /admin/users/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get user details
+      tags: [Admin Users]
+      responses:
+        '200':
+          description: User details.
+        '404':
+          description: User not found.
+    patch:
+      summary: Update user
+      tags: [Admin Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: {type: string}
+                email: {type: string, format: email}
+                mobile: {type: string}
+                party_ref: {type: string}
+                employee_code: {type: string}
+                department: {type: string}
+                designation: {type: string}
+                assigned_region: {type: string}
+                joining_date: {type: string, format: date}
+                reporting_manager_ref: {type: string, nullable: true}
+                role_ref: {type: string}
+                status: {type: string, enum: [ACTIVE, INACTIVE]}
+      responses:
+        '200':
+          description: User updated.
+        '404':
+          description: User not found.
+
+  /admin/users/{ref}/activate:
+    post:
+      summary: Activate user account
+      tags: [Admin Users]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: User activated.
+        '404':
+          description: User not found.
+
+  /admin/users/{ref}/deactivate:
+    post:
+      summary: Deactivate user account
+      tags: [Admin Users]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: User deactivated.
+        '404':
+          description: User not found.
+
+  /admin/users/{ref}/reset-password:
+    post:
+      summary: Reset user password
+      tags: [Admin Users]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: {type: string, format: password}
+      responses:
+        '200':
+          description: Password reset successfully.
+        '404':
+          description: User not found.
+
+  /admin/users/{ref}/unlock:
+    post:
+      summary: Unlock locked user account
+      tags: [Admin Users]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: User unlocked successfully.
+        '404':
+          description: User not found.
+
   /admin/categories:
     get:
       summary: List product categories
@@ -1086,6 +1321,28 @@ paths:
       - {name: ref, in: path, required: true, schema: {type: string}}
       responses: {'200': {description: Category status changed.}}
 
+  /admin/settings:
+    get:
+      summary: List system and franchise settings
+      tags: [Admin Masters]
+      responses:
+        '200':
+          description: System settings list.
+    patch:
+      summary: Update franchise branding and settings
+      tags: [Admin Masters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                brand_accent_hex: {type: string, example: "#FF7A00"}
+      responses:
+        '200':
+          description: Settings updated.
+
   /admin/tiers:
     get:
       summary: List pricing tiers
@@ -1093,6 +1350,24 @@ paths:
       responses:
         '200':
           description: Pricing tiers list.
+    post:
+      summary: Create pricing tier
+      tags: [Admin Masters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tier_name]
+              properties:
+                tier_name: {type: string, example: "TIER A"}
+                description: {type: string}
+      responses:
+        '201':
+          description: Pricing tier created.
+        '409':
+          description: Tier name duplicate.
 
   /admin/tiers/{ref}:
     parameters:
@@ -1165,6 +1440,36 @@ paths:
       tags: [Admin Masters]
       responses: {'200': {description: Master value updated.}}
 
+  /admin/catalog-masters/{category}/{ref}/status:
+    post:
+      summary: Update catalog master item status
+      tags: [Admin Masters]
+      parameters:
+      - {name: category, in: path, required: true, schema: {type: string, enum: [dosageForms, schemeTypes]}}
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: {type: string, enum: [ACTIVE, INACTIVE]}
+      responses:
+        '200':
+          description: Master status updated.
+        '404':
+          description: Master not found.
+
+  /admin/notification-templates:
+    get:
+      summary: List notification templates
+      tags: [Admin Masters]
+      responses:
+        '200':
+          description: Notification templates list.
+
   # ============================================================================
   # Franchise Admin: Products & Pricing
   # ============================================================================
@@ -1203,6 +1508,54 @@ paths:
       summary: Delete an unreferenced product
       tags: [Admin Products]
       responses: {'200': {description: Product deleted.}}
+
+  /admin/products/{ref}/activate:
+    post:
+      summary: Activate product
+      tags: [Admin Products]
+      parameters:
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Product activated.
+        '404':
+          description: Product not found.
+
+  /admin/products/{ref}/deactivate:
+    post:
+      summary: Deactivate product
+      tags: [Admin Products]
+      parameters:
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Product deactivated.
+        '404':
+          description: Product not found.
+
+  /admin/products/{ref}/archive:
+    post:
+      summary: Archive product
+      tags: [Admin Products]
+      parameters:
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Product archived.
+        '404':
+          description: Product not found.
+
+  /admin/products/{ref}/restore:
+    post:
+      summary: Restore archived product
+      tags: [Admin Products]
+      parameters:
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Product restored to active status.
+        '404':
+          description: Product not found.
 
   /admin/prices:
     get:
@@ -1325,6 +1678,71 @@ paths:
         '201':
           description: Lead created.
 
+  /admin/leads/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get lead details with timeline and activities
+      tags: [Admin Leads & Follow-ups]
+      responses:
+        '200':
+          description: Lead details.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+    patch:
+      summary: Update lead details
+      tags: [Admin Leads & Follow-ups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact_name: {type: string}
+                mobile: {type: string}
+                email: {type: string}
+                notes: {type: string}
+      responses:
+        '200':
+          description: Lead updated.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
+  /admin/leads/{ref}/status:
+    post:
+      summary: Update lead status
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: {type: string, enum: [NEW, CONTACTED, QUALIFIED, WON, LOST]}
+                note: {type: string}
+      responses:
+        '200':
+          description: Lead status updated.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
   /admin/leads/{ref}/assign:
     post:
       summary: Assign lead to sales representative
@@ -1372,9 +1790,103 @@ paths:
         '201':
           description: Follow-up scheduled.
 
+  /admin/follow-ups/{ref}/complete:
+    post:
+      summary: Complete a scheduled follow-up
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remark: {type: string}
+      responses:
+        '200':
+          description: Follow-up marked completed.
+        '404':
+          description: Follow-up not found.
+
+  /admin/follow-ups/{ref}/reschedule:
+    post:
+      summary: Reschedule a follow-up
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [next_follow_up_at]
+              properties:
+                next_follow_up_at: {type: string, format: date-time}
+                remark: {type: string}
+      responses:
+        '200':
+          description: Follow-up rescheduled.
+        '404':
+          description: Follow-up not found.
+
   # ============================================================================
   # Franchise Admin: Parties & Territory
   # ============================================================================
+  /admin/onboarding/invite:
+    post:
+      summary: Issue distributor onboarding invitation
+      tags: [Admin Parties & Onboarding]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lead_ref: {type: string}
+                assigned_user_ref: {type: string}
+      responses:
+        '201':
+          description: Onboarding invite token created.
+
+  /onboarding/register:
+    post:
+      summary: Public distributor registration submission
+      tags: [Admin Parties & Onboarding]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, party_name, contact_person, mobile, state_code, district_name]
+              properties:
+                token: {type: string}
+                party_name: {type: string}
+                contact_person: {type: string}
+                mobile: {type: string}
+                email: {type: string, format: email}
+                state_code: {type: string}
+                district_name: {type: string}
+                pincode: {type: string}
+                gstin: {type: string}
+                pan: {type: string}
+                drug_license_no: {type: string}
+      responses:
+        '201':
+          description: Registration submitted.
+
   /admin/onboarding:
     get:
       summary: List distributor onboarding registrations
@@ -1448,6 +1960,66 @@ paths:
       parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
       responses: {'200': {description: Approved registration.}, '422': {
             description: Invalid lifecycle transition.}}
+
+  /admin/onboarding/{ref}/reject:
+    post:
+      summary: Reject a distributor registration
+      tags: [Admin Parties & Onboarding]
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remarks: {type: string}
+      responses:
+        '200':
+          description: Registration rejected.
+        '422':
+          description: Invalid transition.
+
+  /admin/onboarding/{ref}/request-info:
+    post:
+      summary: Request additional information from applicant
+      tags: [Admin Parties & Onboarding]
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remarks: {type: string}
+      responses:
+        '200':
+          description: Info requested.
+        '422':
+          description: Invalid transition.
+
+  /admin/onboarding/{ref}/convert:
+    post:
+      summary: Convert approved registration into an active distributor party
+      tags: [Admin Parties & Onboarding]
+      security: [bearerAuth: []]
+      parameters: [{name: ref, in: path, required: true, schema: {type: string}}]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tier_ref: {type: string}
+                credit_limit: {type: number}
+                credit_days: {type: integer}
+      responses:
+        '200':
+          description: Registration converted to Party.
   /admin/onboarding/{ref}/kyc-documents/{document_ref}/verify:
     post:
       summary: Verify or reject a pending KYC document
@@ -1475,6 +2047,46 @@ paths:
       security: [bearerAuth: []]
       responses: {'201': {description: DCR draft created.}, '409': {description: 
             Duplicate owner/date.}}
+
+  /portal/dcrs/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get online DCR detail
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      responses:
+        '200':
+          description: DCR details.
+        '403':
+          description: Not in permitted scope.
+        '404':
+          description: DCR not found.
+    patch:
+      summary: Update online DCR draft
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activity_type: {type: string}
+                work_type: {type: string}
+                remarks: {type: string}
+                calls: {type: array, items: {type: object}}
+      responses:
+        '200':
+          description: DCR draft updated.
+        '403':
+          description: Not in permitted scope.
+        '404':
+          description: DCR not found.
   /portal/dcrs/{ref}/status:
     post:
       summary: Submit, approve, reject, or reopen an online DCR
@@ -2009,6 +2621,18 @@ paths:
         '201':
           description: Payment recorded and allocated.
 
+  /admin/payments/{ref}:
+    parameters:
+    - {name: ref, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Get payment details with allocations
+      tags: [Admin Payments]
+      responses:
+        '200':
+          description: Payment details.
+        '404':
+          description: Payment not found.
+
   /admin/payments/{ref}/allocations:
     post:
       summary: Manually allocate a payment to one invoice
@@ -2018,6 +2642,28 @@ paths:
       parameters:
       - {name: ref, in: path, required: true, schema: {type: string}}
       - $ref: '#/components/parameters/IdempotencyKeyHeader'
+
+  /admin/payments/{ref}/reverse:
+    post:
+      summary: Reverse a payment and its invoice allocations
+      tags: [Admin Payments]
+      parameters:
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, idempotency_key]
+              properties:
+                reason: {type: string, example: "Cheque bounced"}
+                idempotency_key: {type: string}
+      responses:
+        '201':
+          description: Payment reversed.
+        '404':
+          description: Payment not found.
       requestBody:
         required: true
         content:
@@ -2215,6 +2861,21 @@ paths:
       responses:
         '201':
           description: Order placed.
+
+  /portal/orders/{ref}:
+    parameters:
+    - name: ref
+      in: path
+      required: true
+      schema: {type: string}
+    get:
+      summary: Get distributor order details
+      tags: [Distributor Portal]
+      responses:
+        '200':
+          description: Order details.
+        '404':
+          description: Order not found.
 
   /portal/orders/{ref}/cancel:
     post:
@@ -2425,3 +3086,54 @@ paths:
       security: [bearerAuth: []]
       responses:
         '200': {description: List of webhook sources.}
+    post:
+      summary: Create webhook source
+      tags: [Webhooks]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_name]
+              properties:
+                source_name: {type: string, example: "IndiaMART"}
+      responses:
+        '201':
+          description: Webhook source created.
+
+  /webhooks/{slug}/leads:
+    post:
+      summary: Ingest external lead webhook event
+      tags: [Webhooks]
+      security: []
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema: {type: string}
+      - name: X-Signature
+        in: header
+        required: true
+        schema: {type: string}
+      - name: X-Timestamp
+        in: header
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [external_event_id]
+              properties:
+                external_event_id: {type: string}
+      responses:
+        '200':
+          description: Webhook accepted for asynchronous ingestion.
+        '400':
+          description: Invalid payload or signature verification failed.
+        '413':
+          description: Payload exceeds 256KB.
