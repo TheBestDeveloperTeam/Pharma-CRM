@@ -52,6 +52,8 @@ class CorsMiddleware
             ->withHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Accept, Origin, X-Requested-With, X-Request-ID, Idempotency-Key, X-Franchise-Ref, X-Org-Ref, Cache-Control, Pragma, *')
             ->withHeader('Access-Control-Expose-Headers', 'X-Request-ID, Idempotency-Replay, Content-Disposition, *')
             ->withHeader('Access-Control-Max-Age', '86400')
+            ->withHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+            ->withHeader('Cross-Origin-Opener-Policy', 'unsafe-none')
             ->withHeader('Vary', 'Origin');
     }
 }

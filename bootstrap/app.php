@@ -19,7 +19,25 @@ $globalMiddleware = require __DIR__ . '/middleware.php';
 
 // Only auto-capture & dispatch if called from a web server (CLI scripts require bootstrap without dispatching)
 if (PHP_SAPI !== 'cli') {
-    $request  = \App\Core\Request::capture();
+    try {
+        $request  = \App\Core\Request::capture();
+    } catch (\App\Core\Exceptions\ValidationException $e) {
+        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
+        $response = $cors->addHeaders(
+            \App\Core\Response::error(422, 'VALIDATION_FAILED', $e->getMessage()),
+            $_SERVER['HTTP_ORIGIN'] ?? ''
+        );
+        $response->send();
+        exit(0);
+    } catch (\Throwable $e) {
+        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
+        $response = $cors->addHeaders(
+            \App\Core\Response::error(400, 'BAD_REQUEST', $e->getMessage()),
+            $_SERVER['HTTP_ORIGIN'] ?? ''
+        );
+        $response->send();
+        exit(0);
+    }
 
     // Fast-path OPTIONS preflight requests for zero CORS errors
     if ($request->method === 'OPTIONS') {

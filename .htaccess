@@ -3,11 +3,16 @@
     SetEnvIfNoCase Origin "(.+)" ORIGIN=$1
     Header always set Access-Control-Allow-Origin "%{ORIGIN}e" env=ORIGIN
     Header always set Access-Control-Allow-Credentials "true" env=ORIGIN
+    Header always set Access-Control-Allow-Origin "*" env=!ORIGIN
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
     Header always set Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Origin, X-Requested-With, X-Request-ID, Idempotency-Key, X-Franchise-Ref, X-Org-Ref, Cache-Control, Pragma, *"
     Header always set Access-Control-Expose-Headers "X-Request-ID, Idempotency-Replay, Content-Disposition, *"
     Header always set Access-Control-Max-Age "86400"
     Header always merge Vary "Origin"
+    Header always unset Cross-Origin-Resource-Policy
+    Header always set Cross-Origin-Resource-Policy "cross-origin"
+    Header always unset Cross-Origin-Opener-Policy
+    Header always set Cross-Origin-Opener-Policy "unsafe-none"
 </IfModule>
 
 <IfModule mod_rewrite.c>

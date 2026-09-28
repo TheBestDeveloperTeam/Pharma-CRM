@@ -19,7 +19,7 @@ return [
             $orgRef = 'ORG-PLATFORM0000000001';
             $prodRef = 'PRD-TEST000000000001';
 
-            $pc = '400' . rand(100, 999);
+            $pc = (string)rand(110001, 999999);
             $partyRef = $partyService->create([
                 'org_ref'        => $orgRef,
                 'franchise_ref'  => $frnRef,
