@@ -67,7 +67,13 @@ final class Tenant
                 }
                 throw new ForbiddenException('TENANT_MISMATCH', 'X-Franchise-Ref header does not match authenticated tenant.');
             } elseif ($ctx->franchiseRef === null && $ctx->isSuperAdmin()) {
-                // Super Admin "SignInAs" dynamic impersonation via header
+                // Super Admin "SignInAs" dynamic impersonation via header.
+                // isSuper() still bypasses can()/scopeFor() everywhere, but
+                // roles/permissions/scopes/teamUserRefs/territoryRefs were
+                // being dropped here (defaulted to []) — any code path that
+                // reads them directly instead of via isSuper() would see an
+                // empty-permission super admin. Carry them over from the
+                // original context so SignInAs doesn't silently strip them.
                 $ctx = new TenantContext(
                     orgRef: $ctx->orgRef,
                     franchiseRef: $headerFranchise,
@@ -76,7 +82,12 @@ final class Tenant
                     scope: 'FRANCHISE', // Switch scope dynamically to allow lower APIs
                     partyRef: $partyRef ?? $ctx->partyRef,
                     requestId: $ctx->requestId,
-                    impersonatorRef: $ctx->userRef
+                    impersonatorRef: $ctx->userRef,
+                    roles: $ctx->roles,
+                    permissions: $ctx->permissions,
+                    scopes: $ctx->scopes,
+                    teamUserRefs: $ctx->teamUserRefs,
+                    territoryRefs: $ctx->territoryRefs,
                 );
                 Container::getInstance()->instance(TenantContext::class, $ctx);
             }
