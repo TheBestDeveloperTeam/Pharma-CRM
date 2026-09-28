@@ -17,6 +17,66 @@ Combined order by frontend blocking priority plus security/data-corruption sever
 9. **BE-004 (P0 production)** - production blocker, integration blocker nahi.
 
 
+## Live post-deploy delta check — 2026-09-27
+
+Smoke-tested against `https://crm.easysolutins24.in` with live ADMIN/SALES/PORTAL/SUPER tokens plus a
+freshly-created custom role, FIX ORDER items only (not a full re-audit). Full narrative in
+`OPEN_ISSUES.md` §"Live post-deploy delta check".
+
+- **BE-001: RESOLVED, live-verified.** Custom role with only `masters.view` + `leads.view` (OWN): granted keys
+  returned 200, ungranted keys (`masters.create`, `orders.*`, `products.view`) returned 403 with no legacy
+  `isAdmin()`/role-name bypass. Regression pass on ADMIN/SALES/PORTAL/SUPER and the 4 live masters all correct.
+- **S-3: list-authorization check RESOLVED, live-verified** (`PORTAL GET /admin/leads` → 403). The
+  non-owner-status-change check is **inconclusive** — it returned `500`, not `403`, because of new defect BE-034
+  below, not because it returned data.
+- **S-4, BE-002, BE-091, BE-070, BE-004, BE-170, BE-171, BE-003: all still open**, each re-confirmed against the
+  live server with the exact request in its §4 Verify steps (see `OPEN_ISSUES.md` for the per-item detail). BE-170
+  now fails with `500` rather than being merely unreachable.
+- **New defect — BE-034 (P0), widened 2026-09-27 during F16-6, widened again 2026-09-28 during F16-7: every
+  single-*record* Leads and Follow-ups endpoint returns 500 for every role.** Leads: `GET /admin/leads/{ref}`,
+  `PATCH /admin/leads/{ref}`, `POST /admin/leads/{ref}/status`, `POST /admin/leads/{ref}/assign` all 500 on every
+  lead tried (fresh and pre-existing). Follow-ups: `POST /admin/follow-ups/{ref}/complete` and
+  `.../reschedule` both 500 too, on a lead-linked follow-up, a party-linked one, a fresh one, and a pre-existing
+  one. `GET/POST /admin/leads` and `GET/POST /admin/follow-ups` (list/create, both modules) all work, including a
+  follow-up created *with* a `lead_ref` — which rules out the leads repository as the shared cause, since
+  `FollowUpsController::complete` never touches the `leads` table and still 500s. Corrected guess: every broken
+  method calls `AuthorizationService`/`CrmScopePolicy::canAccessLead()` or `::canAccessFollowUp()` — the
+  per-record scope check `show`/`update`/`status`/`assign`/`complete`/`reschedule` all call, that `index`/`store`
+  don't — worth checking there first, not six separate bugs. This is a regression: the coverage grid below still
+  says Leads Get/Status/assign and Follow-ups complete/reschedule are SUPPORTED, but none of them are live. Needs
+  a backend fix before Lead detail/edit/status/assign or Follow-up complete/reschedule can go live.
+- **New defects — BE-034b/c (P0), found 2026-09-27 during F16-4 (frontend Parties module going live):**
+  `POST /admin/parties` 500s for every payload (even a minimal valid one), and `PATCH /admin/parties/{ref}`
+  always 422s `OPENING_OUTSTANDING_IMMUTABLE` regardless of what's sent, because `Validation::validate()`
+  (`app/Core/Validation.php:16-44`) always sets every rule key in its result — defaulting to `null` when the
+  field is absent — so `PartiesController::validateParty`'s `array_key_exists('opening_outstanding', $clean)`
+  check is always true. Party list/get/status/archive/restore all still work live; create and update do not.
+  This `array_key_exists`-on-`Validation::validate()` idiom is likely used elsewhere in the codebase with the
+  same bug — worth a grep across controllers.
+- **New defect — BE-190 (P0), found 2026-09-28 during F16-8 (frontend Inventory module going live), a
+  data-integrity risk, not just a broken endpoint:** `POST /admin/inventory/receive` and
+  `POST /admin/inventory/batches/{ref}/adjust` both 500 live — but `adjust`'s underlying write commits anyway.
+  Verified: called `adjust` with `delta_qty: 5` on a batch with `on_hand_qty: 1500`, got `500`, then `GET` that
+  same batch and it showed `on_hand_qty: 1505` with a real `ADJUST` row in its `movements`. A user or client
+  retrying after the 500 (the natural response to a failure) would double-apply the adjustment. Batch
+  list/get/near-expiry all still work live; only receive/adjust are affected. Needs a backend fix before batch
+  receiving or stock adjustment can go live — and given the silent-apply behavior, this should be treated as more
+  urgent than a typical 500.
+- **New defect — BE-191 (P0), found 2026-09-28 during F16-9 (frontend Dashboards/Reports going live):**
+  `GET /admin/dashboard` 500s for an ALL-scope token (ADMIN) but returns `200` fine for an OWN-scope token
+  (SALES). The `sales-team-productivity` report 500s the same way for the same kind of user — almost certainly
+  the same query, since `ScopedAnalyticsService::team()` (the dashboard's `sales_team` section) only runs when
+  `scopeFor('internalUsers')==='ALL'`, and that report definition runs the identical correlated-subquery/`HAVING`
+  shape over `users`/`leads`/`orders`. This blocks the dashboard for the role (Admin) it matters most for.
+- **New defect — BE-192 (P0), found 2026-09-28 during F16-9:** `GET /admin/audit` 500s for ADMIN every time,
+  with or without query params, on a token that does hold `auditLogs.view`. `GET /super/audit` (a different,
+  platform-level controller) works fine and returns real rows, so this is specific to
+  `AuditLogsController::index`, not the table or a shared audit-writing path. This corrects the earlier
+  "BE-140 RESOLVED" note below, which only confirmed the route/controller exist in source, not a live `200`.
+- **S-1 and BE-090: unverified**, not regressions — the live environment currently has 0 payments and 0 invoices,
+  so there's no data to observe a scope leak or a free-goods overcharge against. Needs seeded test data or a
+  written-through order→invoice→payment chain to check properly.
+
 ## Current-source reconciliation — 2026-09-27 (authoritative)
 
 This reconciliation supersedes an earlier live-environment snapshot further below. It was made by reading the
