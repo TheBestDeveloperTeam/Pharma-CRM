@@ -86,7 +86,49 @@ file + line, which `Exceptions\Handler::render()` always logs) for one
 user for this alongside the Group 1 log request.
 
 ## Group 4 — Security (S-1, S-2, S-4, S-5)
-**Status: NOT STARTED**
+**Status: DONE (code-complete, unverified)**
+
+- **S-4 (legacy `role=FRANCHISE_ADMIN` privilege escalation) — fixed.**
+  `UsersController::create()` used the legacy `role` string (not `role_ref`) to
+  create a user, and ran `assertCanGrantRole()` against the franchise's baseline
+  role row for that legacy role - but only `if ($baselineRoleRef)` was truthy.
+  If a franchise had no `auth_roles` row for that slug (a provisioning gap), the
+  escalation check was silently skipped entirely - any caller with just
+  `internalUsers.create` could pass `role: "FRANCHISE_ADMIN"` and get a full
+  admin created with no permission check. Now throws `BASELINE_ROLE_MISSING`
+  instead of skipping the check (fail closed, not fail open).
+- **S-5 (party restore scope check missing) — fixed.** `PartiesController::restore()`
+  had `requirePermission('parties','archive')` but, unlike `show`/`update`/`archive`/
+  `ledger`/`status`, no `requireRecordScope()` call - an OWN/TEAM/TERRITORY-scoped
+  user with `parties.archive` could restore any archived party in the franchise,
+  not just ones in their own scope. Added the same `requireRecordScope()` call the
+  sibling methods already have.
+- **S-2 (webhook-sources no permission check) — fixed.** `WebhookSourcesController::index()`
+  and `::store()` had no `requirePermission()` call at all - any authenticated user
+  of any role could list webhook sources or create one (which issues a new
+  source/signing credential). Added `requirePermission($ctx,'webhooks','view')` and
+  `'configure'` respectively, using the existing `webhooks.view`/`webhooks.configure`
+  permission keys from `auth_permission_catalogue` (migration 002) — these keys
+  existed but nothing referenced them yet.
+- **S-1 (payments list/detail/mutation record-scope leak) — fixed.**
+  `PaymentsController::index()`/`show()`/`reverse()` only checked the module-level
+  `payments.view`/`reverse` permission, never the caller's record *scope* — an
+  OWN-scope user could list and open every payment in the franchise, not just
+  their own parties'. `allocate()` was already safe (`AllocationService::allocate`
+  applies `PartyScopePredicate` internally). Applied the same
+  `PartyScopePredicate::clause($ctx, 'pt', ..., 'payments')` pattern
+  `OutstandingService`/`AllocationService` already use elsewhere for payments:
+  extended `PaymentRepositoryInterface`/`SqlPaymentRepository`'s `list()` and
+  `findByRef()` with an optional scope-SQL + params pair (backward compatible —
+  existing callers that don't pass them are unaffected), and wired it through
+  `index()`, `show()`, and `reverse()`.
+
+Not live-verified (no deploy access). All four need a live pass before RESOLVED:
+S-4 (try creating a user with `role: FRANCHISE_ADMIN` and no `role_ref` from a
+non-super, no-baseline-role franchise → should now 403, not 201), S-5 (OWN-scope
+user restoring another sales rep's party → should now 404), S-2 (non-privileged
+role hitting `GET/POST /admin/webhooks/sources` → should now 403), S-1 (OWN-scope
+user listing/opening a payment outside their parties → should now be excluded/404).
 
 ## Group 5 — Missing routes
 **Status: NOT STARTED**

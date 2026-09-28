@@ -120,13 +120,22 @@ final class UsersController
 
         if ($roleRef === '' && !$ctx->isSuper()) {
             // B1 — a legacy role now means "the franchise's baseline role for that
-            // surface", so creating one is a role grant and gets the same escalation check.
+            // surface", so creating one is a role grant and gets the same escalation
+            // check as the role_ref path (assertCanGrantRole). S-4: this used to be
+            // skipped entirely whenever the franchise had no auth_roles row for the
+            // baseline slug (fail-open) - a caller could pass role=FRANCHISE_ADMIN
+            // with no role_ref and get a full admin created with zero permission
+            // check. Fail closed instead: an unresolvable baseline for a legacy role
+            // is a data-integrity gap, not permission to skip the check.
             $baselineSlug = ['FRANCHISE_ADMIN' => SystemRoles::ADMIN, 'SALES' => SystemRoles::SALES_TEAM, 'DISTRIBUTOR' => SystemRoles::DISTRIBUTOR][$legacyRole] ?? null;
             if ($baselineSlug !== null) {
                 $stmt = $this->pdo->prepare('SELECT role_ref FROM auth_roles WHERE franchise_ref = ? AND role_slug = ? LIMIT 1');
                 $stmt->execute([$franchiseRef, $baselineSlug]);
                 $baselineRoleRef = $stmt->fetchColumn();
-                if ($baselineRoleRef) $this->authorization->assertCanGrantRole($ctx, (string)$baselineRoleRef);
+                if (!$baselineRoleRef) {
+                    throw new ForbiddenException('BASELINE_ROLE_MISSING', "No {$baselineSlug} baseline role is provisioned for this franchise; use role_ref instead.");
+                }
+                $this->authorization->assertCanGrantRole($ctx, (string)$baselineRoleRef);
             }
         }
 

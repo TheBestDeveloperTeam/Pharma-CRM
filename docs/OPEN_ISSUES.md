@@ -8,8 +8,12 @@ Combined order by frontend blocking priority plus security/data-corruption sever
 
 1. **S-3 (P0)** - lead list authorization data leak: list-scope check **RESOLVED (2026-09-27, live-verified)**;
    status-change-on-non-owner check inconclusive, blocked by **BE-034**.
-2. **S-4 (P0)** - legacy `role=FRANCHISE_ADMIN` privilege escalation. Still open, live-confirmed 2026-09-27.
-3. **S-1 (P0)** - payments list/detail/mutation record-scope leak. Unverified 2026-09-27 (no live payments/invoices).
+2. **S-4 (P0) — FIXED IN CODE (2026-09-28), UNVERIFIED.** legacy `role=FRANCHISE_ADMIN` privilege escalation:
+   `UsersController::create()` skipped `assertCanGrantRole()` entirely when the franchise had no baseline `auth_roles`
+   row for the legacy role's slug. Now fails closed (`BASELINE_ROLE_MISSING`) instead of skipping the check.
+3. **S-1 (P0) — FIXED IN CODE (2026-09-28), UNVERIFIED.** payments list/detail/mutation record-scope leak:
+   `PaymentsController::index/show/reverse` only checked module permission, never record scope. Now applies
+   `PartyScopePredicate::clause(...,'payments')`, same pattern already used by `OutstandingService`/`AllocationService`.
 4. **BE-034 (P0, new 2026-09-27, widened 2026-09-27, widened again 2026-09-28)** - every single-*record* Leads
    and Follow-ups endpoint 500s for every role: leads' `GET`, `PATCH /admin/leads/{ref}`,
    `POST /admin/leads/{ref}/status`, `POST /admin/leads/{ref}/assign`; follow-ups'
@@ -154,7 +158,7 @@ Priority: **P0** blocks integrating a module · **P1** a flow stays broken · **
 
 ### Backend: security detail
 
-Security items are part of the main priority table above, not a separate hidden queue. Current severity: **P0** S-3 lead list/status authorization data leak, **P0** S-4 legacy `role=FRANCHISE_ADMIN` privilege escalation, **P0** S-1 payments record-scope leak, **P1** S-2 webhook-source permission check, **P2** S-5 party restore scope.
+Security items are part of the main priority table above, not a separate hidden queue. Current severity: **P0** S-3 lead list/status authorization data leak, **P0** S-4 legacy `role=FRANCHISE_ADMIN` privilege escalation — FIXED IN CODE (2026-09-28), unverified, **P0** S-1 payments record-scope leak — FIXED IN CODE (2026-09-28), unverified, **P1** S-2 webhook-source permission check — FIXED IN CODE (2026-09-28), unverified, **P2** S-5 party restore scope — FIXED IN CODE (2026-09-28), unverified.
 
 ### Backend: internal (found in the audit; not in the requirements doc because no frontend screen depends on them)
 

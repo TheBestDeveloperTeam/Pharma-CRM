@@ -79,7 +79,7 @@ final class PartiesController
     public function restore(Request $r): Response
     {
         $ctx = $this->ctx(); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'archive'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
-        $this->partyService->restore($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.restored', entityType: 'party', entityRef: $ref, before: $before, after: ['status' => 'ACTIVE']); return Response::json(200, ['party_ref' => $ref, 'status' => 'ACTIVE']);
+        $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); $this->partyService->restore($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.restored', entityType: 'party', entityRef: $ref, before: $before, after: ['status' => 'ACTIVE']); return Response::json(200, ['party_ref' => $ref, 'status' => 'ACTIVE']);
     }
 
     public function ledger(Request $r): Response

@@ -11,21 +11,31 @@ final class SqlPaymentRepository implements PaymentRepositoryInterface
 {
     public function __construct(private Database $db) {}
 
-    public function findByRef(string $franchiseRef, string $paymentRef): ?array
+    public function findByRef(string $franchiseRef, string $paymentRef, ?string $scopeSql = null, array $scopeParams = []): ?array
     {
+        $where = "p.franchise_ref = :f AND p.payment_ref = :r";
+        $params = [':f' => $franchiseRef, ':r' => $paymentRef] + $scopeParams;
+        if ($scopeSql !== null) {
+            $where .= " AND ({$scopeSql})";
+        }
         return $this->db->fetchOne(
             "SELECT p.*, pt.firm_name as party_name
              FROM payments p
              JOIN parties pt ON p.franchise_ref = pt.franchise_ref AND p.party_ref = pt.party_ref
-             WHERE p.franchise_ref = :f AND p.payment_ref = :r LIMIT 1",
-            [':f' => $franchiseRef, ':r' => $paymentRef]
+             WHERE {$where} LIMIT 1",
+            $params
         );
     }
 
-    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $partyRef = null): array
+    public function list(string $franchiseRef, array $filters, int $page, int $perPage, ?string $partyRef = null, ?string $scopeSql = null, array $scopeParams = []): array
     {
         $where = ["p.franchise_ref = :f"];
         $params = [':f' => $franchiseRef];
+
+        if ($scopeSql !== null) {
+            $where[] = "({$scopeSql})";
+            $params = $params + $scopeParams;
+        }
 
         if ($partyRef !== null) {
             $where[] = "p.party_ref = :party";

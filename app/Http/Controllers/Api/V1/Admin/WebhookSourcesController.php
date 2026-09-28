@@ -6,6 +6,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Validation;
 use App\Core\TenantContext;
+use App\Domain\Authorization\AuthorizationService;
 use App\Domain\Webhooks\WebhookService;
 use App\Core\Database;
 
@@ -14,11 +15,13 @@ final class WebhookSourcesController
     public function __construct(
         private WebhookService $webhookService,
         private Database $db,
+        private AuthorizationService $authorization,
     ) {}
 
     public function index(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'webhooks', 'view');
         $items = $this->db->fetchAll(
             "SELECT source_ref, source_name, endpoint_slug, auth_type, status, created_at
              FROM webhook_sources WHERE franchise_ref = :f ORDER BY created_at DESC",
@@ -31,6 +34,7 @@ final class WebhookSourcesController
     public function store(Request $r): Response
     {
         $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'webhooks', 'configure');
         $clean = Validation::validate($r->all(), [
             'source_name' => 'required|string',
         ]);

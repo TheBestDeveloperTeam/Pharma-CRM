@@ -8,6 +8,7 @@ use App\Domain\Payments\PaymentService;
 use App\Domain\Payments\AllocationService;
 use App\Domain\Payments\PaymentReversalService;
 use App\Domain\Authorization\AuthorizationService;
+use App\Domain\Authorization\PartyScopePredicate;
 use App\Domain\Audit\AuditService;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 
@@ -19,6 +20,7 @@ final class PaymentsController
         private AllocationService $allocations,
         private PaymentReversalService $reversals,
         private AuthorizationService $authorization,
+        private PartyScopePredicate $scope,
         private AuditService $audit,
     ) {}
 
@@ -39,7 +41,14 @@ final class PaymentsController
             'search' => $query['search'],
         ];
 
-        $res = $this->paymentRepo->list($franchiseRef, $filters, $page, $perPage, $partyRef);
+        // S-1 — the party's owning sales user / territory scope, same predicate
+        // OutstandingService/AllocationService already apply to payments. Was
+        // missing here: any payments.view holder (even OWN scope) could list
+        // every payment in the franchise, not just their own parties'.
+        $scopeParams = [];
+        $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+
+        $res = $this->paymentRepo->list($franchiseRef, $filters, $page, $perPage, $partyRef, $scopeSql, $scopeParams);
         return Response::json(200, $res['data'], $res['meta']);
     }
 
@@ -47,7 +56,9 @@ final class PaymentsController
     {
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'payments', 'view');
-        $payment = $this->paymentRepo->findByRef($ctx->franchiseRef, $ref);
+        $scopeParams = [];
+        $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+        $payment = $this->paymentRepo->findByRef($ctx->franchiseRef, $ref, $scopeSql, $scopeParams);
         if (!$payment) {
             throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
         }
@@ -98,7 +109,8 @@ final class PaymentsController
     {
         $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'payments', 'reverse');
         $data = Validation::validate($r->all(), ['reason' => 'required|string|min:2', 'idempotency_key' => 'required|string']);
-        $paymentRef = (string)$r->param('ref'); $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $paymentRef);
+        $paymentRef = (string)$r->param('ref'); $scopeParams = []; $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+        $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $paymentRef, $scopeSql, $scopeParams);
         if (!$payment) throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
         $result = $this->reversals->reverse($ctx->requireFranchise(), $paymentRef, $ctx->userRef, $data['reason'], $data['idempotency_key']);
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.reversed', entityType: 'payment', entityRef: $paymentRef, before: $payment, after: $result, reason: $data['reason']);
