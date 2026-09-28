@@ -44,7 +44,12 @@ final class FollowUpsController
         $scopeSql = SalesFollowUpPolicy::listClause($ctx, $scopeParams);
 
         $res = $this->followups->list($franchiseRef, $filters, $page, $perPage, null, $scopeSql, $scopeParams);
-        return Response::json(['data' => $res]);
+        return Response::json(200, $res['items'] ?? [], [
+            'page'        => $res['page'] ?? $page,
+            'per_page'    => $res['per_page'] ?? $perPage,
+            'total'       => $res['total'] ?? 0,
+            'total_pages' => $res['total_pages'] ?? 1,
+        ]);
     }
 
     public function store(Request $r): Response
@@ -68,11 +73,12 @@ final class FollowUpsController
         ]);
 
         $fuRef = $this->followUpService->create($data);
-        return Response::json(['data' => $this->followups->findByRef($ctx->franchiseRef, $fuRef)], 201);
+        return Response::json(201, $this->followups->findByRef($ctx->franchiseRef, $fuRef));
     }
 
-    public function complete(Request $r, string $ref): Response
+    public function complete(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'followUps', 'complete');
         $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
@@ -88,11 +94,12 @@ final class FollowUpsController
         $remark = $r->input('remark');
         $this->followUpService->complete($ctx->franchiseRef, $ref, $remark);
 
-        return Response::json(['data' => $this->followups->findByRef($ctx->franchiseRef, $ref)]);
+        return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
     }
 
-    public function reschedule(Request $r, string $ref): Response
+    public function reschedule(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'followUps', 'reschedule');
         $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
@@ -112,6 +119,6 @@ final class FollowUpsController
         $remark = $r->input('remark');
         $this->followUpService->reschedule($ctx->franchiseRef, $ref, $clean['next_follow_up_at'], $remark);
 
-        return Response::json(['data' => $this->followups->findByRef($ctx->franchiseRef, $ref)]);
+        return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
     }
 }

@@ -13,6 +13,7 @@ $seedFiles = [
     '002_masters_seed.sql',
     '004_inventory_seed.sql',
     '005_additional_seed.sql',
+    '006_update_job_queue_seed.sql',
 ];
 
 $specificSeed = $argv[1] ?? null;

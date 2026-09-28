@@ -19,8 +19,18 @@ final class AuditLogsController
         if (!$ctx->isSuper() && $scope==='OWN') {$where[]='actor_ref=:actor';$params[':actor']=$ctx->userRef;}
         if (!$ctx->isSuper() && $scope==='TEAM') {$actors=array_values(array_unique(array_merge([$ctx->userRef],$ctx->teamUserRefs)));if(!$actors)return Response::json(200,[],['page'=>$page,'per_page'=>$per,'total'=>0,'total_pages'=>0]);$marks=[];foreach($actors as$i=>$actor){$key=':actor'.$i;$marks[]=$key;$params[$key]=$actor;}$where[]='actor_ref IN ('.implode(',',$marks).')';}
         if (!$ctx->isSuper() && $scope==='TERRITORY') return Response::json(200,[],['page'=>$page,'per_page'=>$per,'total'=>0,'total_pages'=>0]);
-        foreach(['category','entity_type','actor_ref'] as $key) if($r->query($key)!==''){$where[]="$key=:$key";$params[":$key"]=$r->query($key);}
-        if($r->query('search')!==''){$where[]='(action LIKE :search OR entity_ref LIKE :search)';$params[':search']='%'.$r->query('search').'%';}
+        foreach(['category','entity_type','actor_ref'] as $key) {
+            $val = $r->query($key);
+            if ($val !== null && $val !== '') {
+                $where[] = "$key=:$key";
+                $params[":$key"] = (string)$val;
+            }
+        }
+        $search = $r->query('search');
+        if ($search !== null && $search !== '') {
+            $where[] = '(action LIKE :search OR entity_ref LIKE :search)';
+            $params[':search'] = '%' . (string)$search . '%';
+        }
         $sql=implode(' AND ',$where);$total=(int)$this->db->fetchColumn("SELECT COUNT(*) FROM audit_logs WHERE $sql",$params);$offset=($page-1)*$per;
         $rows=$this->db->fetchAll("SELECT audit_ref,actor_ref,actor_role,category,action,entity_type,entity_ref,reason,created_at FROM audit_logs WHERE $sql ORDER BY created_at DESC LIMIT $per OFFSET $offset",$params);
         return Response::json(200,$rows,['page'=>$page,'per_page'=>$per,'total'=>$total,'total_pages'=>(int)ceil($total/$per)]);

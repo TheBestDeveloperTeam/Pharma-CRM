@@ -25,12 +25,12 @@ final class InventoryController
 
     public function receive(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'create'); $clean = Validation::validate($r->all(), ['product_ref' => 'required|string', 'batch_no' => 'required|string', 'expiry_date' => 'required|date:Y-m-d', 'qty' => 'required|integer|min:1', 'manufacturing_date' => 'date:Y-m-d']); $ref = $this->inventoryService->receiveGoods($ctx->orgRef, $ctx->requireFranchise(), $clean['product_ref'], $clean['batch_no'], $clean['expiry_date'], (int)$clean['qty'], $clean['manufacturing_date'] ?? null, $r->input('location_code'), $ctx->userRef); $after = $this->batchRepo->findByRef($ctx->requireFranchise(), $ref); $this->audit->log(ctx: $ctx, category: 'INVENTORY', action: 'batch.received', entityType: 'inventory_batch', entityRef: $ref, after: $after); return Response::json(201, $after);
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'create'); $clean = Validation::validate($r->all(), ['product_ref' => 'required|string', 'batch_no' => 'required|string', 'expiry_date' => 'required|date:Y-m-d', 'qty' => 'required|integer|min:1', 'manufacturing_date' => 'date:Y-m-d']); $ref = $this->inventoryService->receiveGoods($ctx->orgRef, $ctx->requireFranchise(), $clean['product_ref'], $clean['batch_no'], $clean['expiry_date'], (int)$clean['qty'], $clean['manufacturing_date'] ?? null, $r->input('location_code'), $ctx->userRef); $after = $this->batchRepo->findByRef($ctx->requireFranchise(), $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.received', entityType: 'inventory_batch', entityRef: $ref, after: $after); return Response::json(201, $after);
     }
 
     public function adjust(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'adjust'); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $clean = Validation::validate($r->all(), ['delta_qty' => 'required|integer', 'reason' => 'required|string|min:2']); $this->inventoryService->adjustStock($ctx->orgRef, $f, $ref, (int)$clean['delta_qty'], $clean['reason'], $ctx->userRef); $after = $this->batchRepo->findByRef($f, $ref); $this->audit->log(ctx: $ctx, category: 'INVENTORY', action: 'batch.adjusted', entityType: 'inventory_batch', entityRef: $ref, after: $after, reason: $clean['reason']); return Response::json(200, $after);
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'adjust'); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $clean = Validation::validate($r->all(), ['delta_qty' => 'required|integer', 'reason' => 'required|string|min:2']); $this->inventoryService->adjustStock($ctx->orgRef, $f, $ref, (int)$clean['delta_qty'], $clean['reason'], $ctx->userRef); $after = $this->batchRepo->findByRef($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.adjusted', entityType: 'inventory_batch', entityRef: $ref, after: $after, reason: $clean['reason']); return Response::json(200, $after);
     }
 
     public function nearExpiry(Request $r): Response
@@ -45,11 +45,11 @@ final class InventoryController
 
     public function release(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'release'); $orderRef = (string)$r->param('order_ref'); $this->fefo->releaseOrderStock($ctx->orgRef, $ctx->requireFranchise(), $orderRef, $ctx->userRef); $this->audit->log(ctx: $ctx, category: 'INVENTORY', action: 'reservation.released', entityType: 'order', entityRef: $orderRef); return Response::json(200, ['order_ref' => $orderRef, 'status' => 'RELEASED']);
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'release'); $orderRef = (string)$r->param('order_ref'); $this->fefo->releaseOrderStock($ctx->orgRef, $ctx->requireFranchise(), $orderRef, $ctx->userRef); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'reservation.released', entityType: 'order', entityRef: $orderRef); return Response::json(200, ['order_ref' => $orderRef, 'status' => 'RELEASED']);
     }
 
     public function consume(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'reserve'); $orderRef = (string)$r->param('order_ref'); $this->fefo->consumeOrderStock($ctx->orgRef, $ctx->requireFranchise(), $orderRef, $ctx->userRef); $this->audit->log(ctx: $ctx, category: 'INVENTORY', action: 'reservation.consumed', entityType: 'order', entityRef: $orderRef); return Response::json(200, ['order_ref' => $orderRef, 'status' => 'CONSUMED']);
+        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'reserve'); $orderRef = (string)$r->param('order_ref'); $this->fefo->consumeOrderStock($ctx->orgRef, $ctx->requireFranchise(), $orderRef, $ctx->userRef); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'reservation.consumed', entityType: 'order', entityRef: $orderRef); return Response::json(200, ['order_ref' => $orderRef, 'status' => 'CONSUMED']);
     }
 }

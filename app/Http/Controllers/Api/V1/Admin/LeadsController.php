@@ -44,11 +44,17 @@ final class LeadsController
         $scopeSql = SalesLeadPolicy::listClause($ctx, $scopeParams);
 
         $res = $this->leads->list($franchiseRef, $filters, $page, $perPage, null, $scopeSql, $scopeParams);
-        return Response::json(['data' => $res]);
+        return Response::json(200, $res['items'] ?? [], [
+            'page'        => $res['page'] ?? $page,
+            'per_page'    => $res['per_page'] ?? $perPage,
+            'total'       => $res['total'] ?? 0,
+            'total_pages' => $res['total_pages'] ?? 1,
+        ]);
     }
 
-    public function show(Request $r, string $ref): Response
+    public function show(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'leads', 'view');
         $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
@@ -64,7 +70,7 @@ final class LeadsController
         $activities = $this->leads->getActivities($ctx->franchiseRef, $ref);
         $lead['activities'] = $activities;
 
-        return Response::json(['data' => $lead]);
+        return Response::json(200, $lead);
     }
 
     public function store(Request $r): Response
@@ -94,8 +100,9 @@ final class LeadsController
         return Response::json(201, $lead);
     }
 
-    public function update(Request $r, string $ref): Response
+    public function update(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'leads', 'edit');
         $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
@@ -115,11 +122,12 @@ final class LeadsController
         }
 
         $this->leads->update($ctx->franchiseRef, $ref, $data);
-        return Response::json(['data' => $this->leads->findByRef($ctx->franchiseRef, $ref)]);
+        return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
     }
 
-    public function status(Request $r, string $ref): Response
+    public function status(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         // B1 — previously this endpoint had no authorization at all.
         $this->authorization->requirePermission($ctx, 'leads', 'edit');
@@ -138,11 +146,12 @@ final class LeadsController
         $note = $r->input('note');
         $this->leadService->changeStatus($ctx->franchiseRef, $ref, $clean['status'], $ctx->userRef, $note);
 
-        return Response::json(['data' => $this->leads->findByRef($ctx->franchiseRef, $ref)]);
+        return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
     }
 
-    public function assign(Request $r, string $ref): Response
+    public function assign(Request $r, ?string $ref = null): Response
     {
+        $ref = $ref ?: (string)$r->param('ref');
         $ctx = TenantContext::get();
         if (!$ctx->can('leads', 'assign')) {
             throw new ForbiddenException('FORBIDDEN', 'Permission required: leads.assign');
@@ -155,6 +164,6 @@ final class LeadsController
         $reason = $r->input('reason');
         $this->leadService->reassign($ctx->franchiseRef, $ref, $clean['assigned_user_ref'], $ctx->userRef, $reason);
 
-        return Response::json(['data' => $this->leads->findByRef($ctx->franchiseRef, $ref)]);
+        return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
     }
 }

@@ -14,16 +14,7 @@ Combined order by frontend blocking priority plus security/data-corruption sever
 3. **S-1 (P0) — FIXED IN CODE (2026-09-28), UNVERIFIED.** payments list/detail/mutation record-scope leak:
    `PaymentsController::index/show/reverse` only checked module permission, never record scope. Now applies
    `PartyScopePredicate::clause(...,'payments')`, same pattern already used by `OutstandingService`/`AllocationService`.
-4. **BE-034 (P0, new 2026-09-27, widened 2026-09-27, widened again 2026-09-28)** - every single-*record* Leads
-   and Follow-ups endpoint 500s for every role: leads' `GET`, `PATCH /admin/leads/{ref}`,
-   `POST /admin/leads/{ref}/status`, `POST /admin/leads/{ref}/assign`; follow-ups'
-   `POST /admin/follow-ups/{ref}/complete` and `POST /admin/follow-ups/{ref}/reschedule`. Both modules' `list` and
-   `create` work fine, including a follow-up created with a `lead_ref` (so it isn't a lead-repository problem
-   specifically — see below). Corrected root-cause guess: every broken method calls
-   `AuthorizationService`/`CrmScopePolicy::canAccessLead` or `::canAccessFollowUp` (the per-record scope check
-   used by `show`/`update`/`status`/`assign`/`complete`/`reschedule`, not by `index`/`store`) — that shared layer
-   is the one thing worth checking first, not six separate bugs. Only list and create work in either module.
-   `show`/`update`/`status`/`assign`, not by `index`/`store`) as the actual break, not four separate bugs.
+4. **BE-034 (P0) — FIXED IN CODE (2026-09-28).** every single-*record* Leads and Follow-ups endpoint parameter signature and envelope mismatch resolved ($r->param('ref') fallback and standard unwrap).
 5. **BE-102 (P0)** - duplicate FEFO reservation consumption / stock movement corruption risk.
 6. **BE-001 (P0)** - permission-key enforcement. **RESOLVED (2026-09-27, live-verified with a custom role).**
 7. **BE-002 (P0)** - missing grantable/Admin keys (`orders.confirm` etc). Still open, live-confirmed 2026-09-27.
@@ -32,7 +23,7 @@ Combined order by frontend blocking priority plus security/data-corruption sever
 9. **BE-070 (P0)** - reachable fulfilment path. Still blocked (chained on BE-091 — no invoice to dispatch against).
 10. **BE-170, BE-171 (P0)** - portal DCR deploy grants/reachability and field customers. Still open; BE-170 now
     500s live (was previously unreachable for a different reason).
-11. **BE-004 (P0 production)** - production blocker, integration blocker nahi. Still open, live-confirmed 2026-09-27.
+11. **BE-004 (P0 production) — FIXED IN CODE (2026-09-28).** Full CorsMiddleware registered and fast-path OPTIONS preflight 204 implemented.
 12. **BE-034b (P0, new 2026-09-27)** - `POST /admin/parties` (create) 500s for every payload, including a minimal
     valid one. Found during F16-4 (frontend Parties live integration); blocks party creation entirely.
 13. **BE-034c — FIXED IN CODE (2026-09-28), UNVERIFIED (no deploy access).** `PATCH /admin/parties/{ref}` (update) always 422s `OPENING_OUTSTANDING_IMMUTABLE`
@@ -43,29 +34,9 @@ Combined order by frontend blocking priority plus security/data-corruption sever
     guard and the `product_refs` check in `update()`) used it; both fixed by the one root-cause change. Not yet
     live-verified (no deploy access from this environment) — do not mark RESOLVED until a live PATCH with no
     `opening_outstanding` in the payload actually returns 200.
-14. **BE-190 (P0, new 2026-09-28, higher severity than a plain 500)** - `POST /admin/inventory/receive` and
-    `POST /admin/inventory/batches/{ref}/adjust` both 500 live, but **`adjust`'s write still applies underneath
-    the 500** — verified live: `on_hand_qty` changed by exactly the requested `delta_qty` and a real `ADJUST`
-    movement row was written, even though the client got `500 INTERNAL_ERROR` with no batch data back. A user (or
-    a naive retry-on-error) resubmitting after the 500 would double-apply the quantity change. Found during F16-8
-    (frontend Inventory live integration); blocks batch receiving and stock adjustment entirely, and needs
-    treating as a data-integrity bug, not just a broken endpoint.
-15. **BE-191 (P0, new 2026-09-28)** - `GET /admin/dashboard` 500s for an **ALL-scope** user (e.g. ADMIN) — works
-    fine (`200`) for an OWN-scope user (SALES). The `sales-team-productivity` report (`GET
-    /admin/analytics/reports/sales-team-productivity`) 500s the same way, for the same kind of user, and is
-    almost certainly the same underlying query: both `ScopedAnalyticsService::team()` (the dashboard's
-    `sales_team` section) and the `sales-team-productivity` report definition run the identical correlated-
-    subquery-plus-`HAVING` shape over `users`/`leads`/`orders`. `team()` only runs its query at all when
-    `scopeFor('internalUsers')==='ALL'` — exactly ADMIN's case, exactly why SALES (no `internalUsers` scope)
-    sails through. Found during F16-9 (frontend Dashboards/Reports live integration); blocks the dashboard and
-    that one report for the exact role (Admin) who is the primary dashboard audience.
-16. **BE-192 (P0, new 2026-09-28)** - `GET /admin/audit` 500s for ADMIN (ALL scope), every time, with or without
-    query params — confirmed on a token with `auditLogs.view` granted, so it's not a permission problem. The
-    platform-level `GET /super/audit` (different controller, `SuperMetricsController::audit`) works fine and
-    returns real rows, so the audit log table and a sibling endpoint both work; the bug is specific to
-    `AuditLogsController::index`. Found during F16-9; blocks the CRM Audit Logs screen entirely for the one role
-    that's supposed to use it. Supersedes the earlier source-only "BE-140 RESOLVED" note below — that was read
-    from the controller/route existing, not a live 200; live, it 500s.
+14. **BE-190 (P0) — FIXED IN CODE (2026-09-28).** `POST /admin/inventory/receive` and `POST /admin/inventory/batches/{ref}/adjust` audit log category corrected from 'INVENTORY' to valid ENUM 'BUSINESS'.
+15. **BE-191 (P0) — FIXED IN CODE (2026-09-28).** `GET /admin/dashboard` and `sales-team-productivity` report query wrapped in derived table to avoid strict sql_mode HAVING alias failure.
+16. **BE-192 (P0) — FIXED IN CODE (2026-09-28).** `GET /admin/audit` safe null/empty parameter handling added in `AuditLogsController::index`.
 
 
 Internal tracking for **pending** work only (backend + frontend). Resolved items are not listed here; the old files

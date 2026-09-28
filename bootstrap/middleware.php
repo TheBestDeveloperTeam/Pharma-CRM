@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 // Global middleware applied to every request (in order)
 return [
+    \App\Http\Middleware\CorsMiddleware::class,
     \App\Http\Middleware\RequestId::class,
     \App\Http\Middleware\SecurityHeaders::class,
     \App\Http\Middleware\RateLimit::class,

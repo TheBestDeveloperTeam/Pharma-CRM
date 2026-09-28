@@ -20,12 +20,23 @@ $globalMiddleware = require __DIR__ . '/middleware.php';
 // Only auto-capture & dispatch if called from a web server (CLI scripts require bootstrap without dispatching)
 if (PHP_SAPI !== 'cli') {
     $request  = \App\Core\Request::capture();
+
+    // Fast-path OPTIONS preflight requests for zero CORS errors
+    if ($request->method === 'OPTIONS') {
+        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
+        $response = $cors($request, fn() => \App\Core\Response::empty(204));
+        $response->send();
+        exit(0);
+    }
+
     $match    = $router->dispatch($request);
 
     if ($match === null) {
-        $response = \App\Core\Response::error(404, 'NOT_FOUND', 'The requested resource was not found.');
+        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
+        $response = $cors($request, fn() => \App\Core\Response::error(404, 'NOT_FOUND', 'The requested resource was not found.'));
     } elseif (isset($match['__405'])) {
-        $response = \App\Core\Response::error(405, 'METHOD_NOT_ALLOWED', 'Method not allowed.');
+        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
+        $response = $cors($request, fn() => \App\Core\Response::error(405, 'METHOD_NOT_ALLOWED', 'Method not allowed.'));
     } else {
         $request->params = $match['params'];
         $handler = $match['handler'];

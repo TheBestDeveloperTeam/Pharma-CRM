@@ -774,6 +774,7 @@ CREATE TABLE job_queue (
   attempts INT NOT NULL DEFAULT 0, max_attempts INT NOT NULL DEFAULT 5,
   run_at DATETIME NOT NULL, locked_at DATETIME NULL, last_error VARCHAR(255) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_job_ref (job_ref),
   UNIQUE KEY uq_job_dedupe (job_type, dedupe_key),
   INDEX idx_job_run (status, run_at)
