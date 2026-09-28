@@ -31,11 +31,14 @@ Combined order by frontend blocking priority plus security/data-corruption sever
 11. **BE-004 (P0 production)** - production blocker, integration blocker nahi. Still open, live-confirmed 2026-09-27.
 12. **BE-034b (P0, new 2026-09-27)** - `POST /admin/parties` (create) 500s for every payload, including a minimal
     valid one. Found during F16-4 (frontend Parties live integration); blocks party creation entirely.
-13. **BE-034c (P0, new 2026-09-27)** - `PATCH /admin/parties/{ref}` (update) always 422s `OPENING_OUTSTANDING_IMMUTABLE`
+13. **BE-034c — FIXED IN CODE (2026-09-28), UNVERIFIED (no deploy access).** `PATCH /admin/parties/{ref}` (update) always 422s `OPENING_OUTSTANDING_IMMUTABLE`
     regardless of payload — `Validation::validate()` always sets every rule key in its result (even to `null` when
-    absent), so `array_key_exists('opening_outstanding', $clean)` is always true. Likely a systemic pattern: any
-    controller using `array_key_exists()` on a `Validation::validate()` result to detect "was this sent" has the
-    same bug. Blocks party edit entirely; worth a codebase-wide check for the same `array_key_exists` pattern.
+    absent), so `array_key_exists('opening_outstanding', $clean)` is always true. Fixed at the root:
+    `Validation::validate()` now only sets `$clean[$field]` when the field was actually present in the input.
+    Did the codebase-wide search for the same pattern — only this controller's two call sites (`opening_outstanding`
+    guard and the `product_refs` check in `update()`) used it; both fixed by the one root-cause change. Not yet
+    live-verified (no deploy access from this environment) — do not mark RESOLVED until a live PATCH with no
+    `opening_outstanding` in the payload actually returns 200.
 14. **BE-190 (P0, new 2026-09-28, higher severity than a plain 500)** - `POST /admin/inventory/receive` and
     `POST /admin/inventory/batches/{ref}/adjust` both 500 live, but **`adjust`'s write still applies underneath
     the 500** — verified live: `on_hand_qty` changed by exactly the requested `delta_qty` and a real `ADJUST`

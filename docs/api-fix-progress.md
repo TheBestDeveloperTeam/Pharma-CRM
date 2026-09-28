@@ -57,7 +57,33 @@ of guessing. Asked the user for this.
 **Status: NOT STARTED**
 
 ## Group 3 — Validation::validate() array_key_exists bug + POST /admin/parties 500
-**Status: NOT STARTED**
+**Status: DONE (code-complete, unverified) for the array_key_exists bug; BLOCKED on the POST /admin/parties 500**
+
+**Fixed (root cause, not a per-call-site patch):** `app/Core/Validation.php::validate()`
+always set `$clean[$field]` for every rule key, defaulting to `null` when the field
+was absent from the payload. That breaks any `array_key_exists($field, $clean)`
+"was this actually sent" check downstream. Did the codebase-wide search the user
+asked for (`array_key_exists\(.*\$clean\)` across `app/`) — only
+`PartiesController::validateParty` (`opening_outstanding` immutability guard,
+line 97) and `PartiesController::update` (`product_refs`, line 63) rely on this
+idiom; both are fixed by the one root-cause change instead of patching each site.
+Checked every other direct `$clean['field']` read in the codebase (Products,
+Prices, Schemes, Orders, Territories, Payments, Users, Franchises, etc.) — all of
+them read fields marked `required` in their own rule set, so they were always
+present anyway and are unaffected by no longer defaulting absent optional fields
+to `null`.
+
+**Not fixed — BE-034b, `POST /admin/parties` 500s on every payload including a
+minimal valid one.** Traced `PartiesController::store` → `validateParty()` →
+`partyData()` → `PartyService::create()` → `SqlPartyRepository::create()` (explicit
+named-param INSERT, extra `$data` keys like `product_refs` are harmless - not the
+cause) → `SequenceService::nextNumber()` (auto party_code) → `RefGenerator::generate()`.
+Nothing here reads as defective by static inspection (schema columns match the
+INSERT list, `sequence_counters` upsert is a standard atomic counter). Same
+situation as Group 1: need the actual `storage/logs` error line (exception class +
+file + line, which `Exceptions\Handler::render()` always logs) for one
+`POST /admin/parties` 500 to pinpoint this instead of guessing further. Asked the
+user for this alongside the Group 1 log request.
 
 ## Group 4 — Security (S-1, S-2, S-4, S-5)
 **Status: NOT STARTED**

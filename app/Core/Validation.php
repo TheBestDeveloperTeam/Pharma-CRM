@@ -27,7 +27,13 @@ final class Validation
                 $v->applyRule($field, $value, $ruleName, $param);
             }
 
-            if (!isset($v->errors[$field])) {
+            // Only surface the key when it was actually sent (or a rule
+            // mutated/cast it) - callers use array_key_exists($field, $clean)
+            // to mean "was this sent", and defaulting every rule's key to
+            // null here made that check always true (e.g. an update payload
+            // that never touched `opening_outstanding` was rejected as if it
+            // had - see PartiesController::validateParty).
+            if (!isset($v->errors[$field]) && array_key_exists($field, $data)) {
                 $clean[$field] = $value;
             }
         }
