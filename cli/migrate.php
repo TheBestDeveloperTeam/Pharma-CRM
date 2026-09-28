@@ -7,7 +7,6 @@
 require_once __DIR__ . '/../public/index.php'; // Bootstraps autoloader and env
 
 use App\Repositories\DB;
-use PDO;
 
 DB::getInstance()->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 

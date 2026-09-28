@@ -1,3 +1,15 @@
+<IfModule mod_headers.c>
+    # Universal CORS: Dynamically allow any Origin, support credentials, all methods and custom headers
+    SetEnvIfNoCase Origin "(.+)" ORIGIN=$1
+    Header always set Access-Control-Allow-Origin "%{ORIGIN}e" env=ORIGIN
+    Header always set Access-Control-Allow-Credentials "true" env=ORIGIN
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
+    Header always set Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Origin, X-Requested-With, X-Request-ID, Idempotency-Key, X-Franchise-Ref, X-Org-Ref, Cache-Control, Pragma, *"
+    Header always set Access-Control-Expose-Headers "X-Request-ID, Idempotency-Replay, Content-Disposition, *"
+    Header always set Access-Control-Max-Age "86400"
+    Header always merge Vary "Origin"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^(.*)$ public/$1 [L]

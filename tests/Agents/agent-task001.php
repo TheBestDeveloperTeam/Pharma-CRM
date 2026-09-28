@@ -27,7 +27,7 @@ return [
             \Tests\Support\Assert::eq('NONE', $ctx->scopeFor('payments'), 'Unconfigured module defaults to NONE');
         },
         function() {
-            $migration = file_get_contents(__DIR__ . '/../../database/migrations/002_task001_authorization.sql');
+            $migration = file_get_contents(__DIR__ . '/../../database/migrations/001_initial_setup.sql');
             foreach (['auth_roles', 'auth_permissions', 'auth_role_permissions', 'auth_role_scopes', 'auth_user_roles', 'auth_user_hierarchy', 'auth_user_territories'] as $table) {
                 \Tests\Support\Assert::true(str_contains($migration, "CREATE TABLE IF NOT EXISTS {$table}"), "Migration contains {$table}");
             }

@@ -9,11 +9,7 @@ $pdo = \App\Core\Database::connection();
 $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 
 $seedFiles = [
-    '001_admin_seed.sql',
-    '002_masters_seed.sql',
-    '004_inventory_seed.sql',
-    '005_additional_seed.sql',
-    '006_update_job_queue_seed.sql',
+    '001_initial_seed.sql',
 ];
 
 $specificSeed = $argv[1] ?? null;

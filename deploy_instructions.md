@@ -41,18 +41,16 @@ JWT_PASSPHRASE="your_generated_passphrase"
 ```
 
 ## Step 5: Database Migration & Seeding
-Import the full schema and seed data into the database using PHPMyAdmin, cPanel, or the MySQL CLI:
+Import the unified setup into the database using PHPMyAdmin, cPanel, or the MySQL CLI:
 ```bash
-# 1. Full Schema
-mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/schema/001_full_schema.sql
+# Option A: Single Unified File via MySQL CLI / PHPMyAdmin
+# (Contains all 68 module tables, indexes, triggers, constraints, and complete baseline seeds)
+mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/schema/001_initial_setup.sql
 
-# 2. Seed Data (in sequence)
-mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/seeds/001_admin_seed.sql
-mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/seeds/002_masters_seed.sql
-mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/seeds/004_inventory_seed.sql
-mysql -u ihgzplwh_crm -p ihgzplwh_crm < database/seeds/005_additional_seed.sql
+# Option B: Via PHP CLI Migration Runner
+php cli/migrate.php
 
-# Or execute via CLI seeder:
+# (Optional) Re-run / verify seeds idempotently:
 php cli/seed.php
 ```
 
