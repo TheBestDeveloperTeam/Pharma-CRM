@@ -116,6 +116,16 @@ final class Response
         return new self($this->status, $this->body, array_merge($this->headers, [$name => $value]));
     }
 
+    public function withHeaders(array $headers): self
+    {
+        return new self($this->status, $this->body, array_merge($this->headers, $headers));
+    }
+
+    public function withCors(?string $origin = null): self
+    {
+        return \App\Core\Http\CorsPolicy::apply($this, $origin);
+    }
+
     // ── Send ──────────────────────────────────────────────────────────────
 
     public function send(): void
@@ -125,7 +135,11 @@ final class Response
 
         http_response_code($this->status);
 
-        foreach ($this->headers as $name => $value) {
+        // Guarantees universal CORS & CORP policy headers across every outgoing response
+        $policyHeaders = \App\Core\Http\CorsPolicy::getHeaders();
+        $mergedHeaders = array_merge($policyHeaders, $this->headers);
+
+        foreach ($mergedHeaders as $name => $value) {
             header("$name: $value", replace: true);
         }
 

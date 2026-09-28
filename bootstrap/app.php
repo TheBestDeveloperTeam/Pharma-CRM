@@ -20,18 +20,16 @@ $globalMiddleware = require __DIR__ . '/middleware.php';
 // Only auto-capture & dispatch if called from a web server (CLI scripts require bootstrap without dispatching)
 if (PHP_SAPI !== 'cli') {
     try {
-        $request  = \App\Core\Request::capture();
+        $request = \App\Core\Request::capture();
     } catch (\App\Core\Exceptions\ValidationException $e) {
-        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-        $response = $cors->addHeaders(
+        $response = \App\Core\Http\CorsPolicy::apply(
             \App\Core\Response::error(422, 'VALIDATION_FAILED', $e->getMessage()),
             $_SERVER['HTTP_ORIGIN'] ?? ''
         );
         $response->send();
         exit(0);
     } catch (\Throwable $e) {
-        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-        $response = $cors->addHeaders(
+        $response = \App\Core\Http\CorsPolicy::apply(
             \App\Core\Response::error(400, 'BAD_REQUEST', $e->getMessage()),
             $_SERVER['HTTP_ORIGIN'] ?? ''
         );
@@ -40,21 +38,24 @@ if (PHP_SAPI !== 'cli') {
     }
 
     // Fast-path OPTIONS preflight requests for zero CORS errors
-    if ($request->method === 'OPTIONS') {
-        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-        $response = $cors($request, fn() => \App\Core\Response::empty(204));
+    if ($request->isOptions()) {
+        $response = \App\Core\Http\CorsPolicy::preflightResponse($request->origin());
         $response->send();
         exit(0);
     }
 
-    $match    = $router->dispatch($request);
+    $match = $router->dispatch($request);
 
     if ($match === null) {
-        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-        $response = $cors($request, fn() => \App\Core\Response::error(404, 'NOT_FOUND', 'The requested resource was not found.'));
+        $response = \App\Core\Http\CorsPolicy::apply(
+            \App\Core\Response::error(404, 'NOT_FOUND', 'The requested resource was not found.'),
+            $request->origin()
+        );
     } elseif (isset($match['__405'])) {
-        $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-        $response = $cors($request, fn() => \App\Core\Response::error(405, 'METHOD_NOT_ALLOWED', 'Method not allowed.'));
+        $response = \App\Core\Http\CorsPolicy::apply(
+            \App\Core\Response::error(405, 'METHOD_NOT_ALLOWED', 'Method not allowed.'),
+            $request->origin()
+        );
     } else {
         $request->params = $match['params'];
         $handler = $match['handler'];
@@ -77,19 +78,17 @@ if (PHP_SAPI !== 'cli') {
         try {
             $response = \App\Core\Pipeline::run($request, $allMiddleware, $controllerFn);
         } catch (\App\Core\Exceptions\AppException $e) {
-            $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-            $response = $cors->addHeaders(
+            $response = \App\Core\Http\CorsPolicy::apply(
                 \App\Core\Response::error($e->statusCode(), $e->errorCode(), $e->getMessage(), $e->fields()),
-                $request->header('origin')
+                $request->origin()
             );
         } catch (\Throwable $e) {
             // Log it, return generic 500 with CORS headers intact
             error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            $cors = $container->make(\App\Http\Middleware\CorsMiddleware::class);
-            $response = $cors->addHeaders(
+            $response = \App\Core\Http\CorsPolicy::apply(
                 \App\Core\Response::error(500, 'INTERNAL_ERROR',
                     \App\Support\Config::get('app.debug') ? $e->getMessage() : 'An internal error occurred.'),
-                $request->header('origin')
+                $request->origin()
             );
         }
     }

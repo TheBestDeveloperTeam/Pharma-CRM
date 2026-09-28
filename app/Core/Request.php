@@ -171,6 +171,16 @@ final class Request
         return str_starts_with($this->path, '/webhooks/');
     }
 
+    public function isOptions(): bool
+    {
+        return $this->method === 'OPTIONS';
+    }
+
+    public function origin(): string
+    {
+        return $this->header('origin');
+    }
+
     /** Check if path starts with the given prefix (for surface detection). */
     public function surface(): string
     {
