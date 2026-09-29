@@ -166,4 +166,42 @@ final class LeadsController
 
         return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
     }
+
+    /** BE-032: Archive a lead (soft status change). */
+    public function archive(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'edit');
+        $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
+        if (!$lead) throw new NotFoundException('LEAD_NOT_FOUND', 'Lead not found.');
+        if (!SalesLeadPolicy::canUpdate($ctx, $lead)) throw new ForbiddenException('FORBIDDEN_LEAD', 'You do not have permission to archive this lead.');
+        if ($lead['status'] === 'ARCHIVED') return Response::json(200, $lead);
+
+        $this->leads->updateStatus($ctx->franchiseRef, $ref, 'ARCHIVED');
+        $this->leads->addActivity($ctx->franchiseRef, [
+            'lead_ref' => $ref, 'franchise_ref' => $ctx->franchiseRef, 'org_ref' => $ctx->orgRef,
+            'actor_ref' => $ctx->userRef, 'activity_type' => 'STATUS_CHANGE', 'description' => 'Lead archived',
+        ]);
+        return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
+    }
+
+    /** BE-032: Restore a previously archived lead. */
+    public function restore(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'leads', 'edit');
+        $lead = $this->leads->findByRef($ctx->franchiseRef, $ref);
+        if (!$lead) throw new NotFoundException('LEAD_NOT_FOUND', 'Lead not found.');
+        if (!SalesLeadPolicy::canUpdate($ctx, $lead)) throw new ForbiddenException('FORBIDDEN_LEAD', 'You do not have permission to restore this lead.');
+        if ($lead['status'] !== 'ARCHIVED') return Response::json(200, $lead);
+
+        $this->leads->updateStatus($ctx->franchiseRef, $ref, 'NEW');
+        $this->leads->addActivity($ctx->franchiseRef, [
+            'lead_ref' => $ref, 'franchise_ref' => $ctx->franchiseRef, 'org_ref' => $ctx->orgRef,
+            'actor_ref' => $ctx->userRef, 'activity_type' => 'STATUS_CHANGE', 'description' => 'Lead restored from archive',
+        ]);
+        return Response::json(200, $this->leads->findByRef($ctx->franchiseRef, $ref));
+    }
 }

@@ -48,7 +48,9 @@ final class CrmScopePolicy
     /** Record check for one lead row (show / update / status). */
     public function canAccessLead(TenantContext $ctx, array $lead): bool
     {
-        return $this->recordInScope($ctx, 'leads', $lead, fn(): bool => $this->leadInTerritory($ctx, $lead));
+        return $this->recordInScope($ctx, 'leads', $lead, function () use ($ctx, $lead): bool {
+            return $this->leadInTerritory($ctx, $lead);
+        });
     }
 
     /** Record check for one follow-up row (complete / reschedule). */
@@ -56,11 +58,14 @@ final class CrmScopePolicy
     {
         return $this->recordInScope($ctx, 'followUps', $followUp, function () use ($ctx, $followUp): bool {
             if (!empty($followUp['lead_ref'])) {
-                $lead = $this->db->fetchOne('SELECT * FROM leads WHERE franchise_ref = ? AND lead_ref = ? LIMIT 1', [$followUp['franchise_ref'], $followUp['lead_ref']]);
+                $lead = $this->db->fetchOne('SELECT * FROM leads WHERE franchise_ref = ? AND lead_ref = ? LIMIT 1', [
+                    $followUp['franchise_ref'] ?? '', 
+                    $followUp['lead_ref']
+                ]);
                 if ($lead && $this->leadInTerritory($ctx, $lead)) return true;
             }
             if (!empty($followUp['party_ref'])) {
-                $params = [':f' => (string)$followUp['franchise_ref'], ':p' => (string)$followUp['party_ref']];
+                $params = [':f' => (string)($followUp['franchise_ref'] ?? ''), ':p' => (string)$followUp['party_ref']];
                 $marks = $this->bindTerritories($ctx, $params, 't');
                 return (bool)$this->db->fetchColumn(
                     'SELECT 1 FROM party_territories pt WHERE pt.franchise_ref = :f AND pt.party_ref = :p AND ' . $this->activeTerritorySql('pt') . " AND pt.territory_ref IN ($marks) LIMIT 1",
@@ -90,14 +95,16 @@ final class CrmScopePolicy
     {
         if ($ctx->isSuper()) return true;
         if (($record['franchise_ref'] ?? null) !== $ctx->franchiseRef) return false;
+        
         $owner = $record['assigned_user_ref'] ?? null;
-        return match ($ctx->scopeFor($module)) {
-            'ALL' => true,
-            'OWN' => $owner === $ctx->userRef,
-            'TEAM' => $owner === $ctx->userRef || in_array($owner, $ctx->teamUserRefs, true),
-            'TERRITORY' => $territoryCheck(),
-            default => false,
-        };
+        $scope = $ctx->scopeFor($module);
+        
+        if ($scope === 'ALL') return true;
+        if ($scope === 'OWN') return $owner === $ctx->userRef;
+        if ($scope === 'TEAM') return $owner === $ctx->userRef || in_array($owner, $ctx->teamUserRefs, true);
+        if ($scope === 'TERRITORY') return $territoryCheck();
+        
+        return false;
     }
 
     private function clause(TenantContext $ctx, string $module, array &$params, callable $territorySql): string

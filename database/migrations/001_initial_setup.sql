@@ -2035,4 +2035,55 @@ INSERT INTO sequence_counters (org_ref, franchise_ref, counter_key, period_key, 
 ('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'PAYMENT', '2026', 100)
 ON DUPLICATE KEY UPDATE last_value = GREATEST(last_value, VALUES(last_value));
 
+-- ============================================================================
+-- UI Form Schema Engine (Zero-Local-Data Dynamic Forms)
+-- ============================================================================
+
+-- Table: ui_form_schemas
+CREATE TABLE IF NOT EXISTS `ui_form_schemas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `schema_ref` varchar(32) NOT NULL,
+  `form_key` varchar(64) NOT NULL,
+  `title` varchar(191) NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `entity_type` varchar(64) NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `status` enum('ACTIVE','INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_schema_ref` (`schema_ref`),
+  UNIQUE KEY `uq_form_key` (`form_key`),
+  KEY `idx_form_schema_status` (`status`, `entity_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: ui_form_fields
+CREATE TABLE IF NOT EXISTS `ui_form_fields` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `field_ref` varchar(32) NOT NULL,
+  `form_key` varchar(64) NOT NULL,
+  `field_name` varchar(64) NOT NULL,
+  `label` varchar(191) NOT NULL,
+  `field_type` varchar(32) NOT NULL,
+  `placeholder` varchar(191) DEFAULT NULL,
+  `default_value` text DEFAULT NULL,
+  `is_required` tinyint(1) NOT NULL DEFAULT 0,
+  `is_readonly` tinyint(1) NOT NULL DEFAULT 0,
+  `validation_rules_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `options_source_type` enum('NONE','CATALOG_MASTER','API_ENDPOINT','STATIC_JSON') NOT NULL DEFAULT 'NONE',
+  `options_source_key` varchar(191) DEFAULT NULL,
+  `options_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `step_number` int(11) NOT NULL DEFAULT 1,
+  `grid_width` int(11) NOT NULL DEFAULT 12,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_field_ref` (`field_ref`),
+  UNIQUE KEY `uq_form_field` (`form_key`, `field_name`),
+  KEY `idx_form_field_sort` (`form_key`, `step_number`, `sort_order`, `is_active`),
+  CONSTRAINT `fk_form_field_schema` FOREIGN KEY (`form_key`) REFERENCES `ui_form_schemas` (`form_key`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

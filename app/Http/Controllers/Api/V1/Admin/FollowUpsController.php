@@ -121,4 +121,49 @@ final class FollowUpsController
 
         return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
     }
+
+    /** BE-040: Mark a follow-up as missed (did not happen). */
+    public function markMissed(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'complete');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+        if (!SalesFollowUpPolicy::canUpdate($ctx, $fu)) throw new ForbiddenException('FORBIDDEN_FOLLOWUP', 'You do not have permission to modify this follow-up.');
+
+        $remark = $r->input('remark', 'Marked as missed');
+        $this->followups->update($ctx->franchiseRef, $ref, ['status' => 'MISSED', 'remark' => $remark]);
+        return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
+    }
+
+    /** BE-041: List follow-up history for a specific lead or party. */
+    public function history(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'view');
+        $franchiseRef = $ctx->franchiseRef;
+
+        $leadRef = $r->query('lead_ref');
+        $partyRef = $r->query('party_ref');
+        $page = (int)$r->query('page', 1);
+        $perPage = min((int)$r->query('per_page', 50), 100);
+
+        $filters = ['lead_ref' => $leadRef];
+        if ($partyRef) {
+            $filters['party_ref'] = $partyRef;
+        }
+
+        // Show all statuses for history (PENDING, COMPLETED, MISSED, RESCHEDULED)
+        $scopeParams = [];
+        $scopeSql = SalesFollowUpPolicy::listClause($ctx, $scopeParams);
+        $res = $this->followups->list($franchiseRef, $filters, $page, $perPage, null, $scopeSql, $scopeParams);
+
+        return Response::json(200, $res['items'] ?? [], [
+            'page'        => $res['page'] ?? $page,
+            'per_page'    => $res['per_page'] ?? $perPage,
+            'total'       => $res['total'] ?? 0,
+            'total_pages' => $res['total_pages'] ?? 1,
+        ]);
+    }
 }

@@ -40,6 +40,11 @@ final class SchemesController
         ];
 
         $res = $this->schemes->list($franchiseRef, $filters, $query['page'], $query['per_page']);
+        // BE-062: Inject rules array into each scheme for the list view
+        foreach ($res['data'] as &$scheme) {
+            $scheme['rules'] = $this->schemes->findRules($franchiseRef, $scheme['scheme_ref']);
+        }
+        unset($scheme);
         return Response::json(200, $res['data'], $res['meta']);
     }
 

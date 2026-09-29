@@ -39,8 +39,34 @@ final class BillingService
             $jurisdiction = $supplierState === $placeState ? GstCalculator::INTRASTATE : GstCalculator::INTERSTATE;
             $sourceLines = $this->db->fetchAll("SELECT oi.*,p.product_name,p.sku,p.hsn_code,p.gst_percent product_gst,b.batch_ref,b.batch_no,b.expiry_date,sr.reserved_qty FROM order_items oi JOIN products p ON p.franchise_ref=oi.franchise_ref AND p.product_ref=oi.product_ref JOIN stock_reservations sr ON sr.franchise_ref=oi.franchise_ref AND sr.order_ref=oi.order_ref AND sr.order_item_ref=oi.item_ref AND sr.status='ACTIVE' JOIN inventory_batches b ON b.franchise_ref=sr.franchise_ref AND b.batch_ref=sr.batch_ref WHERE oi.franchise_ref=? AND oi.order_ref=?", [$franchiseRef,$orderRef]);
             if (!$sourceLines) throw new ValidationException('ACTIVE_RESERVATION_REQUIRED', 'A billable order requires active FEFO reservations.');
-            $taxInput=[];foreach($sourceLines as $line){if($line['product_gst']===null)throw new ValidationException('PRODUCT_GST_REQUIRED','Every invoiced product requires a GST rate.');$taxInput[]=['taxable_amount'=>Money::toDecimal(Money::fromDecimal($line['rate'])*(int)$line['reserved_qty']-Money::fromDecimal($line['discount'])),'gst_percent'=>$line['product_gst']];}
-            $tax=$this->gst->calculate($taxInput,$jurisdiction);$items=[];foreach($sourceLines as $i=>$line){$t=$tax['lines'][$i];$half=Money::toDecimal(intdiv(Money::fromDecimal($line['product_gst']),2));$items[]=['item_ref'=>RefGenerator::generate('ii'),'order_item_ref'=>$line['item_ref'],'product_ref'=>$line['product_ref'],'product_name_snapshot'=>$line['product_name'],'sku_snapshot'=>$line['sku'],'hsn_snapshot'=>$line['hsn_code'],'batch_ref'=>$line['batch_ref'],'batch_no_snapshot'=>$line['batch_no'],'expiry_snapshot'=>$line['expiry_date'],'paid_qty'=>$line['reserved_qty'],'free_qty'=>0,'rate'=>$line['rate'],'discount'=>$line['discount'],'taxable_amount'=>$t['taxable_amount'],'gst_percent'=>$line['product_gst'],'cgst_percent'=>$jurisdiction===GstCalculator::INTRASTATE?$half:'0.00','sgst_percent'=>$jurisdiction===GstCalculator::INTRASTATE?$half:'0.00','igst_percent'=>$jurisdiction===GstCalculator::INTERSTATE?$line['product_gst']:'0.00','cgst_amount'=>$t['cgst_amount'],'sgst_amount'=>$t['sgst_amount'],'igst_amount'=>$t['igst_amount'],'total_tax'=>$t['total_tax'],'line_total'=>$t['line_total']];}
+            $groupedLines = []; foreach ($sourceLines as $line) { $groupedLines[$line['item_ref']][] = $line; }
+            $taxInput = []; $processedLines = [];
+            foreach ($groupedLines as $itemRef => $lines) {
+                $remainingPaid = (int)$lines[0]['paid_qty']; $remainingFree = (int)$lines[0]['free_qty']; $totalPaid = $remainingPaid; $totalDiscount = Money::fromDecimal($lines[0]['discount']);
+                foreach ($lines as $line) {
+                    if ($line['product_gst'] === null) throw new ValidationException('PRODUCT_GST_REQUIRED', 'Every invoiced product requires a GST rate.');
+                    $resQty = (int)$line['reserved_qty']; $allocPaid = min($resQty, $remainingPaid); $remainingPaid -= $allocPaid; $resQty -= $allocPaid;
+                    $allocFree = min($resQty, $remainingFree); $remainingFree -= $allocFree;
+                    $invDiscount = 0; if ($allocPaid > 0 && $totalPaid > 0) { $invDiscount = (int)round(($totalDiscount * $allocPaid) / $totalPaid); }
+                    $lineTaxable = (Money::fromDecimal($line['rate']) * $allocPaid) - $invDiscount; if ($lineTaxable < 0) $lineTaxable = 0;
+                    $processedLines[] = array_merge($line, ['inv_paid_qty' => $allocPaid, 'inv_free_qty' => $allocFree, 'inv_taxable' => Money::toDecimal($lineTaxable), 'inv_discount' => Money::toDecimal($invDiscount)]);
+                    $taxInput[] = ['taxable_amount' => Money::toDecimal($lineTaxable), 'gst_percent' => $line['product_gst']];
+                }
+            }
+            $tax = $this->gst->calculate($taxInput, $jurisdiction); $items = [];
+            foreach ($processedLines as $i => $line) {
+                $t = $tax['lines'][$i]; $half = Money::toDecimal(intdiv(Money::fromDecimal($line['product_gst']), 2));
+                $items[] = [
+                    'item_ref' => RefGenerator::generate('ii'), 'order_item_ref' => $line['item_ref'], 'product_ref' => $line['product_ref'],
+                    'product_name_snapshot' => $line['product_name'], 'sku_snapshot' => $line['sku'], 'hsn_snapshot' => $line['hsn_code'],
+                    'batch_ref' => $line['batch_ref'], 'batch_no_snapshot' => $line['batch_no'], 'expiry_snapshot' => $line['expiry_date'],
+                    'paid_qty' => $line['inv_paid_qty'], 'free_qty' => $line['inv_free_qty'], 'rate' => $line['rate'], 'discount' => $line['inv_discount'],
+                    'taxable_amount' => $t['taxable_amount'], 'gst_percent' => $line['product_gst'],
+                    'cgst_percent' => $jurisdiction === GstCalculator::INTRASTATE ? $half : '0.00', 'sgst_percent' => $jurisdiction === GstCalculator::INTRASTATE ? $half : '0.00',
+                    'igst_percent' => $jurisdiction === GstCalculator::INTERSTATE ? $line['product_gst'] : '0.00',
+                    'cgst_amount' => $t['cgst_amount'], 'sgst_amount' => $t['sgst_amount'], 'igst_amount' => $t['igst_amount'], 'total_tax' => $t['total_tax'], 'line_total' => $t['line_total']
+                ];
+            }
             $invoiceRef = RefGenerator::generate('inv');
             $invoiceNo = $this->sequenceService->next($franchiseRef, 'INVOICE', date('Y-m-d'));
             $this->invoiceRepo->create([

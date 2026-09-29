@@ -36,6 +36,11 @@ final class SqlFollowUpRepository implements FollowUpRepositoryInterface
             $params[':lead_ref'] = $filters['lead_ref'];
         }
 
+        if (!empty($filters['party_ref'])) {
+            $where[] = "party_ref = :party_ref";
+            $params[':party_ref'] = $filters['party_ref'];
+        }
+
         if (!empty($filters['overdue'])) {
             $where[] = "status = 'PENDING' AND next_follow_up_at < NOW()";
         }
