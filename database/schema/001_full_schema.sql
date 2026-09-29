@@ -442,6 +442,9 @@ CREATE TABLE IF NOT EXISTS system_settings (
   `franchise_ref` varchar(24) NOT NULL,
   `setting_key` varchar(64) NOT NULL,
   `setting_value` varchar(500) NOT NULL,
+  `data_type` varchar(20) NOT NULL DEFAULT 'STRING',
+  `description` varchar(255) DEFAULT NULL,
+  `is_encrypted` tinyint(1) NOT NULL DEFAULT 0,
   `updated_by_ref` varchar(24) DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -2157,14 +2160,14 @@ INSERT INTO `catalog_master_values` (`master_ref`, `org_ref`, `franchise_ref`, `
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description);
 
 -- 5.2 Seed Default System Settings
-INSERT INTO `system_settings` (`franchise_ref`, `setting_key`, `setting_value`, `data_type`, `description`, `is_encrypted`, `updated_by_ref`) VALUES
-('FRN-MUMBAI000000000001', 'INVENTORY_NEAR_EXPIRY_THRESHOLD_DAYS', '90', 'INT', 'Days before product batch expiry to flag as near expiry', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'ORDER_AUTO_APPROVE_BELOW_VALUE', '10000', 'DECIMAL', 'Order total under which automatic confirmation can be configured', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'DEFAULT_CREDIT_PERIOD_DAYS', '30', 'INT', 'Standard credit payment term days for new parties', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'DEFAULT_CREDIT_LIMIT_AMOUNT', '50000', 'DECIMAL', 'Initial credit limit for newly converted parties', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'INVOICE_INTEREST_RATE_OVERDUE', '18.00', 'DECIMAL', 'Annual interest percentage calculated on overdue invoices', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'DCR_MANDATORY_LOCATION_CAPTURING', '1', 'BOOLEAN', 'Require GPS coordinates on field visits', 0, 'USR-FRNADMIN000000001'),
-('FRN-MUMBAI000000000001', 'GST_E_INVOICE_MANDATORY', '0', 'BOOLEAN', 'Enforce NIC e-invoice generation on invoices above statutory limit', 0, 'USR-FRNADMIN000000001')
+INSERT INTO `system_settings` (`org_ref`, `franchise_ref`, `setting_key`, `setting_value`, `data_type`, `description`, `is_encrypted`, `updated_by_ref`) VALUES
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'INVENTORY_NEAR_EXPIRY_THRESHOLD_DAYS', '90', 'INT', 'Days before product batch expiry to flag as near expiry', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'ORDER_AUTO_APPROVE_BELOW_VALUE', '10000', 'DECIMAL', 'Order total under which automatic confirmation can be configured', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'DEFAULT_CREDIT_PERIOD_DAYS', '30', 'INT', 'Standard credit payment term days for new parties', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'DEFAULT_CREDIT_LIMIT_AMOUNT', '50000', 'DECIMAL', 'Initial credit limit for newly converted parties', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'INVOICE_INTEREST_RATE_OVERDUE', '18.00', 'DECIMAL', 'Annual interest percentage calculated on overdue invoices', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'DCR_MANDATORY_LOCATION_CAPTURING', '1', 'BOOLEAN', 'Require GPS coordinates on field visits', 0, 'USR-FRNADMIN000000001'),
+('ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'GST_E_INVOICE_MANDATORY', '0', 'BOOLEAN', 'Enforce NIC e-invoice generation on invoices above statutory limit', 0, 'USR-FRNADMIN000000001')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- 5.3 Seed Core UI Form Schemas
