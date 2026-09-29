@@ -83,11 +83,20 @@ return function(\App\Core\Router $router): void {
 
     $router->get('/api/v1/admin/transporters', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listTransporters']);
     $router->post('/api/v1/admin/transporters', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'createTransporter']);
+    $router->get('/api/v1/admin/catalog-masters', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'listAll']);
     $router->get('/api/v1/admin/catalog-masters/{category}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'index']);
     $router->post('/api/v1/admin/catalog-masters/{category}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'create']);
     $router->get('/api/v1/admin/catalog-masters/{category}/{ref}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'show']);
     $router->patch('/api/v1/admin/catalog-masters/{category}/{ref}', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'update']);
     $router->post('/api/v1/admin/catalog-masters/{category}/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\CatalogMastersController::class, 'status']);
+
+    // Zero-Local-Data UI Dynamic Form Schemas
+    $router->get('/api/v1/ui/forms', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'index']);
+    $router->get('/api/v1/ui/forms/{form_key}', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'show']);
+    $router->post('/api/v1/ui/forms/{form_key}/validate', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'validate']);
+    $router->get('/api/v1/forms', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'index']);
+    $router->get('/api/v1/forms/{form_key}', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'show']);
+    $router->post('/api/v1/forms/{form_key}/validate', [\App\Http\Controllers\Api\V1\Admin\UiFormSchemasController::class, 'validate']);
 
     $router->get('/api/v1/admin/notification-templates', [\App\Http\Controllers\Api\V1\Admin\MastersController::class, 'listTemplates']);
 
@@ -187,6 +196,7 @@ return function(\App\Core\Router $router): void {
     // P4: Orders
     $router->get('/api/v1/admin/orders', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'index']);
     $router->post('/api/v1/admin/orders', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'store']);
+    $router->post('/api/v1/admin/orders/calculate', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'calculate']);
     $router->get('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'show']);
     $router->patch('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'updateDraft']);
     $router->delete('/api/v1/admin/orders/{ref}', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'deleteDraft']);

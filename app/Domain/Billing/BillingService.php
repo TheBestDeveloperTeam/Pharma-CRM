@@ -24,9 +24,18 @@ final class BillingService
             if (!$this->orderRepo->getItems($franchiseRef, $orderRef)) throw new ValidationException('EMPTY_ORDER', 'Order has no billable lines.');
 
             $supplierState = $this->db->fetchColumn('SELECT state_ref FROM franchises WHERE franchise_ref = ? FOR UPDATE', [$franchiseRef]);
+            if (!$supplierState) {
+                $supplierState = $this->db->fetchColumn("SELECT setting_value FROM system_settings WHERE franchise_ref = ? AND setting_key = 'default_state_ref' LIMIT 1", [$franchiseRef]);
+            }
             if (!$supplierState) throw new ValidationException('SUPPLIER_STATE_REQUIRED', 'Supplier state must be configured before invoicing.');
-            $placeState = $order['shipping_pincode'] ? $this->db->fetchColumn('SELECT state_ref FROM pincodes WHERE pincode = ? LIMIT 1', [$order['shipping_pincode']]) : null;
+
+            $placePincode = $order['shipping_pincode'] ?: ($party['pincode'] ?? null);
+            $placeState = $placePincode ? $this->db->fetchColumn('SELECT state_ref FROM pincodes WHERE pincode = ? LIMIT 1', [$placePincode]) : null;
+            if (!$placeState && !empty($party['state_ref'])) {
+                $placeState = $party['state_ref'];
+            }
             if (!$placeState) throw new ValidationException('PLACE_OF_SUPPLY_REQUIRED', 'A normalized shipping pincode/state is required before invoicing.');
+
             $jurisdiction = $supplierState === $placeState ? GstCalculator::INTRASTATE : GstCalculator::INTERSTATE;
             $sourceLines = $this->db->fetchAll("SELECT oi.*,p.product_name,p.sku,p.hsn_code,p.gst_percent product_gst,b.batch_ref,b.batch_no,b.expiry_date,sr.reserved_qty FROM order_items oi JOIN products p ON p.franchise_ref=oi.franchise_ref AND p.product_ref=oi.product_ref JOIN stock_reservations sr ON sr.franchise_ref=oi.franchise_ref AND sr.order_ref=oi.order_ref AND sr.order_item_ref=oi.item_ref AND sr.status='ACTIVE' JOIN inventory_batches b ON b.franchise_ref=sr.franchise_ref AND b.batch_ref=sr.batch_ref WHERE oi.franchise_ref=? AND oi.order_ref=?", [$franchiseRef,$orderRef]);
             if (!$sourceLines) throw new ValidationException('ACTIVE_RESERVATION_REQUIRED', 'A billable order requires active FEFO reservations.');

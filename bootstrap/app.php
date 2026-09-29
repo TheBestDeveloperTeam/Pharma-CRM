@@ -72,7 +72,7 @@ if (PHP_SAPI !== 'cli') {
 
         // Resolve controller if class@method notation
         $controllerFn = is_array($handler)
-            ? fn(\App\Core\Request $r) => $container->make($handler[0])->{$handler[1]}($r)
+            ? fn(\App\Core\Request $r) => $container->make($handler[0])->{$handler[1]}($r, ...array_values($r->params))
             : $handler;
 
         try {

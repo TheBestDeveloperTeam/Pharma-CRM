@@ -13,6 +13,22 @@ final class SettingsController
         private AuditService $audit,
     ) {}
 
+    public function show(Request $r): Response
+    {
+        /** @var TenantContext $ctx */
+        $ctx = Container::getInstance()->make(TenantContext::class);
+        if (!$ctx->can('settings', 'view')) {
+            throw new ForbiddenException('FORBIDDEN', 'Permission required: settings.view');
+        }
+
+        $franchiseRef = $ctx->requireFranchise();
+        $stmt = $this->pdo->prepare('SELECT franchise_ref, franchise_code, franchise_name, gstin, drug_license_no, address, state_ref, brand_primary_hex, brand_accent_hex, status FROM franchises WHERE franchise_ref = :f LIMIT 1');
+        $stmt->execute([':f' => $franchiseRef]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return Response::json(200, $row ?: []);
+    }
+
     public function update(Request $r): Response
     {
         /** @var TenantContext $ctx */
@@ -67,7 +83,54 @@ final class SettingsController
             ]);
         }
 
-        return Response::json(200, ['updated' => true]);
+        // Update franchise legal & location settings (BE-091 fix)
+        $stateRef = $r->input('state_ref');
+        $franchiseName = $r->input('franchise_name');
+        $gstin = $r->input('gstin');
+        $address = $r->input('address');
+        $drugLicense = $r->input('drug_license_no');
+
+        $updates = [];
+        $params = [];
+
+        if ($stateRef !== null) {
+            $updates[] = 'state_ref = :state_ref';
+            $params[':state_ref'] = trim((string)$stateRef);
+        }
+        if ($franchiseName !== null) {
+            $updates[] = 'franchise_name = :franchise_name';
+            $params[':franchise_name'] = trim((string)$franchiseName);
+        }
+        if ($gstin !== null) {
+            $updates[] = 'gstin = :gstin';
+            $params[':gstin'] = strtoupper(trim((string)$gstin));
+        }
+        if ($address !== null) {
+            $updates[] = 'address = :address';
+            $params[':address'] = trim((string)$address);
+        }
+        if ($drugLicense !== null) {
+            $updates[] = 'drug_license_no = :drug_license_no';
+            $params[':drug_license_no'] = trim((string)$drugLicense);
+        }
+
+        if (!empty($updates)) {
+            $params[':f'] = $franchiseRef;
+            $sql = 'UPDATE franchises SET ' . implode(', ', $updates) . ' WHERE franchise_ref = :f';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+
+            $this->audit->log(
+                ctx: $ctx,
+                category: 'BUSINESS',
+                action: 'franchise.settings_updated',
+                entityType: 'franchise',
+                entityRef: $franchiseRef,
+                after: $params
+            );
+        }
+
+        return Response::json(200, ['updated' => true, 'franchise_ref' => $franchiseRef]);
     }
 
     private function calculateContrast(string $c1, string $c2): float

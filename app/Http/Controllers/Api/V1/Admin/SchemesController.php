@@ -184,6 +184,31 @@ final class SchemesController
         return Response::json(200, ['scheme_ref' => $ref, 'status' => $status]);
     }
 
+    public function calculate(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'schemes', 'view');
+
+        $clean = Validation::validate($r->all(), [
+            'product_ref' => 'required|string',
+            'ordered_qty' => 'required|int|min:1',
+        ]);
+
+        $tierRef = $r->input('tier_ref');
+        $date = (string)$r->input('date', date('Y-m-d'));
+
+        $result = $this->calculator->calculate(
+            $franchiseRef,
+            $tierRef ? (string)$tierRef : null,
+            (string)$clean['product_ref'],
+            (int)$clean['ordered_qty'],
+            $date
+        );
+
+        return Response::json(200, $result);
+    }
+
     private function validateRules(TenantContext $ctx, string $franchiseRef, mixed $input): array
     {
         if (!is_array($input) || count($input) < 1) throw new ValidationException('RULES_REQUIRED', 'At least one scheme rule is required.');

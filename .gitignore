@@ -1,5 +1,7 @@
 .env
 /vendor/
+/react-front-end/
+/marketing/
 /storage/logs/*
 !/storage/logs/.gitkeep
 /storage/cache/*
@@ -24,3 +26,4 @@ composer.phar
 Pharma-CRM-Easy-Solutions.zip
 Pharma-CRM-CORS-Update.zip
 yashwant-crm.mp4
+.phpunit.cache/

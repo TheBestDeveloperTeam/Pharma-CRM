@@ -11,23 +11,113 @@ use App\Repositories\Contracts\CatalogMasterRepositoryInterface;
 final class CatalogMastersController
 {
     /** @var array<string,string> */
-    private const KEYS = ['dosageForms' => 'DOSAGE_FORM', 'schemeTypes' => 'SCHEME_TYPE'];
+    private const KEYS = [
+        'dosageForms'            => 'DOSAGE_FORM',
+        'dosage-forms'           => 'DOSAGE_FORM',
+        'dosage_forms'           => 'DOSAGE_FORM',
+        'schemeTypes'            => 'SCHEME_TYPE',
+        'scheme-types'           => 'SCHEME_TYPE',
+        'scheme_types'           => 'SCHEME_TYPE',
+        'leadSources'            => 'LEAD_SOURCE',
+        'lead-sources'           => 'LEAD_SOURCE',
+        'lead_sources'           => 'LEAD_SOURCE',
+        'leadStatuses'           => 'LEAD_STATUS',
+        'lead-statuses'          => 'LEAD_STATUS',
+        'lead_statuses'          => 'LEAD_STATUS',
+        'partyTypes'             => 'PARTY_TYPE',
+        'party-types'            => 'PARTY_TYPE',
+        'party_types'            => 'PARTY_TYPE',
+        'businessTypes'          => 'PARTY_TYPE',
+        'business-types'         => 'PARTY_TYPE',
+        'business_types'         => 'PARTY_TYPE',
+        'constitutionTypes'      => 'CONSTITUTION_TYPE',
+        'constitution-types'     => 'CONSTITUTION_TYPE',
+        'constitution_types'     => 'CONSTITUTION_TYPE',
+        'packagingTypes'         => 'PACKAGING_TYPE',
+        'packaging-types'        => 'PACKAGING_TYPE',
+        'packaging_types'        => 'PACKAGING_TYPE',
+        'uoms'                   => 'UOM',
+        'units'                  => 'UOM',
+        'paymentModes'           => 'PAYMENT_MODE',
+        'payment-modes'          => 'PAYMENT_MODE',
+        'payment_modes'          => 'PAYMENT_MODE',
+        'workTypes'              => 'WORK_TYPE',
+        'work-types'             => 'WORK_TYPE',
+        'work_types'             => 'WORK_TYPE',
+        'followUpTypes'          => 'FOLLOWUP_TYPE',
+        'follow-up-types'        => 'FOLLOWUP_TYPE',
+        'follow_up_types'        => 'FOLLOWUP_TYPE',
+        'followup_types'         => 'FOLLOWUP_TYPE',
+        'stockAdjustmentReasons' => 'STOCK_ADJUSTMENT_REASON',
+        'stock-adjustment-reasons' => 'STOCK_ADJUSTMENT_REASON',
+        'stock_adjustment_reasons' => 'STOCK_ADJUSTMENT_REASON',
+        'transporterModes'       => 'TRANSPORTER_MODE',
+        'transporter-modes'      => 'TRANSPORTER_MODE',
+        'transporter_modes'      => 'TRANSPORTER_MODE',
+    ];
 
-    public function __construct(private CatalogMasterRepositoryInterface $masters, private AuditService $audit, private AuthorizationService $authorization) {}
+    public function __construct(
+        private CatalogMasterRepositoryInterface $masters,
+        private AuditService $audit,
+        private AuthorizationService $authorization
+    ) {}
 
     private function context(): TenantContext
     {
         /** @var TenantContext $ctx */
         $ctx = Container::getInstance()->make(TenantContext::class);
-        // B1 — no role-name gate: each action checks its masters.* permission key.
         return $ctx;
     }
 
     private function key(Request $r): string
     {
-        $key = (string)$r->param('category', '');
-        if (!isset(self::KEYS[$key])) throw new NotFoundException('MASTER_NOT_FOUND', 'Product master category not found.');
-        return self::KEYS[$key];
+        $raw = trim((string)$r->param('category', ''));
+        if (isset(self::KEYS[$raw])) {
+            return self::KEYS[$raw];
+        }
+
+        // Normalize camelCase, kebab-case, or snake_case to UPPER_SNAKE_CASE
+        $normalized = strtoupper(preg_replace('/(?<!^)[A-Z]/', '_$0', str_replace('-', '_', $raw)));
+        if (!empty($normalized)) {
+            return $normalized;
+        }
+
+        throw new NotFoundException('MASTER_NOT_FOUND', "Catalog master category '{$raw}' not found.");
+    }
+
+    /**
+     * List all catalog master values grouped by category for zero-local-data pre-fetching.
+     */
+    public function listAll(Request $r): Response
+    {
+        $ctx = $this->context();
+        $this->authorization->requirePermission($ctx, 'masters', 'view');
+        $franchiseRef = $ctx->requireFranchise();
+
+        // Read all active master values for the franchise
+        $container = Container::getInstance();
+        /** @var \App\Core\Database $db */
+        $db = $container->make(\App\Core\Database::class);
+
+        $rows = $db->fetchAll(
+            "SELECT master_ref, master_key, name, description, status
+             FROM catalog_master_values
+             WHERE franchise_ref = ? AND status = 'ACTIVE'
+             ORDER BY master_key ASC, name ASC",
+            [$franchiseRef]
+        );
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $grouped[$row['master_key']][] = [
+                'master_ref'  => $row['master_ref'],
+                'code'        => $row['name'],
+                'label'       => $row['name'],
+                'description' => $row['description'],
+            ];
+        }
+
+        return Response::json(200, $grouped);
     }
 
     public function index(Request $r): Response

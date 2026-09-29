@@ -197,10 +197,11 @@ final class PortalController
         return Response::json(200, $res['data'], $res['meta']);
     }
 
-    public function showOrder(Request $r, string $ref): Response
+    public function showOrder(Request $r, ?string $ref = null): Response
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
+        $ref = $ref ?? (string)$r->param('ref');
         $order = $this->orderRepo->findByRef($franchiseRef, $ref);
 
         if (!$order || $order['party_ref'] !== $ctx->partyRef) {
@@ -241,10 +242,11 @@ final class PortalController
         return Response::json(201, $order);
     }
 
-    public function cancelOrder(Request $r, string $ref): Response
+    public function cancelOrder(Request $r, ?string $ref = null): Response
     {
         $ctx = $this->getCtx('placeOrder');
         $franchiseRef = $ctx->requireFranchise();
+        $ref = $ref ?? (string)$r->param('ref');
         $order = $this->orderRepo->findByRef($franchiseRef, $ref);
 
         if (!$order || $order['party_ref'] !== $ctx->partyRef) {

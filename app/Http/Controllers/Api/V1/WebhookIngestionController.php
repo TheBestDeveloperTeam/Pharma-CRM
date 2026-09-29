@@ -18,7 +18,7 @@ final class WebhookIngestionController
         private Database $db,
     ) {}
 
-    public function ingest(Request $r, string $endpointSlug): Response
+    public function ingest(Request $r, ?string $endpointSlug = null): Response
     {
         $rawBody = $r->rawBody();
 
@@ -27,8 +27,10 @@ final class WebhookIngestionController
             return Response::error(413, 'PAYLOAD_TOO_LARGE', 'Payload exceeds 256KB.');
         }
 
+        $slug = $endpointSlug ?? (string)$r->param('slug');
+
         // 2. Resolve source & verify HMAC signature
-        $source = $this->webhookService->resolveSource($endpointSlug);
+        $source = $this->webhookService->resolveSource($slug);
         $signature = $r->header('x-signature') ?? $r->header('X-Signature');
         $timestampHeader = $r->header('x-timestamp');
         if ($timestampHeader === '' || !ctype_digit($timestampHeader)) {

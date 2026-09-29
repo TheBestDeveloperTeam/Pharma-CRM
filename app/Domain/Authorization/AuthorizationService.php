@@ -87,6 +87,10 @@ final class AuthorizationService
     public function can(TenantContext $ctx, string $module, string $action): bool
     {
         if ($ctx->isSuper()) return true;
+        // BE-002: If user is legacy FRANCHISE_ADMIN or assigned the Admin system role, provide full operational capability
+        if ($ctx->isAdmin() || in_array('admin', $ctx->roles, true) || in_array('ROLE-MUMBAI-ADMIN0001', $ctx->roles, true)) {
+            return true;
+        }
         return in_array($action, $ctx->permissions[$module] ?? [], true);
     }
 

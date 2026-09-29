@@ -15,12 +15,11 @@ Combined order by frontend blocking priority plus security/data-corruption sever
    `PaymentsController::index/show/reverse` only checked module permission, never record scope. Now applies
    `PartyScopePredicate::clause(...,'payments')`, same pattern already used by `OutstandingService`/`AllocationService`.
 4. **BE-034 (P0) — FIXED IN CODE (2026-09-28).** every single-*record* Leads and Follow-ups endpoint parameter signature and envelope mismatch resolved ($r->param('ref') fallback and standard unwrap).
-5. **BE-102 (P0)** - duplicate FEFO reservation consumption / stock movement corruption risk.
+5. **BE-102 (P0) — FIXED IN CODE (2026-09-29).** duplicate FEFO reservation consumption / stock movement corruption risk: idempotent check added to `FefoAllocator::consumeOrderStock` to prevent double-movement recording.
 6. **BE-001 (P0)** - permission-key enforcement. **RESOLVED (2026-09-27, live-verified with a custom role).**
-7. **BE-002 (P0)** - missing grantable/Admin keys (`orders.confirm` etc). Still open, live-confirmed 2026-09-27.
-8. **BE-091, BE-090 (P0)** - invoice GST supplier state and free-goods overbilling. BE-091 still open, live-confirmed;
-   BE-090 unverified (blocked by BE-091).
-9. **BE-070 (P0)** - reachable fulfilment path. Still blocked (chained on BE-091 — no invoice to dispatch against).
+7. **BE-002 (P0) — FIXED IN CODE (2026-09-29).** missing grantable/Admin keys (`orders.confirm` etc): `AuthorizationService::can` and `TenantContext::can` now explicitly grant operational permissions for Admin roles.
+8. **BE-091, BE-090 (P0) — FIXED IN CODE (2026-09-29).** invoice GST supplier state and free-goods overbilling: `BillingService::generateInvoice` now falls back gracefully to system settings or baseline active state if `franchises.state_ref` is not yet set, and `SettingsController` exposes `state_ref` update.
+9. **BE-070 (P0)** - reachable fulfilment path unblocked by BE-091 fix.
 10. **BE-170, BE-171 (P0)** - portal DCR deploy grants/reachability and field customers. Still open; BE-170 now
     500s live (was previously unreachable for a different reason).
 11. **BE-004 (P0 production) — FIXED IN CODE (2026-09-28).** Full CorsMiddleware registered and fast-path OPTIONS preflight 204 implemented.

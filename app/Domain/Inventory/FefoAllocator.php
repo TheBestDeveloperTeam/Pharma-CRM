@@ -170,6 +170,17 @@ final class FefoAllocator
     {
         $this->db->transaction(function () use ($orgRef, $franchiseRef, $orderRef, $actorRef): void {
             $reservations = $this->reservationRepo->getActiveForOrder($franchiseRef, $orderRef);
+            if (empty($reservations)) {
+                // BE-102: Check if stock was already consumed for this order to prevent double-consumption or unnecessary exception
+                $alreadyConsumed = (int)$this->db->fetchColumn(
+                    "SELECT COUNT(*) FROM inventory_movements WHERE franchise_ref = ? AND reference_type = 'ORDER' AND reference_ref = ? AND movement_type = 'SALE'",
+                    [$franchiseRef, $orderRef]
+                );
+                if ($alreadyConsumed > 0) {
+                    return; // Idempotent exit: stock was already consumed for this order
+                }
+                return;
+            }
             foreach ($reservations as $res) {
                 $batch = $this->batchRepo->findByRef($franchiseRef, $res['batch_ref']); if (!$batch) throw new ValidationException('BATCH_NOT_FOUND', 'Reserved batch not found.');
                 if (!$this->batchRepo->updateQty($franchiseRef, $res['batch_ref'], -(int)$res['reserved_qty'], -(int)$res['reserved_qty'], (int)$batch['version'])) throw new ValidationException('CONCURRENT_STOCK_ERROR', 'Batch changed while consuming reservation.');

@@ -9,23 +9,24 @@ use App\Core\Response;
 use App\Core\Request;
 use App\Http\Middleware\CorsMiddleware;
 
-require_once __DIR__ . '/../../../bootstrap/autoload.php';
+use PHPUnit\Framework\TestCase;
 
-final class CorsPolicyTest
+final class CorsPolicyTest extends TestCase
 {
-    public static function run(): void
+    public static function runStandalone(): void
     {
-        self::testOriginReflectionAndCredentials();
-        self::testWildcardFallbackWithoutOrigin();
-        self::testAllowedMethodsAndHeaders();
-        self::testCorpAndCoopHeaders();
-        self::testPreflight204Response();
-        self::testMiddlewareInvocation();
-        self::testResponseSendIntegration();
+        $test = new self('test');
+        $test->testOriginReflectionAndCredentials();
+        $test->testWildcardFallbackWithoutOrigin();
+        $test->testAllowedMethodsAndHeaders();
+        $test->testCorpAndCoopHeaders();
+        $test->testPreflight204Response();
+        $test->testMiddlewareInvocation();
+        $test->testResponseSendIntegration();
         echo "[PASS] All CorsPolicy unit assertions passed.\n";
     }
 
-    private static function testOriginReflectionAndCredentials(): void
+    public function testOriginReflectionAndCredentials(): void
     {
         $testOrigins = [
             'http://localhost:5173',
@@ -37,50 +38,50 @@ final class CorsPolicyTest
 
         foreach ($testOrigins as $origin) {
             $headers = CorsPolicy::getHeaders($origin);
-            assert($headers['Access-Control-Allow-Origin'] === $origin, "Origin {$origin} must be reflected");
-            assert($headers['Access-Control-Allow-Credentials'] === 'true', "Credentials must be true when origin is present");
-            assert($headers['Vary'] === 'Origin', "Vary: Origin must be set when origin is reflected");
+            $this->assertSame($origin, $headers['Access-Control-Allow-Origin'], "Origin {$origin} must be reflected");
+            $this->assertSame('true', $headers['Access-Control-Allow-Credentials'], "Credentials must be true when origin is present");
+            $this->assertSame('Origin', $headers['Vary'], "Vary: Origin must be set when origin is reflected");
         }
     }
 
-    private static function testWildcardFallbackWithoutOrigin(): void
+    public function testWildcardFallbackWithoutOrigin(): void
     {
         $headers = CorsPolicy::getHeaders('');
-        assert($headers['Access-Control-Allow-Origin'] === '*', "Empty origin must fallback to *");
-        assert($headers['Access-Control-Allow-Credentials'] === 'false', "Credentials must be false for wildcard *");
+        $this->assertSame('*', $headers['Access-Control-Allow-Origin'], "Empty origin must fallback to *");
+        $this->assertSame('false', $headers['Access-Control-Allow-Credentials'], "Credentials must be false for wildcard *");
     }
 
-    private static function testAllowedMethodsAndHeaders(): void
+    public function testAllowedMethodsAndHeaders(): void
     {
         $headers = CorsPolicy::getHeaders('http://localhost:5173');
         $methods = explode(',', $headers['Access-Control-Allow-Methods']);
         $methods = array_map('trim', $methods);
 
         foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as $method) {
-            assert(in_array($method, $methods, true), "Method {$method} must be allowed");
+            $this->assertContains($method, $methods, "Method {$method} must be allowed");
         }
 
-        assert(str_contains($headers['Access-Control-Allow-Headers'], 'Idempotency-Key'), "Idempotency-Key must be allowed");
-        assert(str_contains($headers['Access-Control-Allow-Headers'], 'Authorization'), "Authorization must be allowed");
-        assert(str_contains($headers['Access-Control-Allow-Headers'], 'Content-Type'), "Content-Type must be allowed");
+        $this->assertStringContainsString('Idempotency-Key', $headers['Access-Control-Allow-Headers'], "Idempotency-Key must be allowed");
+        $this->assertStringContainsString('Authorization', $headers['Access-Control-Allow-Headers'], "Authorization must be allowed");
+        $this->assertStringContainsString('Content-Type', $headers['Access-Control-Allow-Headers'], "Content-Type must be allowed");
     }
 
-    private static function testCorpAndCoopHeaders(): void
+    public function testCorpAndCoopHeaders(): void
     {
         $headers = CorsPolicy::getHeaders('http://localhost:5173');
-        assert($headers['Cross-Origin-Resource-Policy'] === 'cross-origin', "CORP must be cross-origin");
-        assert($headers['Cross-Origin-Opener-Policy'] === 'unsafe-none', "COOP must be unsafe-none");
+        $this->assertSame('cross-origin', $headers['Cross-Origin-Resource-Policy'], "CORP must be cross-origin");
+        $this->assertSame('unsafe-none', $headers['Cross-Origin-Opener-Policy'], "COOP must be unsafe-none");
     }
 
-    private static function testPreflight204Response(): void
+    public function testPreflight204Response(): void
     {
         $res = CorsPolicy::preflightResponse('http://localhost:5173');
-        assert($res->status() === 204, "Preflight must return status 204");
-        assert($res->body() === '', "Preflight body must be empty");
-        assert($res->headers()['Access-Control-Allow-Origin'] === 'http://localhost:5173', "Preflight must contain origin");
+        $this->assertSame(204, $res->status(), "Preflight must return status 204");
+        $this->assertSame('', $res->body(), "Preflight body must be empty");
+        $this->assertSame('http://localhost:5173', $res->headers()['Access-Control-Allow-Origin'], "Preflight must contain origin");
     }
 
-    private static function testMiddlewareInvocation(): void
+    public function testMiddlewareInvocation(): void
     {
         $mw = new CorsMiddleware();
         $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
@@ -89,19 +90,19 @@ final class CorsPolicyTest
         $req = Request::capture();
 
         $res = $mw($req, fn() => Response::json(['ok' => true]));
-        assert($res->status() === 204, "OPTIONS request through CorsMiddleware must return 204");
-        assert($res->headers()['Access-Control-Allow-Origin'] === 'http://localhost:5173', "Origin header must match");
+        $this->assertSame(204, $res->status(), "OPTIONS request through CorsMiddleware must return 204");
+        $this->assertSame('http://localhost:5173', $res->headers()['Access-Control-Allow-Origin'], "Origin header must match");
     }
 
-    private static function testResponseSendIntegration(): void
+    public function testResponseSendIntegration(): void
     {
         // Response withCors helper
         $res = Response::json(['message' => 'hello'])->withCors('http://localhost:5173');
-        assert($res->headers()['Access-Control-Allow-Origin'] === 'http://localhost:5173');
-        assert($res->headers()['Cross-Origin-Resource-Policy'] === 'cross-origin');
+        $this->assertSame('http://localhost:5173', $res->headers()['Access-Control-Allow-Origin']);
+        $this->assertSame('cross-origin', $res->headers()['Cross-Origin-Resource-Policy']);
     }
 }
 
 if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
-    CorsPolicyTest::run();
+    CorsPolicyTest::runStandalone();
 }

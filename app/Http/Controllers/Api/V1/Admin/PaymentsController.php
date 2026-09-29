@@ -52,10 +52,11 @@ final class PaymentsController
         return Response::json(200, $res['data'], $res['meta']);
     }
 
-    public function show(Request $r, string $ref): Response
+    public function show(Request $r, ?string $ref = null): Response
     {
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'payments', 'view');
+        $ref = $ref ?? (string)$r->param('ref');
         $scopeParams = [];
         $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
         $payment = $this->paymentRepo->findByRef($ctx->franchiseRef, $ref, $scopeSql, $scopeParams);

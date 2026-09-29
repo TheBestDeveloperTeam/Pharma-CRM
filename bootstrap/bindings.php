@@ -13,7 +13,9 @@ return function(\App\Core\Container $container): void {
 
     // P0-S10: Database & Transaction
     $container->singleton(\PDO::class, fn() => \App\Core\Database::connection());
+    $container->singleton(\App\Core\Database::class, fn($c) => new \App\Core\Database($c->make(\PDO::class)));
     $container->singleton(\App\Core\Transaction::class, fn($c) => new \App\Core\Transaction($c->make(\PDO::class)));
+    $container->singleton(\App\Domain\Billing\GstCalculator::class, fn() => new \App\Domain\Billing\GstCalculator());
 
     // P0-S11: FileCache
     $container->singleton(\App\Core\FileCache::class, function($c) {
@@ -330,11 +332,27 @@ return function(\App\Core\Container $container): void {
         );
     });
 
-    $container->singleton(\App\Domain\Dcr\DcrService::class, function($c) {
-        return new \App\Domain\Dcr\DcrService(
+    $container->singleton(\App\Repositories\Contracts\UiFormSchemaRepositoryInterface::class, function($c) {
+        return new \App\Repositories\Sql\SqlUiFormSchemaRepository(new \App\Core\Database($c->make(\PDO::class)));
+    });
+    $container->singleton(\App\Domain\Masters\UiFormSchemaService::class, function($c) {
+        return new \App\Domain\Masters\UiFormSchemaService(
+            $c->make(\App\Repositories\Contracts\UiFormSchemaRepositoryInterface::class),
+            $c->make(\App\Repositories\Contracts\CatalogMasterRepositoryInterface::class)
+        );
+    });
+
+    $container->singleton(\App\Domain\Masters\DynamicFormValidator::class, function($c) {
+        return new \App\Domain\Masters\DynamicFormValidator(
+            $c->make(\App\Repositories\Contracts\UiFormSchemaRepositoryInterface::class)
+        );
+    });
+    $container->singleton(\App\Domain\DCR\DcrService::class, function($c) {
+        return new \App\Domain\DCR\DcrService(
             new \App\Core\Database($c->make(\PDO::class)),
             $c->make(\App\Domain\Audit\AuditService::class)
         );
     });
+    $container->singleton(\App\Domain\Dcr\DcrService::class, fn($c) => $c->make(\App\Domain\DCR\DcrService::class));
     $container->singleton(\App\Domain\Reports\ScopedAnalyticsService::class, function($c) { return new \App\Domain\Reports\ScopedAnalyticsService(new \App\Core\Database($c->make(\PDO::class)), $c->make(\App\Domain\Payments\OutstandingService::class)); });
 };
