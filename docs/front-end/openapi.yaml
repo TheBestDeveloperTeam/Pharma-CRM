@@ -1765,6 +1765,40 @@ paths:
         '200':
           description: Lead assigned.
 
+  /admin/leads/{ref}/archive:
+    post:
+      summary: Archive a lead (soft status change)
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Lead archived successfully.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
+  /admin/leads/{ref}/restore:
+    post:
+      summary: Restore a previously archived lead
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Lead restored successfully.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
   /admin/follow-ups:
     get:
       summary: List follow-up queue
@@ -1837,6 +1871,49 @@ paths:
           description: Follow-up rescheduled.
         '404':
           description: Follow-up not found.
+
+  /admin/follow-ups/{ref}/mark-missed:
+    post:
+      summary: Mark a follow-up as missed
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remark: {type: string, example: "Customer did not answer"}
+      responses:
+        '200':
+          description: Follow-up marked as missed.
+        '404':
+          description: Follow-up not found.
+
+  /admin/follow-ups/history:
+    get:
+      summary: List follow-up history for a specific lead or party
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: lead_ref
+        in: query
+        schema: {type: string}
+      - name: party_ref
+        in: query
+        schema: {type: string}
+      - name: page
+        in: query
+        schema: {type: integer, default: 1}
+      - name: per_page
+        in: query
+        schema: {type: integer, default: 50}
+      responses:
+        '200':
+          description: Paginated history of follow-ups.
 
   # ============================================================================
   # Franchise Admin: Parties & Territory
@@ -2453,6 +2530,86 @@ paths:
       responses:
         '200':
           description: Near-expiry batches list.
+
+  /admin/inventory/movements:
+    get:
+      summary: Movement ledger — all stock movements across batches
+      tags: [Admin Inventory]
+      parameters:
+      - name: batch_ref
+        in: query
+        schema: {type: string}
+      - name: product_ref
+        in: query
+        schema: {type: string}
+      - name: movement_type
+        in: query
+        schema: {type: string}
+      - name: from_date
+        in: query
+        schema: {type: string, format: date}
+      - name: to_date
+        in: query
+        schema: {type: string, format: date}
+      - name: page
+        in: query
+        schema: {type: integer, default: 1}
+      - name: per_page
+        in: query
+        schema: {type: integer, default: 50}
+      responses:
+        '200':
+          description: Paginated movement ledger.
+
+  /admin/inventory/batches/{ref}/edit:
+    post:
+      summary: Edit batch metadata (location, expiry, batch_no)
+      tags: [Admin Inventory]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                batch_no: {type: string}
+                expiry_date: {type: string, format: date}
+                manufacturing_date: {type: string, format: date}
+                location_code: {type: string}
+      responses:
+        '200':
+          description: Batch metadata updated.
+        '404':
+          description: Batch not found.
+
+  /admin/inventory/transfer:
+    post:
+      summary: Stock transfer between warehouses/locations within same franchise
+      tags: [Admin Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batch_ref, qty, from_location, to_location]
+              properties:
+                batch_ref: {type: string}
+                qty: {type: integer, minimum: 1}
+                from_location: {type: string}
+                to_location: {type: string}
+                reason: {type: string}
+      responses:
+        '200':
+          description: Stock transferred successfully.
+        '400':
+          description: Insufficient stock.
+        '404':
+          description: Batch not found.
 
   /admin/invoices:
     get:
@@ -3135,40 +3292,6 @@ paths:
         '200': {description: Role revoked.}
         '403': {description: Last privileged user protection or missing 
             permission.}
-
-
-
-  /admin/reports/{key}:
-    get:
-      summary: Stream analytical reports
-      tags: [Admin Reports]
-      security: [bearerAuth: []]
-      parameters:
-      - name: key
-        in: path
-        required: true
-        schema: {type: string, enum: [lead-source, response-time, conversion, 
-              sales-team-productivity, territory-sales, party-sales, 
-              product-sales, scheme-utilization, order-status, dispatch-pending, 
-              batch-inventory, near-expiry, territory-violations, 
-              webhook-failures, whatsapp-delivery]}
-      - $ref: '#/components/parameters/PageParam'
-      - $ref: '#/components/parameters/PerPageParam'
-      - $ref: '#/components/parameters/DateFromParam'
-      - $ref: '#/components/parameters/DateToParam'
-      - $ref: '#/components/parameters/SortByParam'
-      - $ref: '#/components/parameters/SortDirParam'
-      responses:
-        '200':
-          description: Paginated report data.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: {type: boolean, example: true}
-                  data: {type: object}
-                  meta: {type: object}
 
 
 
