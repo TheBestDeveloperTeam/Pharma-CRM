@@ -49,7 +49,7 @@ This document provides the unified, sprint-by-sprint execution plan for resolvin
 
 ## Sprint 4: Swagger / OpenAPI 3.0.3 Parity
 **Goal:** Finalize documentation.
-**Status**: 🔄 IN PROGRESS — see `docs/front-end/openapi.yaml`
+**Status**: ✅ DONE
 
 1. All 241 live registered routes (was 231, now +10 new Sprint 2 routes) must be reflected in OpenAPI.
 2. Request payloads and response envelopes match the backend source of truth.
