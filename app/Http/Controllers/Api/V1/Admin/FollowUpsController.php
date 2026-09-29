@@ -166,4 +166,91 @@ final class FollowUpsController
             'total_pages' => $res['total_pages'] ?? 1,
         ]);
     }
+
+    /** FUP-001: Show follow-up detail */
+    public function show(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'view');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+        if (!SalesFollowUpPolicy::canView($ctx, $fu)) throw new ForbiddenException('FORBIDDEN_FOLLOWUP', 'Forbidden.');
+        return Response::json(200, $fu);
+    }
+
+    /** FUP-002: Update follow-up details */
+    public function update(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'reschedule');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+        if (!SalesFollowUpPolicy::canUpdate($ctx, $fu)) throw new ForbiddenException('FORBIDDEN_FOLLOWUP', 'Forbidden.');
+
+        $data = $r->all();
+        $this->followups->update($ctx->franchiseRef, $ref, $data);
+        return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
+    }
+
+    /** FUP-005: Cancel follow-up */
+    public function cancel(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'complete');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+        if (!SalesFollowUpPolicy::canUpdate($ctx, $fu)) throw new ForbiddenException('FORBIDDEN_FOLLOWUP', 'Forbidden.');
+
+        $reason = $r->input('reason', 'Cancelled');
+        $this->followups->update($ctx->franchiseRef, $ref, ['status' => 'CLOSED', 'remark' => $reason]);
+        return Response::json(200, $this->followups->findByRef($ctx->franchiseRef, $ref));
+    }
+
+    /** FUP-003: Follow-up remarks */
+    public function remarks(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'view');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+
+        $remarks = [];
+        if (!empty($fu['remark'])) {
+            $remarks[] = [
+                'remark'     => $fu['remark'],
+                'created_at' => $fu['updated_at'] ?? $fu['created_at'],
+                'user_ref'   => $fu['assigned_user_ref'] ?? null,
+            ];
+        }
+        return Response::json(200, $remarks);
+    }
+
+    /** FUP-004: Add remark to follow-up */
+    public function addRemark(Request $r, ?string $ref = null): Response
+    {
+        $ref = $ref ?: (string)$r->param('ref');
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'followUps', 'complete');
+        $fu = $this->followups->findByRef($ctx->franchiseRef, $ref);
+        if (!$fu) throw new NotFoundException('FOLLOWUP_NOT_FOUND', 'Follow-up not found.');
+
+        $clean = Validation::validate($r->all(), ['remark' => 'required|string']);
+        $newRemark = trim(($fu['remark'] ? $fu['remark'] . "\n---\n" : '') . $clean['remark']);
+        $this->followups->update($ctx->franchiseRef, $ref, ['remark' => $newRemark]);
+
+        if (!empty($fu['lead_ref'])) {
+            $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+            $db->execute(
+                "INSERT INTO lead_activities (activity_ref, org_ref, franchise_ref, lead_ref, user_ref, activity_type, activity_note)
+                 VALUES (?, ?, ?, ?, ?, 'REMARK', ?)",
+                [\App\Core\RefGenerator::generate('ACT'), $ctx->orgRef, $ctx->franchiseRef, $fu['lead_ref'], $ctx->userRef, $clean['remark']]
+            );
+        }
+
+        return Response::json(201, ['remark' => $clean['remark']]);
+    }
 }

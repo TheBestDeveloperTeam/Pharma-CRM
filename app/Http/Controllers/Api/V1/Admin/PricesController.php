@@ -168,4 +168,81 @@ final class PricesController
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'price.status_changed', entityType: 'product_price', entityRef: $ref, before: $old, after: array_merge($old, ['status' => $clean['status']]));
         return Response::json(200, ['price_ref' => $ref, 'status' => $clean['status']]);
     }
+
+    public function update(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $this->authorization->requirePermission($ctx, 'pricing', 'edit');
+        $franchiseRef = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $old = $this->prices->findByRef($franchiseRef, $ref);
+        if (!$old) throw new NotFoundException('PRICE_NOT_FOUND', 'Pricing rate not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'mrp'            => 'nullable|numeric|min:0',
+            'pts'            => 'nullable|numeric|min:0',
+            'net_rate'       => 'nullable|numeric|min:0',
+            'priority'       => 'nullable|integer|min:1',
+            'effective_from' => 'nullable|date:Y-m-d',
+            'effective_to'   => 'nullable|date:Y-m-d',
+            'override_reason'=> 'nullable|string',
+        ]);
+
+        $updates = [];
+        if (isset($clean['net_rate'])) {
+            $updates['rate'] = (float)$clean['net_rate'];
+            $updates['net_rate'] = (float)$clean['net_rate'];
+        }
+        if (isset($clean['mrp'])) $updates['mrp'] = (float)$clean['mrp'];
+        if (isset($clean['pts'])) $updates['pts'] = (float)$clean['pts'];
+        if (isset($clean['priority'])) $updates['priority'] = (int)$clean['priority'];
+        if (isset($clean['effective_from'])) $updates['effective_from'] = $clean['effective_from'];
+        if (array_key_exists('effective_to', $clean)) $updates['effective_to'] = $clean['effective_to'] ?: null;
+        if (isset($clean['override_reason'])) $updates['override_reason'] = $clean['override_reason'];
+        $updates['updated_by_ref'] = $ctx->userRef;
+
+        $this->prices->update($franchiseRef, $ref, $updates);
+        $updated = $this->prices->findByRef($franchiseRef, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'price.updated', entityType: 'product_price', entityRef: $ref, before: $old, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function delete(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $this->authorization->requirePermission($ctx, 'pricing', 'edit');
+        $franchiseRef = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $old = $this->prices->findByRef($franchiseRef, $ref);
+        if (!$old) throw new NotFoundException('PRICE_NOT_FOUND', 'Pricing rate not found.');
+
+        $this->prices->update($franchiseRef, $ref, ['status' => 'INACTIVE', 'updated_by_ref' => $ctx->userRef]);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'price.deleted', entityType: 'product_price', entityRef: $ref, before: $old, after: ['status' => 'INACTIVE']);
+        return Response::json(200, ['price_ref' => $ref, 'status' => 'INACTIVE']);
+    }
+
+    public function history(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $this->authorization->requirePermission($ctx, 'pricing', 'view');
+        $franchiseRef = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $row = $this->prices->findByRef($franchiseRef, $ref);
+        if (!$row) throw new NotFoundException('PRICE_NOT_FOUND', 'Pricing rate not found.');
+
+        $stmt = $this->pdo->prepare(
+            "SELECT audit_ref, category, action, entity_type, entity_ref, actor_user_ref, reason, before_state, after_state, created_at
+             FROM audit_logs
+             WHERE franchise_ref = ? AND entity_type = 'product_price' AND entity_ref = ?
+             ORDER BY id DESC"
+        );
+        $stmt->execute([$franchiseRef, $ref]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as &$item) {
+            $item['before_state'] = json_decode($item['before_state'] ?? '{}', true);
+            $item['after_state'] = json_decode($item['after_state'] ?? '{}', true);
+        }
+        unset($item);
+        return Response::json(200, $rows);
+    }
 }

@@ -434,4 +434,29 @@ final class UsersController
         $user['scopes'] = $effective['scopes'];
         return $user;
     }
+
+    /** UTL-004 / USR-010: Lightweight user list for assignment dropdowns */
+    public function dropdown(Request $r): Response
+    {
+        $ctx = $this->getTenantContext();
+        $franchiseRef = $ctx->isSuper() ? $r->query('franchise_ref') : $ctx->requireFranchise();
+        $role = $r->query('role', '');
+
+        $sql = "SELECT user_ref, full_name, email, role, status FROM users WHERE status = 'ACTIVE'";
+        $params = [];
+        if ($franchiseRef) {
+            $sql .= " AND (franchise_ref = ? OR tenant_key = ?)";
+            $params[] = $franchiseRef;
+            $params[] = $franchiseRef;
+        }
+        if ($role !== '') {
+            $sql .= " AND role = ?";
+            $params[] = $role;
+        }
+        $sql .= " ORDER BY full_name ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
 }

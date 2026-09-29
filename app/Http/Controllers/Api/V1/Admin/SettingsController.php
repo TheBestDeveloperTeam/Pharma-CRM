@@ -152,4 +152,184 @@ final class SettingsController
         $transform = fn($c) => $c <= 0.04045 ? $c / 12.92 : pow(($c + 0.055) / 1.055, 2.4);
         return 0.2126 * $transform($r) + 0.7152 * $transform($g) + 0.0722 * $transform($b);
     }
+
+    // --- System Settings Helpers (SET-001 to SET-016) ---
+
+    private function getSystemSetting(string $key, array $defaults): array
+    {
+        /** @var TenantContext $ctx */
+        $ctx = Container::getInstance()->make(TenantContext::class);
+        $franchiseRef = $ctx->requireFranchise();
+
+        $stmt = $this->pdo->prepare("SELECT setting_value_json FROM system_settings WHERE franchise_ref = :f AND setting_key = :k LIMIT 1");
+        $stmt->execute([':f' => $franchiseRef, ':k' => $key]);
+        $val = $stmt->fetchColumn();
+
+        if ($val === false || $val === null) {
+            return $defaults;
+        }
+
+        $decoded = json_decode((string)$val, true);
+        return is_array($decoded) ? array_merge($defaults, $decoded) : $defaults;
+    }
+
+    private function saveSystemSetting(string $key, array $data, string $action): array
+    {
+        /** @var TenantContext $ctx */
+        $ctx = Container::getInstance()->make(TenantContext::class);
+        if (!$ctx->can('settings', 'edit')) {
+            throw new ForbiddenException('FORBIDDEN', 'Permission required: settings.edit');
+        }
+
+        $franchiseRef = $ctx->requireFranchise();
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES);
+
+        $stmt = $this->pdo->prepare("INSERT INTO system_settings (org_ref, franchise_ref, setting_key, setting_value_json) 
+            VALUES (:org, :f, :k, :val) 
+            ON DUPLICATE KEY UPDATE setting_value_json = VALUES(setting_value_json), updated_at = NOW()");
+        $stmt->execute([
+            ':org' => $ctx->orgRef,
+            ':f'   => $franchiseRef,
+            ':k'   => $key,
+            ':val' => $json,
+        ]);
+
+        $this->audit->log(
+            ctx: $ctx,
+            category: 'BUSINESS',
+            action: 'settings.' . $action,
+            entityType: 'setting',
+            entityRef: $key,
+            after: $data
+        );
+
+        return $data;
+    }
+
+    // SET-001 & SET-002: Near-expiry thresholds
+    public function getNearExpiryThresholds(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('near_expiry_thresholds', [
+            'days_threshold' => 180,
+            'levels'         => [180, 90, 60, 30],
+            'action'         => 'WARN',
+        ]));
+    }
+
+    public function updateNearExpiryThresholds(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('near_expiry_thresholds', $data, 'near_expiry_thresholds_updated'));
+    }
+
+    // SET-003 & SET-004: SLA configuration
+    public function getSla(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('sla_policy', [
+            'response_time_hours' => 4,
+            'escalation_hours'    => 8,
+            'auto_reassign'       => false,
+        ]));
+    }
+
+    public function updateSla(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('sla_policy', $data, 'sla_policy_updated'));
+    }
+
+    // SET-005 & SET-006: Territory policy
+    public function getTerritoryPolicy(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('territory_policy', [
+            'unassigned_pincode_action' => 'BLOCK',
+            'allow_override'            => true,
+            'require_approval'          => true,
+        ]));
+    }
+
+    public function updateTerritoryPolicy(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('territory_policy', $data, 'territory_policy_updated'));
+    }
+
+    // SET-007 & SET-008: Credit policy
+    public function getCreditPolicy(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('credit_policy', [
+            'mode'                 => 'HARD_BLOCK',
+            'grace_period_days'    => 7,
+            'max_overdue_invoices' => 3,
+        ]));
+    }
+
+    public function updateCreditPolicy(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('credit_policy', $data, 'credit_policy_updated'));
+    }
+
+    // SET-009 & SET-010: DCR config
+    public function getDcrConfig(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('dcr_config', [
+            'cutoff_time'         => '23:00',
+            'allow_backdate_days' => 1,
+            'require_gps'         => false,
+            'require_visits'      => true,
+        ]));
+    }
+
+    public function updateDcrConfig(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('dcr_config', $data, 'dcr_config_updated'));
+    }
+
+    // SET-011 & SET-012: Invite config
+    public function getInviteConfig(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('invite_config', [
+            'token_validity_days' => 7,
+            'required_documents'  => ['DRUG_LICENSE', 'GST_CERTIFICATE', 'PAN_CARD'],
+        ]));
+    }
+
+    public function updateInviteConfig(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('invite_config', $data, 'invite_config_updated'));
+    }
+
+    // SET-013 & SET-014: Scheme stacking
+    public function getSchemeStacking(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('scheme_stacking', [
+            'allow_stacking' => false,
+            'priority_order' => ['PRODUCT_SPECIFIC', 'CATEGORY_WIDE', 'GLOBAL'],
+        ]));
+    }
+
+    public function updateSchemeStacking(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('scheme_stacking', $data, 'scheme_stacking_updated'));
+    }
+
+    // SET-015 & SET-016: Min shelf-life
+    public function getMinShelfLife(Request $r): Response
+    {
+        return Response::json(200, $this->getSystemSetting('min_shelf_life', [
+            'min_shelf_life_months'  => 6,
+            'min_shelf_life_percent' => 60,
+            'enforce_at_dispatch'    => true,
+        ]));
+    }
+
+    public function updateMinShelfLife(Request $r): Response
+    {
+        $data = $r->all();
+        return Response::json(200, $this->saveSystemSetting('min_shelf_life', $data, 'min_shelf_life_updated'));
+    }
 }

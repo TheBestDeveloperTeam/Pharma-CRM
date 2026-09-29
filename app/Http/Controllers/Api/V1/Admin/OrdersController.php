@@ -258,4 +258,187 @@ final class OrdersController
         $territory = $this->parties->findTerritoryRefs($ctx->requireFranchise(), (string)$order['party_ref'])[0] ?? null;
         $this->authorization->requireRecordScope($ctx, 'orders', $order['sales_user_ref'] ?? null, $territory, $ctx->franchiseRef);
     }
+
+    /** ORD-001: Order items detail */
+    public function items(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+        return Response::json(200, $this->orderRepo->getItems($f, $ref));
+    }
+
+    /** ORD-002: Order status change history */
+    public function timeline(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+        return Response::json(200, $this->orderRepo->getHistory($f, $ref));
+    }
+
+    /** ORD-003: Invoices linked to order */
+    public function invoices(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+
+        $stmt = $this->db->prepare("SELECT * FROM invoices WHERE franchise_ref = ? AND order_ref = ? ORDER BY id DESC");
+        $stmt->execute([$f, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-004: Dispatches linked to order */
+    public function dispatches(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+
+        $stmt = $this->db->prepare(
+            "SELECT d.* FROM dispatches d
+             JOIN invoices i ON i.invoice_ref = d.invoice_ref
+             WHERE d.franchise_ref = ? AND i.order_ref = ?
+             ORDER BY d.id DESC"
+        );
+        $stmt->execute([$f, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-005: Payments linked to order */
+    public function payments(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+
+        $stmt = $this->db->prepare(
+            "SELECT p.*, pa.allocated_amount
+             FROM payment_allocations pa
+             JOIN payments p ON p.payment_ref = pa.payment_ref
+             JOIN invoices i ON i.invoice_ref = pa.invoice_ref
+             WHERE p.franchise_ref = ? AND i.order_ref = ?
+             ORDER BY p.id DESC"
+        );
+        $stmt->execute([$f, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-006: Stock reservations for order */
+    public function reservations(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+
+        $stmt = $this->db->prepare(
+            "SELECT r.*, b.batch_number, b.expiry_date, p.product_name, p.sku
+             FROM stock_reservations r
+             JOIN inventory_batches b ON b.batch_ref = r.batch_ref
+             JOIN products p ON p.product_ref = r.product_ref
+             WHERE r.franchise_ref = ? AND r.order_ref = ?
+             ORDER BY r.id ASC"
+        );
+        $stmt->execute([$f, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-013: Reopen cancelled order */
+    public function reopen(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'confirm');
+        $ref = (string)$r->param('ref');
+        $order = $this->orderRepo->findByRef($f, $ref);
+        if (!$order) throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found.');
+        $this->checkScope($ctx, $order);
+
+        if ($order['status'] !== 'CANCELLED') {
+            throw new ValidationException('ORDER_NOT_CANCELLED', 'Only cancelled orders can be reopened.');
+        }
+
+        $reason = $r->input('reason', 'Order reopened');
+        $this->orderRepo->updateStatus($f, $ref, 'DRAFT', $ctx->userRef, $reason);
+        return Response::json(200, $this->orderRepo->findByRef($f, $ref));
+    }
+
+    /** ORD-011: Orders pending dispatch */
+    public function pendingDispatch(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+
+        $sql = "SELECT o.*, p.firm_name as party_name, i.invoice_ref, i.invoice_no
+                FROM orders o
+                JOIN parties p ON p.party_ref = o.party_ref
+                JOIN invoices i ON i.order_ref = o.order_ref AND i.status = 'POSTED'
+                LEFT JOIN dispatches d ON d.invoice_ref = i.invoice_ref
+                WHERE o.franchise_ref = ? AND (d.id IS NULL OR d.status = 'PENDING')
+                ORDER BY o.id DESC LIMIT 50";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$f]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-012: Orders pending billing */
+    public function pendingBilling(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+
+        $sql = "SELECT o.*, p.firm_name as party_name
+                FROM orders o
+                JOIN parties p ON p.party_ref = o.party_ref
+                LEFT JOIN invoices i ON i.order_ref = o.order_ref
+                WHERE o.franchise_ref = ? AND o.status = 'CONFIRMED' AND i.id IS NULL
+                ORDER BY o.id DESC LIMIT 50";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$f]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** ORD-009: Blocked orders */
+    public function blocked(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'orders', 'view');
+
+        $sql = "SELECT o.*, p.firm_name as party_name
+                FROM orders o
+                JOIN parties p ON p.party_ref = o.party_ref
+                WHERE o.franchise_ref = ? AND o.status IN ('ON_HOLD', 'BLOCKED')
+                ORDER BY o.id DESC LIMIT 50";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$f]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
 }

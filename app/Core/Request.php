@@ -94,6 +94,27 @@ final class Request
         return new self($method, $path, $query, $rawBody, $headers, $ip);
     }
 
+    /**
+     * Create a request programmatically (for testing and internal dispatch).
+     */
+    public static function create(
+        string $method = 'GET',
+        string $path = '/',
+        array  $query = [],
+        string $rawBody = '',
+        array  $headers = [],
+        string $clientIp = '127.0.0.1'
+    ): self {
+        if (str_contains($path, '?')) {
+            [$path, $qs] = explode('?', $path, 2);
+            parse_str($qs, $parsedQuery);
+            $query = array_merge($parsedQuery, $query);
+        }
+        $path = rtrim($path, '/') ?: '/';
+        $path = (string)preg_replace('#/+#', '/', $path);
+        return new self(strtoupper($method), $path, $query, $rawBody, $headers, $clientIp);
+    }
+
     // ── Accessors ──────────────────────────────────────────────────────────
 
     /** Get URL route parameter (e.g. {ref}). */

@@ -104,6 +104,97 @@ final class PartiesController
         $this->authorization->requireRecordScope($ctx, 'parties', $party['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); return Response::json(200, $this->creditService->check($f, $ref, (float)$r->query('proposed_exposure', 0)));
     }
 
+    /** UTL-002: Lightweight party list for order form autocomplete */
+    public function dropdown(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'view');
+
+        $stmt = $this->pdo->prepare(
+            "SELECT party_ref, party_name, party_code, firm_name, city_ref, state_ref, status, credit_limit
+             FROM parties
+             WHERE franchise_ref = ? AND status = 'ACTIVE'
+             ORDER BY party_name ASC"
+        );
+        $stmt->execute([$franchiseRef]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** PTY-009: List orders for party */
+    public function orders(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'view');
+        $ref = (string)$r->param('ref');
+
+        $orderRepo = Container::getInstance()->make(\App\Repositories\Contracts\OrderRepositoryInterface::class);
+        $res = $orderRepo->list($franchiseRef, ['party_ref' => $ref], (int)$r->query('page', 1), (int)$r->query('per_page', 25));
+        return Response::json(200, $res['data'] ?? [], $res['meta'] ?? []);
+    }
+
+    /** PTY-010: List invoices for party */
+    public function invoices(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'view');
+        $ref = (string)$r->param('ref');
+
+        $stmt = $this->pdo->prepare("SELECT * FROM invoices WHERE franchise_ref = ? AND party_ref = ? ORDER BY id DESC LIMIT 50");
+        $stmt->execute([$franchiseRef, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** PTY-011: List payments for party */
+    public function payments(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'view');
+        $ref = (string)$r->param('ref');
+
+        $stmt = $this->pdo->prepare("SELECT * FROM payments WHERE franchise_ref = ? AND party_ref = ? ORDER BY id DESC LIMIT 50");
+        $stmt->execute([$franchiseRef, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    /** PTY-013: Update party credit limit */
+    public function updateCreditLimit(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'edit');
+        $ref = (string)$r->param('ref');
+        $clean = Validation::validate($r->all(), ['credit_limit' => 'required|numeric|min:0']);
+
+        $this->parties->update($franchiseRef, $ref, ['credit_limit' => $clean['credit_limit']]);
+        return Response::json(200, ['party_ref' => $ref, 'credit_limit' => $clean['credit_limit']]);
+    }
+
+    /** PTY-014: Suspend party */
+    public function suspend(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate');
+        $ref = (string)$r->param('ref');
+        $this->parties->setStatus($franchiseRef, $ref, 'INACTIVE');
+        return Response::json(200, ['party_ref' => $ref, 'status' => 'INACTIVE']);
+    }
+
+    /** PTY-015: Activate party */
+    public function activate(Request $r): Response
+    {
+        $ctx = $this->ctx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate');
+        $ref = (string)$r->param('ref');
+        $this->parties->setStatus($franchiseRef, $ref, 'ACTIVE');
+        return Response::json(200, ['party_ref' => $ref, 'status' => 'ACTIVE']);
+    }
+
     private function validateParty(Request $r, bool $create, TenantContext $ctx): array
     {
         $payload = $r->all();

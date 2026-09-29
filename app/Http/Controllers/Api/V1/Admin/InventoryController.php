@@ -181,4 +181,137 @@ final class InventoryController
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.transferred', entityType: 'inventory_batch', entityRef: $clean['batch_ref']);
         return Response::json(200, ['batch_ref' => $clean['batch_ref'], 'qty' => $clean['qty'], 'from' => $clean['from_location'], 'to' => $clean['to_location'], 'status' => 'TRANSFERRED']);
     }
+
+    public function stockSummary(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'view');
+        $f = $ctx->requireFranchise();
+
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $sql = "SELECT p.product_ref, p.product_name, p.sku,
+                       COALESCE(SUM(b.on_hand_qty), 0) as total_on_hand,
+                       COALESCE(SUM(b.reserved_qty), 0) as total_reserved,
+                       COALESCE(SUM(b.on_hand_qty - b.reserved_qty), 0) as total_available,
+                       COALESCE(SUM(b.damaged_qty), 0) as total_damaged,
+                       COUNT(b.id) as batch_count
+                FROM products p
+                LEFT JOIN inventory_batches b ON b.franchise_ref = p.franchise_ref AND b.product_ref = p.product_ref AND b.status = 'SALEABLE'
+                WHERE p.franchise_ref = ?
+                GROUP BY p.product_ref, p.product_name, p.sku
+                ORDER BY p.product_name ASC";
+        $rows = $db->fetchAll($sql, [$f]);
+        return Response::json(200, $rows);
+    }
+
+    public function quarantine(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust');
+        $f = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $batch = $this->batchRepo->findByRef($f, $ref);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Inventory batch not found.');
+
+        $reason = (string)$r->input('reason', 'Batch moved to quarantine');
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $db->update('inventory_batches', ['status' => 'QUARANTINE'], 'franchise_ref = ? AND batch_ref = ?', [$f, $ref]);
+
+        $after = $this->batchRepo->findByRef($f, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.quarantined', entityType: 'inventory_batch', entityRef: $ref, before: $batch, after: $after, reason: $reason);
+        return Response::json(200, $after);
+    }
+
+    public function unquarantine(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust');
+        $f = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $batch = $this->batchRepo->findByRef($f, $ref);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Inventory batch not found.');
+
+        $reason = (string)$r->input('reason', 'Batch released from quarantine to saleable');
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $db->update('inventory_batches', ['status' => 'SALEABLE'], 'franchise_ref = ? AND batch_ref = ?', [$f, $ref]);
+
+        $after = $this->batchRepo->findByRef($f, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.unquarantined', entityType: 'inventory_batch', entityRef: $ref, before: $batch, after: $after, reason: $reason);
+        return Response::json(200, $after);
+    }
+
+    public function damage(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust');
+        $f = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $batch = $this->batchRepo->findByRef($f, $ref);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Inventory batch not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'qty'    => 'required|integer|min:1',
+            'reason' => 'required|string|min:2',
+        ]);
+
+        $qty = (int)$clean['qty'];
+        $available = (int)$batch['on_hand_qty'] - (int)$batch['reserved_qty'];
+        if ($qty > $available) {
+            throw new \App\Core\Exceptions\ValidationException('INSUFFICIENT_STOCK', 'Damaged quantity exceeds available stock.');
+        }
+
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $db->transaction(function() use ($db, $ctx, $f, $ref, $qty, $clean) {
+            $db->prepare(
+                "UPDATE inventory_batches
+                 SET on_hand_qty = on_hand_qty - ?, damaged_qty = damaged_qty + ?, updated_at = NOW()
+                 WHERE franchise_ref = ? AND batch_ref = ?"
+            )->execute([$qty, $qty, $f, $ref]);
+
+            $this->movementRepo->record([
+                'movement_ref'   => \App\Core\RefGenerator::generate('mov'),
+                'org_ref'        => $ctx->orgRef,
+                'franchise_ref'  => $f,
+                'batch_ref'      => $ref,
+                'movement_type'  => 'DAMAGE',
+                'qty'            => $qty,
+                'reference_type' => 'MANUAL_DAMAGE',
+                'reference_ref'  => null,
+                'remarks'        => $clean['reason'],
+                'created_by_ref' => $ctx->userRef,
+            ]);
+        });
+
+        $after = $this->batchRepo->findByRef($f, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.damaged', entityType: 'inventory_batch', entityRef: $ref, before: $batch, after: $after, reason: $clean['reason']);
+        return Response::json(200, $after);
+    }
+
+    public function batchMovements(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'view');
+        $f = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $batch = $this->batchRepo->findByRef($f, $ref);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Inventory batch not found.');
+
+        return Response::json(200, $this->movementRepo->listByBatch($f, $ref));
+    }
+
+    public function expired(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'view');
+        $f = $ctx->requireFranchise();
+
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $today = date('Y-m-d');
+        $sql = "SELECT b.*, p.product_name, p.sku
+                FROM inventory_batches b
+                JOIN products p ON p.franchise_ref = b.franchise_ref AND p.product_ref = b.product_ref
+                WHERE b.franchise_ref = ? AND b.expiry_date < ? AND b.on_hand_qty > 0
+                ORDER BY b.expiry_date ASC";
+        return Response::json(200, $db->fetchAll($sql, [$f, $today]));
+    }
 }
