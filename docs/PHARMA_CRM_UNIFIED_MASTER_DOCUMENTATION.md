@@ -707,3 +707,40 @@ See FRS §43 and §47 for full decision list with defaults.
 ---
 
 *End of Pharma CRM Unified Master Documentation v3.0*
+
+
+---
+
+## 34. Sprint-Wise Tasks & Open Issues List (Frontend vs Backend)
+
+### 34.1 Backend Pending API & DB Tasks
+
+#### P0 (Critical Blockers)
+- **BE-034**: Single-record endpoints for Leads & Follow-ups return 500 INTERNAL_ERROR due to CrmScopePolicy/AuthorizationService failure.
+- **BE-034b**: POST /admin/parties returns 500 INTERNAL_ERROR on creation.
+- **BE-190**: POST /admin/inventory/receive & djust return 500 (adjust silently commits data corrupting state).
+- **BE-102**: Duplicate FEFO reservation consumption in DispatchService::create and deliver.
+- **BE-170 / BE-171**: Portal DCR grants/reachability and field customers missing.
+- **BE-070 / BE-090 / BE-091**: Fulfilment path blocked, invoice GST state fallback unverified, free goods billing unverified.
+- **Security (S-1, S-2, S-4, S-5)**: Fixed in code (e.g. legacy FRANCHISE_ADMIN privilege escalation) but UNVERIFIED in live environment.
+
+#### P1 / P2 (Features & Enhancements)
+- **BE-062**: GET /admin/schemes missing ules array in list view.
+- **Missing API Routes**: Batch edit/transfer (BE-081/082), movement ledger (BE-080), territory override (BE-050), follow-up history/missed (BE-040/041), leads archive/restore (BE-032).
+- **Format Mismatches**: Pagination outlier on leads/follow-ups (BE-003).
+- **Database Scripts**: Migrations 002-011 lost IF NOT EXISTS, cannot be cleanly re-applied without migrations table.
+
+### 34.2 Frontend Pending Tasks
+
+#### P1 (Integrations & Adapters)
+- **Data Adapters**: Complete bidirectional mapping for order status (Billed, Packed), payment modes, PDC, scheme headers vs flat schemes.
+- **Live API Switches**: Remove client-side business calculations (GST split, outstanding buckets) as backend equivalents go live.
+- **Module Wiring**: Switch remaining reference-data hooks from mock to live as Masters APIs stabilize.
+
+#### P2 (UX & Cleanup)
+- **Responsive Pass**: 375px mobile responsiveness review for all screens.
+- **Mock Data Cleanup**: Handle hybrid-phase data mismatches gracefully (e.g., live users missing in mock data until fully synced).
+
+---
+
+*Document officially consolidated and unified.*
