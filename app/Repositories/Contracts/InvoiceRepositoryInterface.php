@@ -11,4 +11,5 @@ interface InvoiceRepositoryInterface
     public function create(array $invoiceData, array $items): string;
     public function updatePaidTotal(string $franchiseRef, string $invoiceRef, float $paidTotal): bool;
     public function cancelPosted(string $franchiseRef, string $invoiceRef, string $actorRef, string $reason): bool;
+    public function getItems(string $franchiseRef, string $invoiceRef): array;
 }

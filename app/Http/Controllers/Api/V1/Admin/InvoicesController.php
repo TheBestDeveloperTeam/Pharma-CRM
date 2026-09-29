@@ -63,6 +63,61 @@ final class InvoicesController
         return Response::json(200, $result);
     }
 
+    public function items(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'billing', 'view');
+        $ref = (string)$r->param('ref');
+        $invoice = $this->invoices->findByRef($f, $ref);
+        if (!$invoice || !$this->canRead($ctx, $invoice)) throw new NotFoundException('INVOICE_NOT_FOUND', 'Invoice not found.');
+        return Response::json(200, $this->invoices->getItems($f, $ref));
+    }
+
+    public function payments(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'billing', 'view');
+        $ref = (string)$r->param('ref');
+        $invoice = $this->invoices->findByRef($f, $ref);
+        if (!$invoice || !$this->canRead($ctx, $invoice)) throw new NotFoundException('INVOICE_NOT_FOUND', 'Invoice not found.');
+
+        $pdo = \App\Core\Container::getInstance()->make(\PDO::class);
+        $stmt = $pdo->prepare(
+            "SELECT pa.allocation_ref, pa.payment_ref, pa.invoice_ref, pa.amount, pa.created_at,
+                    p.payment_no, p.payment_date, p.payment_mode, p.reference_number, p.status as payment_status
+             FROM payment_allocations pa
+             JOIN payments p ON p.franchise_ref = pa.franchise_ref AND p.payment_ref = pa.payment_ref
+             WHERE pa.franchise_ref = ? AND pa.invoice_ref = ?
+             ORDER BY pa.id ASC"
+        );
+        $stmt->execute([$f, $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function dispatch(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'billing', 'view');
+        $ref = (string)$r->param('ref');
+        $invoice = $this->invoices->findByRef($f, $ref);
+        if (!$invoice || !$this->canRead($ctx, $invoice)) throw new NotFoundException('INVOICE_NOT_FOUND', 'Invoice not found.');
+
+        $pdo = \App\Core\Container::getInstance()->make(\PDO::class);
+        $stmt = $pdo->prepare(
+            "SELECT d.*, t.transporter_name
+             FROM dispatches d
+             LEFT JOIN transporters t ON t.franchise_ref = d.franchise_ref AND t.transporter_ref = d.transporter_ref
+             WHERE d.franchise_ref = ? AND d.invoice_ref = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$f, $ref]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return Response::json(200, $row ?: null);
+    }
+
     private function canRead(TenantContext $ctx, array $invoice): bool
     {
         if ($ctx->isPartyBound() && ($invoice['party_ref'] ?? null) !== $ctx->partyRef) return false;

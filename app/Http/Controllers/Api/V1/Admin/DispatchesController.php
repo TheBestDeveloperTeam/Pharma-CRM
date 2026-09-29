@@ -46,6 +46,125 @@ final class DispatchesController
         $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.delivered', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $result, reason: $r->input('delivery_remarks')); return Response::json(200, $result);
     }
 
+    public function pending(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'view');
+        $rows = $this->dispatches->listPending($ctx->requireFranchise());
+        return Response::json(200, $rows);
+    }
+
+    public function update(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'edit');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'transporter_ref' => 'nullable|string',
+            'lr_number'       => 'nullable|string',
+            'tracking_url'    => 'nullable|string',
+            'boxes'           => 'nullable|integer|min:1',
+            'remarks'         => 'nullable|string',
+            'dispatch_date'   => 'nullable|date:Y-m-d',
+        ]);
+
+        $this->dispatches->updateFields($ctx->requireFranchise(), $ref, array_filter($clean, fn($v) => $v !== null));
+        $updated = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.updated', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function packed(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'create');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        $remarks = (string)$r->input('remarks', 'Consignment packed and ready for dispatch');
+        $this->dispatches->updateStatus($ctx->requireFranchise(), $ref, 'READY', $ctx->userRef, $remarks);
+        $updated = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.packed', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function ship(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'create');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'lr_number'       => 'nullable|string',
+            'transporter_ref' => 'nullable|string',
+            'tracking_url'    => 'nullable|string',
+            'remarks'         => 'nullable|string',
+        ]);
+
+        if (!empty($clean)) {
+            $this->dispatches->updateFields($ctx->requireFranchise(), $ref, array_filter($clean, fn($v) => $v !== null));
+        }
+
+        $remarks = (string)($clean['remarks'] ?? 'Consignment shipped');
+        $this->dispatches->updateStatus($ctx->requireFranchise(), $ref, 'DISPATCHED', $ctx->userRef, $remarks);
+        $updated = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.shipped', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function inTransit(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'updateTracking');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        $remarks = (string)$r->input('remarks', 'Consignment in transit');
+        $this->dispatches->updateStatus($ctx->requireFranchise(), $ref, 'IN_TRANSIT', $ctx->userRef, $remarks);
+        $updated = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.in_transit', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function updateLr(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'updateTracking');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'lr_number'       => 'required|string|min:1',
+            'transporter_ref' => 'nullable|string',
+            'tracking_url'    => 'nullable|string',
+            'boxes'           => 'nullable|integer|min:1',
+        ]);
+
+        $this->dispatches->updateFields($ctx->requireFranchise(), $ref, array_filter($clean, fn($v) => $v !== null));
+        $updated = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        $this->audit->log(ctx: $ctx, category: 'DISPATCH', action: 'dispatch.lr_updated', entityType: 'dispatch', entityRef: $ref, before: $dispatch, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function timeline(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'dispatch', 'view');
+        $ref = (string)$r->param('ref');
+        $dispatch = $this->dispatches->findByRef($ctx->requireFranchise(), $ref);
+        if (!$dispatch || !$this->visible($ctx, $dispatch)) throw new NotFoundException('DISPATCH_NOT_FOUND', 'Dispatch not found.');
+
+        return Response::json(200, $this->dispatches->history($ctx->requireFranchise(), $ref));
+    }
+
     private function visible(TenantContext $ctx, array $dispatch): bool
     {
         if ($ctx->isPartyBound() && ($dispatch['party_ref'] ?? null) !== $ctx->partyRef) return false;

@@ -258,6 +258,71 @@ final class AuthorizationController
         return Response::json(200, ['user_ref' => $userRef, 'role_ref' => $roleRef, 'revoked' => true]);
     }
 
+    public function activate(Request $r): Response
+    {
+        $ctx = $this->context('rolesAndPermissions', 'edit');
+        $roleRef = (string)$r->param('ref');
+        $role = $this->findRole($ctx, $roleRef);
+        if ((int)$role['is_system'] === 1) throw new ForbiddenException('SYSTEM_ROLE_PROTECTED', 'System role status cannot be modified.');
+
+        $this->pdo->prepare("UPDATE auth_roles SET status = 'ACTIVE', updated_at = NOW() WHERE role_ref = ?")->execute([$roleRef]);
+        $this->audit->log($ctx, 'SECURITY', 'role.activated', 'role', $roleRef, ['status' => $role['status']], ['status' => 'ACTIVE']);
+        return Response::json(200, $this->rolePayload($ctx, $roleRef));
+    }
+
+    public function deactivate(Request $r): Response
+    {
+        $ctx = $this->context('rolesAndPermissions', 'edit');
+        $roleRef = (string)$r->param('ref');
+        $role = $this->findRole($ctx, $roleRef);
+        $this->assertMutableRole($ctx, $role);
+        $this->assertNotLastPrivilegedRole($roleRef, $ctx);
+
+        $this->pdo->prepare("UPDATE auth_roles SET status = 'INACTIVE', updated_at = NOW() WHERE role_ref = ?")->execute([$roleRef]);
+        $this->audit->log($ctx, 'SECURITY', 'role.deactivated', 'role', $roleRef, ['status' => $role['status']], ['status' => 'INACTIVE']);
+        return Response::json(200, $this->rolePayload($ctx, $roleRef));
+    }
+
+    public function roleUsers(Request $r): Response
+    {
+        $ctx = $this->context('rolesAndPermissions', 'view');
+        $roleRef = (string)$r->param('ref');
+        $this->findRole($ctx, $roleRef);
+
+        $sql = "SELECT u.user_ref, u.name, u.email, u.mobile, u.status, ur.created_at as assigned_at
+                FROM auth_user_roles ur
+                JOIN users u ON u.user_ref = ur.user_ref
+                WHERE ur.role_ref = :r AND u.org_ref = :o";
+        $params = [':r' => $roleRef, ':o' => $ctx->orgRef];
+        if (!$ctx->isSuper()) {
+            $sql .= " AND u.franchise_ref = :f";
+            $params[':f'] = $ctx->requireFranchise();
+        }
+        $sql .= " ORDER BY u.name ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function matrix(Request $r): Response
+    {
+        $ctx = $this->context('rolesAndPermissions', 'view');
+        $catStmt = $this->pdo->query(
+            "SELECT module_key, action_key, label, is_sensitive
+             FROM auth_permission_catalogue ORDER BY module_key, action_key"
+        );
+        $catalogue = $catStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $rolesResponse = $this->roles($r);
+        $roles = $rolesResponse->getData();
+
+        return Response::json(200, [
+            'catalogue' => $catalogue,
+            'roles'     => $roles,
+        ]);
+    }
+
     private function findRole(TenantContext $ctx, string $roleRef): array
     {
         $sql = "SELECT * FROM auth_roles WHERE role_ref = :r AND org_ref = :o";

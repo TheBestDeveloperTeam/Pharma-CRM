@@ -117,4 +117,77 @@ final class PaymentsController
         $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.reversed', entityType: 'payment', entityRef: $paymentRef, before: $payment, after: $result, reason: $data['reason']);
         return Response::json(201, $result);
     }
+
+    public function allocations(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'view');
+        $ref = (string)$r->param('ref');
+        $scopeParams = [];
+        $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+        $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $ref, $scopeSql, $scopeParams);
+        if (!$payment) throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
+
+        $pdo = \App\Core\Container::getInstance()->make(\PDO::class);
+        $stmt = $pdo->prepare(
+            "SELECT pa.*, i.invoice_no, i.invoice_date, i.grand_total, i.paid_total
+             FROM payment_allocations pa
+             JOIN invoices i ON i.franchise_ref = pa.franchise_ref AND i.invoice_ref = pa.invoice_ref
+             WHERE pa.franchise_ref = ? AND pa.payment_ref = ?
+             ORDER BY pa.id ASC"
+        );
+        $stmt->execute([$ctx->requireFranchise(), $ref]);
+        return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function update(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'create');
+        $ref = (string)$r->param('ref');
+        $scopeParams = [];
+        $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+        $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $ref, $scopeSql, $scopeParams);
+        if (!$payment) throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
+
+        $clean = Validation::validate($r->all(), [
+            'reference_no' => 'nullable|string',
+            'remarks'      => 'nullable|string',
+        ]);
+
+        $pdo = \App\Core\Container::getInstance()->make(\PDO::class);
+        $pdo->prepare(
+            "UPDATE payments SET reference_number = COALESCE(?, reference_number), remarks = COALESCE(?, remarks), updated_at = NOW() WHERE franchise_ref = ? AND payment_ref = ?"
+        )->execute([$clean['reference_no'] ?? null, $clean['remarks'] ?? null, $ctx->requireFranchise(), $ref]);
+
+        $updated = $this->paymentRepo->findByRef($ctx->requireFranchise(), $ref, $scopeSql, $scopeParams);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'payment.updated', entityType: 'payment', entityRef: $ref, before: $payment, after: $updated);
+        return Response::json(200, $updated);
+    }
+
+    public function receipt(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'payments', 'view');
+        $ref = (string)$r->param('ref');
+        $scopeParams = [];
+        $scopeSql = $this->scope->clause($ctx, 'pt', $scopeParams, 'payments');
+        $payment = $this->paymentRepo->findByRef($ctx->requireFranchise(), $ref, $scopeSql, $scopeParams);
+        if (!$payment) throw new NotFoundException('PAYMENT_NOT_FOUND', 'Payment not found.');
+
+        $pdo = \App\Core\Container::getInstance()->make(\PDO::class);
+        $stmt = $pdo->prepare(
+            "SELECT pa.*, i.invoice_no, i.invoice_date, i.grand_total
+             FROM payment_allocations pa
+             JOIN invoices i ON i.franchise_ref = pa.franchise_ref AND i.invoice_ref = pa.invoice_ref
+             WHERE pa.franchise_ref = ? AND pa.payment_ref = ?"
+        );
+        $stmt->execute([$ctx->requireFranchise(), $ref]);
+        $payment['allocations'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return Response::json(200, [
+            'receipt'   => $payment,
+            'issued_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
 }

@@ -128,4 +128,51 @@ final class SqlDispatchRepository implements DispatchRepositoryInterface
     {
         return $this->db->fetchAll('SELECT * FROM dispatch_status_history WHERE franchise_ref = ? AND dispatch_ref = ? ORDER BY created_at ASC, id ASC', [$franchiseRef, $dispatchRef]);
     }
+
+    public function updateFields(string $franchiseRef, string $dispatchRef, array $fields): bool
+    {
+        $allowed = ['transporter_ref', 'lr_number', 'tracking_url', 'dispatch_date', 'boxes', 'remarks'];
+        $sets = [];
+        $params = [':f' => $franchiseRef, ':r' => $dispatchRef];
+        foreach ($fields as $k => $v) {
+            if (in_array($k, $allowed, true)) {
+                $sets[] = "`{$k}` = :{$k}";
+                $params[":{$k}"] = $v;
+            }
+        }
+        if (empty($sets)) return false;
+        $sets[] = "`updated_at` = NOW()";
+        $sql = "UPDATE dispatches SET " . implode(', ', $sets) . " WHERE franchise_ref = :f AND dispatch_ref = :r";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return true;
+    }
+
+    public function updateStatus(string $franchiseRef, string $dispatchRef, string $status, ?string $actorRef = null, ?string $remarks = null): bool
+    {
+        $dispatch = $this->findByRef($franchiseRef, $dispatchRef);
+        if (!$dispatch) return false;
+        $fromStatus = $dispatch['status'];
+        $sql = "UPDATE dispatches SET status = :s, updated_at = NOW() WHERE franchise_ref = :f AND dispatch_ref = :r";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':s' => $status, ':f' => $franchiseRef, ':r' => $dispatchRef]);
+        $this->db->prepare(
+            "INSERT INTO dispatch_status_history (org_ref, franchise_ref, dispatch_ref, from_status, to_status, actor_ref, reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([$dispatch['org_ref'], $franchiseRef, $dispatchRef, $fromStatus, $status, $actorRef, $remarks]);
+        return true;
+    }
+
+    public function listPending(string $franchiseRef): array
+    {
+        $sql = "SELECT i.invoice_ref, i.invoice_no, i.order_ref, i.party_ref, p.firm_name as party_name,
+                       i.invoice_date, i.grand_total, o.order_no, d.dispatch_ref, d.status as dispatch_status
+                FROM invoices i
+                JOIN parties p ON p.franchise_ref = i.franchise_ref AND p.party_ref = i.party_ref
+                JOIN orders o ON o.franchise_ref = i.franchise_ref AND o.order_ref = i.order_ref
+                LEFT JOIN dispatches d ON d.franchise_ref = i.franchise_ref AND d.invoice_ref = i.invoice_ref
+                WHERE i.franchise_ref = ? AND i.status = 'POSTED' AND (d.id IS NULL OR d.status IN ('PENDING', 'PACKING', 'READY'))
+                ORDER BY i.id DESC LIMIT 50";
+        return $this->db->fetchAll($sql, [$franchiseRef]);
+    }
 }

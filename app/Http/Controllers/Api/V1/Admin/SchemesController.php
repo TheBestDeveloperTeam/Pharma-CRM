@@ -189,29 +189,108 @@ final class SchemesController
         return Response::json(200, ['scheme_ref' => $ref, 'status' => $status]);
     }
 
-    public function calculate(Request $r): Response
+    public function delete(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'schemes', 'deactivate');
+        $ref = (string)$r->param('ref');
+        $before = $this->schemes->findByRef($franchiseRef, $ref);
+        if (!$before) throw new NotFoundException('SCHEME_NOT_FOUND', "Scheme {$ref} not found.");
+        $this->schemes->updateScheme($franchiseRef, $ref, ['status' => 'INACTIVE', 'updated_by_ref' => $ctx->userRef]);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'scheme.deleted', entityType: 'scheme', entityRef: $ref, before: $before, after: ['status' => 'INACTIVE']);
+        return Response::json(200, ['scheme_ref' => $ref, 'status' => 'INACTIVE']);
+    }
+
+    public function active(Request $r): Response
     {
         $ctx = $this->getCtx();
         $franchiseRef = $ctx->requireFranchise();
         $this->authorization->requirePermission($ctx, 'schemes', 'view');
+        $today = date('Y-m-d');
+        $tierRef = (string)$r->query('tier_ref', '');
 
-        $clean = Validation::validate($r->all(), [
-            'product_ref' => 'required|string',
-            'ordered_qty' => 'required|int|min:1',
-        ]);
+        $pdo = Container::getInstance()->make(\PDO::class);
+        $sql = "SELECT * FROM schemes WHERE franchise_ref = ? AND status = 'ACTIVE' AND start_date <= ? AND end_date >= ?";
+        $params = [$franchiseRef, $today, $today];
+        if ($tierRef !== '') {
+            $sql .= " AND (tier_ref IS NULL OR tier_ref = ?)";
+            $params[] = $tierRef;
+        }
+        $sql .= " ORDER BY priority ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $schemes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $tierRef = $r->input('tier_ref');
-        $date = (string)$r->input('date', date('Y-m-d'));
+        foreach ($schemes as &$scheme) {
+            $scheme['rules'] = $this->schemes->findRules($franchiseRef, $scheme['scheme_ref']);
+        }
+        unset($scheme);
 
-        $result = $this->calculator->calculate(
-            $franchiseRef,
-            $tierRef ? (string)$tierRef : null,
-            (string)$clean['product_ref'],
-            (int)$clean['ordered_qty'],
-            $date
+        return Response::json(200, $schemes);
+    }
+
+    public function cloneScheme(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $franchiseRef = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'schemes', 'create');
+        $ref = (string)$r->param('ref');
+
+        $source = $this->schemes->findByRef($franchiseRef, $ref);
+        if (!$source) throw new NotFoundException('SCHEME_NOT_FOUND', "Scheme {$ref} not found.");
+        $existingRules = $this->schemes->findRules($franchiseRef, $ref);
+
+        $newName = (string)$r->input('scheme_name', $source['scheme_name'] . ' (Copy)');
+        $newStartDate = (string)$r->input('start_date', date('Y-m-d'));
+        $newEndDate = (string)$r->input('end_date', date('Y-m-d', strtotime('+30 days')));
+
+        $newSchemeRef = RefGenerator::make('SCH');
+        $schemeData = [
+            'scheme_ref'       => $newSchemeRef,
+            'org_ref'          => $ctx->orgRef,
+            'franchise_ref'    => $franchiseRef,
+            'scheme_name'      => $newName,
+            'scheme_type'      => $source['scheme_type'],
+            'start_date'       => $newStartDate,
+            'end_date'         => $newEndDate,
+            'priority'         => (int)$r->input('priority', $source['priority']),
+            'stacking_allowed' => $source['stacking_allowed'] ?? 0,
+            'tier_ref'         => $r->input('tier_ref', $source['tier_ref']),
+            'status'           => 'ACTIVE',
+            'created_by_ref'   => $ctx->userRef,
+            'created_at'       => date('Y-m-d H:i:s'),
+        ];
+
+        $this->schemes->createScheme($schemeData);
+
+        $newRules = [];
+        foreach ($existingRules as $er) {
+            $newRules[] = [
+                'rule_ref'      => RefGenerator::make('RUL'),
+                'org_ref'       => $ctx->orgRef,
+                'franchise_ref' => $franchiseRef,
+                'scheme_ref'    => $newSchemeRef,
+                'product_ref'   => $er['product_ref'],
+                'min_qty'       => (int)$er['min_qty'],
+                'max_qty'       => $er['max_qty'] !== null ? (int)$er['max_qty'] : null,
+                'free_qty'      => (int)$er['free_qty'],
+            ];
+        }
+
+        $this->schemes->replaceRules($franchiseRef, $newSchemeRef, $newRules);
+        $schemeData['rules'] = $newRules;
+
+        $this->audit->log(
+            ctx: $ctx,
+            category: 'BUSINESS',
+            action: 'scheme.cloned',
+            entityType: 'scheme',
+            entityRef: $newSchemeRef,
+            after: $schemeData
         );
 
-        return Response::json(200, $result);
+        return Response::json(201, $schemeData);
     }
 
     private function validateRules(TenantContext $ctx, string $franchiseRef, mixed $input): array
