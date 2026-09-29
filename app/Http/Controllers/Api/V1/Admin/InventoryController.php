@@ -25,12 +25,38 @@ final class InventoryController
 
     public function receive(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'create'); $clean = Validation::validate($r->all(), ['product_ref' => 'required|string', 'batch_no' => 'required|string', 'expiry_date' => 'required|date:Y-m-d', 'qty' => 'required|integer|min:1', 'manufacturing_date' => 'date:Y-m-d']); $ref = $this->inventoryService->receiveGoods($ctx->orgRef, $ctx->requireFranchise(), $clean['product_ref'], $clean['batch_no'], $clean['expiry_date'], (int)$clean['qty'], $clean['manufacturing_date'] ?? null, $r->input('location_code'), $ctx->userRef); $after = $this->batchRepo->findByRef($ctx->requireFranchise(), $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.received', entityType: 'inventory_batch', entityRef: $ref, after: $after); return Response::json(201, $after);
+        $ctx = TenantContext::get(); 
+        $this->authorization->requirePermission($ctx, 'inventory', 'create'); 
+        $clean = Validation::validate($r->all(), ['product_ref' => 'required|string', 'batch_no' => 'required|string', 'expiry_date' => 'required|date:Y-m-d', 'qty' => 'required|integer|min:1', 'manufacturing_date' => 'date:Y-m-d']); 
+        
+        $tx = new \App\Core\Transaction(\App\Core\Database::connection());
+        $after = $tx->run(function() use ($ctx, $clean, $r) {
+            $ref = $this->inventoryService->receiveGoods($ctx->orgRef, $ctx->requireFranchise(), $clean['product_ref'], $clean['batch_no'], $clean['expiry_date'], (int)$clean['qty'], $clean['manufacturing_date'] ?? null, $r->input('location_code'), $ctx->userRef); 
+            $after = $this->batchRepo->findByRef($ctx->requireFranchise(), $ref); 
+            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.received', entityType: 'inventory_batch', entityRef: $ref, after: $after); 
+            return $after;
+        });
+
+        return Response::json(201, $after);
     }
 
     public function adjust(Request $r): Response
     {
-        $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'adjust'); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $clean = Validation::validate($r->all(), ['delta_qty' => 'required|integer', 'reason' => 'required|string|min:2']); $this->inventoryService->adjustStock($ctx->orgRef, $f, $ref, (int)$clean['delta_qty'], $clean['reason'], $ctx->userRef); $after = $this->batchRepo->findByRef($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.adjusted', entityType: 'inventory_batch', entityRef: $ref, after: $after, reason: $clean['reason']); return Response::json(200, $after);
+        $ctx = TenantContext::get(); 
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust'); 
+        $f = $ctx->requireFranchise(); 
+        $ref = (string)$r->param('ref'); 
+        $clean = Validation::validate($r->all(), ['delta_qty' => 'required|integer', 'reason' => 'required|string|min:2']); 
+        
+        $tx = new \App\Core\Transaction(\App\Core\Database::connection());
+        $after = $tx->run(function() use ($ctx, $f, $ref, $clean) {
+            $this->inventoryService->adjustStock($ctx->orgRef, $f, $ref, (int)$clean['delta_qty'], $clean['reason'], $ctx->userRef); 
+            $after = $this->batchRepo->findByRef($f, $ref); 
+            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.adjusted', entityType: 'inventory_batch', entityRef: $ref, after: $after, reason: $clean['reason']); 
+            return $after;
+        });
+
+        return Response::json(200, $after);
     }
 
     public function nearExpiry(Request $r): Response
@@ -51,5 +77,108 @@ final class InventoryController
     public function consume(Request $r): Response
     {
         $ctx = TenantContext::get(); $this->authorization->requirePermission($ctx, 'inventory', 'reserve'); $orderRef = (string)$r->param('order_ref'); $this->fefo->consumeOrderStock($ctx->orgRef, $ctx->requireFranchise(), $orderRef, $ctx->userRef); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'reservation.consumed', entityType: 'order', entityRef: $orderRef); return Response::json(200, ['order_ref' => $orderRef, 'status' => 'CONSUMED']);
+    }
+
+    /** BE-080: Movement ledger — all stock movements across batches. */
+    public function movements(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'view');
+        $f = $ctx->requireFranchise();
+        $page = (int)$r->query('page', 1);
+        $perPage = min((int)$r->query('per_page', 50), 200);
+        $offset = ($page - 1) * $perPage;
+
+        $where = ['im.franchise_ref = ?'];
+        $params = [$f];
+
+        if ($r->query('batch_ref')) { $where[] = 'im.batch_ref = ?'; $params[] = $r->query('batch_ref'); }
+        if ($r->query('product_ref')) { $where[] = 'ib.product_ref = ?'; $params[] = $r->query('product_ref'); }
+        if ($r->query('movement_type')) { $where[] = 'im.movement_type = ?'; $params[] = $r->query('movement_type'); }
+        if ($r->query('from_date')) { $where[] = 'im.created_at >= ?'; $params[] = $r->query('from_date') . ' 00:00:00'; }
+        if ($r->query('to_date')) { $where[] = 'im.created_at <= ?'; $params[] = $r->query('to_date') . ' 23:59:59'; }
+
+        $clause = implode(' AND ', $where);
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $total = (int)$db->fetchColumn("SELECT COUNT(*) FROM inventory_movements im JOIN inventory_batches ib ON ib.franchise_ref = im.franchise_ref AND ib.batch_ref = im.batch_ref WHERE {$clause}", $params);
+        $items = $db->fetchAll("SELECT im.*, ib.batch_no, ib.product_ref, p.product_name, p.sku FROM inventory_movements im JOIN inventory_batches ib ON ib.franchise_ref = im.franchise_ref AND ib.batch_ref = im.batch_ref JOIN products p ON p.franchise_ref = ib.franchise_ref AND p.product_ref = ib.product_ref WHERE {$clause} ORDER BY im.created_at DESC LIMIT {$perPage} OFFSET {$offset}", $params);
+
+        return Response::json(200, $items, [
+            'page' => $page, 'per_page' => $perPage, 'total' => $total, 'total_pages' => (int)ceil($total / $perPage),
+        ]);
+    }
+
+    /** BE-081: Edit batch metadata (location, expiry, batch_no). */
+    public function editBatch(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust');
+        $f = $ctx->requireFranchise();
+        $ref = (string)$r->param('ref');
+        $batch = $this->batchRepo->findByRef($f, $ref);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Inventory batch not found.');
+
+        $allowed = ['batch_no', 'expiry_date', 'manufacturing_date', 'location_code'];
+        $data = [];
+        foreach ($allowed as $field) {
+            if ($r->input($field) !== null) $data[$field] = $r->input($field);
+        }
+        if (empty($data)) return Response::json(200, $batch);
+
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $db->update('inventory_batches', $data, 'franchise_ref = ? AND batch_ref = ?', [$f, $ref]);
+        $after = $this->batchRepo->findByRef($f, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.edited', entityType: 'inventory_batch', entityRef: $ref, before: $batch, after: $after);
+        return Response::json(200, $after);
+    }
+
+    /** BE-082: Stock transfer between warehouses/locations within same franchise. */
+    public function transfer(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $this->authorization->requirePermission($ctx, 'inventory', 'adjust');
+        $f = $ctx->requireFranchise();
+        $clean = Validation::validate($r->all(), [
+            'batch_ref' => 'required|string',
+            'qty' => 'required|integer|min:1',
+            'from_location' => 'required|string',
+            'to_location' => 'required|string',
+            'reason' => 'string',
+        ]);
+
+        $batch = $this->batchRepo->findByRef($f, $clean['batch_ref']);
+        if (!$batch) throw new NotFoundException('BATCH_NOT_FOUND', 'Batch not found.');
+
+        $available = (int)$batch['on_hand_qty'] - (int)$batch['reserved_qty'];
+        if ((int)$clean['qty'] > $available) {
+            throw new \App\Core\Exceptions\ValidationException('INSUFFICIENT_STOCK', 'Cannot transfer more than available unreserved stock.');
+        }
+
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $db->transaction(function () use ($db, $ctx, $f, $clean, $batch) {
+            // Record outbound movement
+            $this->movementRepo->record([
+                'movement_ref' => \App\Core\RefGenerator::generate('mov'),
+                'org_ref' => $ctx->orgRef, 'franchise_ref' => $f, 'batch_ref' => $clean['batch_ref'],
+                'movement_type' => 'TRANSFER_OUT', 'qty' => (int)$clean['qty'],
+                'reference_type' => 'TRANSFER', 'reference_ref' => $clean['to_location'],
+                'remarks' => 'Transfer from ' . $clean['from_location'] . ' to ' . $clean['to_location'] . '. ' . ($clean['reason'] ?? ''),
+                'created_by_ref' => $ctx->userRef,
+            ]);
+            // Record inbound movement
+            $this->movementRepo->record([
+                'movement_ref' => \App\Core\RefGenerator::generate('mov'),
+                'org_ref' => $ctx->orgRef, 'franchise_ref' => $f, 'batch_ref' => $clean['batch_ref'],
+                'movement_type' => 'TRANSFER_IN', 'qty' => (int)$clean['qty'],
+                'reference_type' => 'TRANSFER', 'reference_ref' => $clean['from_location'],
+                'remarks' => 'Transfer from ' . $clean['from_location'] . ' to ' . $clean['to_location'] . '. ' . ($clean['reason'] ?? ''),
+                'created_by_ref' => $ctx->userRef,
+            ]);
+            // Update batch location to target
+            $db->update('inventory_batches', ['location_code' => $clean['to_location']], 'franchise_ref = ? AND batch_ref = ?', [$f, $clean['batch_ref']]);
+        });
+
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'batch.transferred', entityType: 'inventory_batch', entityRef: $clean['batch_ref']);
+        return Response::json(200, ['batch_ref' => $clean['batch_ref'], 'qty' => $clean['qty'], 'from' => $clean['from_location'], 'to' => $clean['to_location'], 'status' => 'TRANSFERRED']);
     }
 }

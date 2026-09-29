@@ -71,6 +71,13 @@ final class Database
         return $tx->run($fn);
     }
 
+    public function execute(string $sql, array $params = []): int
+    {
+        $stmt = $this->pdo()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
     public function fetchOne(string $sql, array $params = []): ?array
     {
         $stmt = $this->pdo()->prepare($sql);

@@ -133,12 +133,16 @@ return function(\App\Core\Router $router): void {
     $router->patch('/api/v1/admin/leads/{ref}', [\App\Http\Controllers\Api\V1\Admin\LeadsController::class, 'update']);
     $router->post('/api/v1/admin/leads/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\LeadsController::class, 'status']);
     $router->post('/api/v1/admin/leads/{ref}/assign', [\App\Http\Controllers\Api\V1\Admin\LeadsController::class, 'assign']);
+    $router->post('/api/v1/admin/leads/{ref}/archive', [\App\Http\Controllers\Api\V1\Admin\LeadsController::class, 'archive']);
+    $router->post('/api/v1/admin/leads/{ref}/restore', [\App\Http\Controllers\Api\V1\Admin\LeadsController::class, 'restore']);
 
     // Follow-ups
     $router->get('/api/v1/admin/follow-ups', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'index']);
     $router->post('/api/v1/admin/follow-ups', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'store']);
     $router->post('/api/v1/admin/follow-ups/{ref}/complete', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'complete']);
     $router->post('/api/v1/admin/follow-ups/{ref}/reschedule', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'reschedule']);
+    $router->post('/api/v1/admin/follow-ups/{ref}/mark-missed', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'markMissed']);
+    $router->get('/api/v1/admin/follow-ups/history', [\App\Http\Controllers\Api\V1\Admin\FollowUpsController::class, 'history']);
 
     // Parties
     $router->get('/api/v1/admin/parties', [\App\Http\Controllers\Api\V1\Admin\PartiesController::class, 'index']);
@@ -192,6 +196,9 @@ return function(\App\Core\Router $router): void {
     $router->get('/api/v1/admin/inventory/reservations/{order_ref}', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'reservations']);
     $router->post('/api/v1/admin/inventory/reservations/{order_ref}/release', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'release']);
     $router->post('/api/v1/admin/inventory/reservations/{order_ref}/consume', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'consume']);
+    $router->get('/api/v1/admin/inventory/movements', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'movements']);
+    $router->post('/api/v1/admin/inventory/batches/{ref}/edit', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'editBatch']);
+    $router->post('/api/v1/admin/inventory/transfer', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'transfer']);
 
     // P4: Orders
     $router->get('/api/v1/admin/orders', [\App\Http\Controllers\Api\V1\Admin\OrdersController::class, 'index']);

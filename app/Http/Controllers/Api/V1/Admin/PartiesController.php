@@ -52,16 +52,32 @@ final class PartiesController
     public function store(Request $r): Response
     {
         $ctx = $this->ctx(); $this->authorization->requirePermission($ctx, 'parties', 'create'); $clean = $this->validateParty($r, true, $ctx); $data = $this->partyData($clean, $ctx);
-        $partyRef = $this->partyService->create($data); if (!empty($clean['product_refs'])) $this->parties->replaceProductInterests($ctx->requireFranchise(), $partyRef, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
-        $after = $this->parties->findByRef($ctx->requireFranchise(), $partyRef); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.created', entityType: 'party', entityRef: $partyRef, after: $after ?? $data); return Response::json(201, $after);
+        $db = Container::getInstance()->make(\App\Core\Database::class);
+        $after = $db->transaction(function() use ($ctx, $clean, $data) {
+            $partyRef = $this->partyService->create($data); 
+            if (!empty($clean['product_refs'])) $this->parties->replaceProductInterests($ctx->requireFranchise(), $partyRef, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
+            $after = $this->parties->findByRef($ctx->requireFranchise(), $partyRef); 
+            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.created', entityType: 'party', entityRef: $partyRef, after: $after ?? $data); 
+            return $after;
+        });
+        return Response::json(201, $after);
     }
 
     public function update(Request $r): Response
     {
         $ctx = $this->ctx(); $franchiseRef = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'edit'); $before = $this->parties->findByRef($franchiseRef, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($franchiseRef, $ref), $franchiseRef); $clean = $this->validateParty($r, false, $ctx); $data = $this->partyData($clean, $ctx, false); unset($data['party_ref'], $data['party_code'], $data['created_by_ref'], $data['franchise_ref'], $data['org_ref'], $data['status'], $data['opening_outstanding']);
-        $this->partyService->update($franchiseRef, $ref, $data); if (array_key_exists('product_refs', $clean)) $this->parties->replaceProductInterests($franchiseRef, $ref, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
-        $after = $this->parties->findByRef($franchiseRef, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.updated', entityType: 'party', entityRef: $ref, before: $before, after: $after ?? $data); return Response::json(200, $after);
+        
+        $db = Container::getInstance()->make(\App\Core\Database::class);
+        $after = $db->transaction(function() use ($ctx, $franchiseRef, $ref, $clean, $data, $before) {
+            $this->partyService->update($franchiseRef, $ref, $data); 
+            if (array_key_exists('product_refs', $clean)) $this->parties->replaceProductInterests($franchiseRef, $ref, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
+            $after = $this->parties->findByRef($franchiseRef, $ref); 
+            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.updated', entityType: 'party', entityRef: $ref, before: $before, after: $after ?? $data); 
+            return $after;
+        });
+        
+        return Response::json(200, $after);
     }
 
     public function status(Request $r): Response
