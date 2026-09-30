@@ -1765,6 +1765,40 @@ paths:
         '200':
           description: Lead assigned.
 
+  /admin/leads/{ref}/archive:
+    post:
+      summary: Archive a lead (soft status change)
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Lead archived successfully.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
+  /admin/leads/{ref}/restore:
+    post:
+      summary: Restore a previously archived lead
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Lead restored successfully.
+        '403':
+          description: Forbidden outside permitted scope.
+        '404':
+          description: Lead not found.
+
   /admin/follow-ups:
     get:
       summary: List follow-up queue
@@ -1837,6 +1871,49 @@ paths:
           description: Follow-up rescheduled.
         '404':
           description: Follow-up not found.
+
+  /admin/follow-ups/{ref}/mark-missed:
+    post:
+      summary: Mark a follow-up as missed
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                remark: {type: string, example: "Customer did not answer"}
+      responses:
+        '200':
+          description: Follow-up marked as missed.
+        '404':
+          description: Follow-up not found.
+
+  /admin/follow-ups/history:
+    get:
+      summary: List follow-up history for a specific lead or party
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: lead_ref
+        in: query
+        schema: {type: string}
+      - name: party_ref
+        in: query
+        schema: {type: string}
+      - name: page
+        in: query
+        schema: {type: integer, default: 1}
+      - name: per_page
+        in: query
+        schema: {type: integer, default: 50}
+      responses:
+        '200':
+          description: Paginated history of follow-ups.
 
   # ============================================================================
   # Franchise Admin: Parties & Territory
@@ -2453,6 +2530,86 @@ paths:
       responses:
         '200':
           description: Near-expiry batches list.
+
+  /admin/inventory/movements:
+    get:
+      summary: Movement ledger — all stock movements across batches
+      tags: [Admin Inventory]
+      parameters:
+      - name: batch_ref
+        in: query
+        schema: {type: string}
+      - name: product_ref
+        in: query
+        schema: {type: string}
+      - name: movement_type
+        in: query
+        schema: {type: string}
+      - name: from_date
+        in: query
+        schema: {type: string, format: date}
+      - name: to_date
+        in: query
+        schema: {type: string, format: date}
+      - name: page
+        in: query
+        schema: {type: integer, default: 1}
+      - name: per_page
+        in: query
+        schema: {type: integer, default: 50}
+      responses:
+        '200':
+          description: Paginated movement ledger.
+
+  /admin/inventory/batches/{ref}/edit:
+    post:
+      summary: Edit batch metadata (location, expiry, batch_no)
+      tags: [Admin Inventory]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                batch_no: {type: string}
+                expiry_date: {type: string, format: date}
+                manufacturing_date: {type: string, format: date}
+                location_code: {type: string}
+      responses:
+        '200':
+          description: Batch metadata updated.
+        '404':
+          description: Batch not found.
+
+  /admin/inventory/transfer:
+    post:
+      summary: Stock transfer between warehouses/locations within same franchise
+      tags: [Admin Inventory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batch_ref, qty, from_location, to_location]
+              properties:
+                batch_ref: {type: string}
+                qty: {type: integer, minimum: 1}
+                from_location: {type: string}
+                to_location: {type: string}
+                reason: {type: string}
+      responses:
+        '200':
+          description: Stock transferred successfully.
+        '400':
+          description: Insufficient stock.
+        '404':
+          description: Batch not found.
 
   /admin/invoices:
     get:
@@ -3138,40 +3295,6 @@ paths:
 
 
 
-  /admin/reports/{key}:
-    get:
-      summary: Stream analytical reports
-      tags: [Admin Reports]
-      security: [bearerAuth: []]
-      parameters:
-      - name: key
-        in: path
-        required: true
-        schema: {type: string, enum: [lead-source, response-time, conversion, 
-              sales-team-productivity, territory-sales, party-sales, 
-              product-sales, scheme-utilization, order-status, dispatch-pending, 
-              batch-inventory, near-expiry, territory-violations, 
-              webhook-failures, whatsapp-delivery]}
-      - $ref: '#/components/parameters/PageParam'
-      - $ref: '#/components/parameters/PerPageParam'
-      - $ref: '#/components/parameters/DateFromParam'
-      - $ref: '#/components/parameters/DateToParam'
-      - $ref: '#/components/parameters/SortByParam'
-      - $ref: '#/components/parameters/SortDirParam'
-      responses:
-        '200':
-          description: Paginated report data.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: {type: boolean, example: true}
-                  data: {type: object}
-                  meta: {type: object}
-
-
-
 
   /admin/webhook-sources:
     get:
@@ -3417,719 +3540,3 @@ paths:
                       label: {type: string}
                       description: {type: string}
 
-  /admin/catalog-masters/{category}:
-    get:
-      summary: List catalog master values for a category
-      tags: [Admin Masters]
-      security: [bearerAuth: []]
-      parameters:
-      - name: category
-        in: path
-        required: true
-        description: Category key (e.g. dosageForms, leadSources, paymentModes, uoms)
-        schema: {type: string}
-      responses:
-        '200':
-          description: Paginated catalog master values.
-    post:
-      summary: Create new catalog master value
-      tags: [Admin Masters]
-      security: [bearerAuth: []]
-      parameters:
-      - name: category
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name]
-              properties:
-                name: {type: string, minLength: 2, maxLength: 191}
-                description: {type: string, maxLength: 500}
-      responses:
-        '201': {description: Master value created.}
-
-  /admin/catalog-masters/{category}/{ref}:
-    get:
-      summary: Get catalog master value by ref
-      tags: [Admin Masters]
-      security: [bearerAuth: []]
-      parameters:
-      - name: category
-        in: path
-        required: true
-        schema: {type: string}
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: Master value details.}
-    patch:
-      summary: Update catalog master value
-      tags: [Admin Masters]
-      security: [bearerAuth: []]
-      parameters:
-      - name: category
-        in: path
-        required: true
-        schema: {type: string}
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name]
-              properties:
-                name: {type: string}
-                description: {type: string}
-      responses:
-        '200': {description: Master value updated.}
-
-  /admin/catalog-masters/{category}/{ref}/status:
-    post:
-      summary: Change catalog master value active status
-      tags: [Admin Masters]
-      security: [bearerAuth: []]
-      parameters:
-      - name: category
-        in: path
-        required: true
-        schema: {type: string}
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [status]
-              properties:
-                status: {type: string, enum: [ACTIVE, INACTIVE]}
-      responses:
-        '200': {description: Master status updated.}
-
-  /admin/onboarding/invite:
-    post:
-      summary: Generate distributor onboarding invite link and token
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                lead_ref: {type: string, nullable: true}
-                assigned_user_ref: {type: string, nullable: true}
-      responses:
-        '201':
-          description: Invite token generated with 72-hour validity.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  invite_ref: {type: string}
-                  token: {type: string}
-                  expires_at: {type: string, format: date-time}
-                  assigned_user_ref: {type: string}
-
-  /onboarding/register:
-    post:
-      summary: Public prospective distributor registration with KYC documents
-      tags: [Admin Parties & Onboarding]
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [token, firm_name, constitution_type, contact_name, designation, mobile, email, gstin, drug_license_no, drug_license_validity, pan, billing_address, shipping_address, pincode, password, preferred_product_categories, documents]
-              properties:
-                token: {type: string}
-                firm_name: {type: string}
-                constitution_type: {type: string, enum: [Proprietorship, Partnership, "Pvt Ltd", LLP]}
-                contact_name: {type: string}
-                designation: {type: string}
-                mobile: {type: string}
-                email: {type: string, format: email}
-                gstin: {type: string}
-                drug_license_no: {type: string}
-                drug_license_validity: {type: string, format: date}
-                pan: {type: string}
-                billing_address: {type: string}
-                shipping_address: {type: string}
-                state_ref: {type: string}
-                district_ref: {type: string}
-                city_ref: {type: string}
-                pincode: {type: string}
-                bank_account_number: {type: string}
-                bank_ifsc: {type: string}
-                bank_name: {type: string}
-                preferred_product_categories: {type: array, items: {type: string}}
-                expected_monthly_business: {type: number}
-                password: {type: string, minLength: 8}
-                documents:
-                  type: array
-                  items:
-                    type: object
-                    required: [type, file_reference, file_name]
-                    properties:
-                      type: {type: string}
-                      file_reference: {type: string}
-                      file_name: {type: string}
-      responses:
-        '201': {description: Onboarding application submitted in SUBMITTED state.}
-
-  /admin/onboarding:
-    get:
-      summary: List distributor onboarding applications
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: status
-        in: query
-        schema: {type: string, enum: [SUBMITTED, UNDER_REVIEW, INFO_REQUESTED, APPROVED, REJECTED, CONVERTED]}
-      - name: search
-        in: query
-        schema: {type: string}
-      - $ref: '#/components/parameters/PageParam'
-      - $ref: '#/components/parameters/PerPageParam'
-      responses:
-        '200': {description: Paginated onboarding applications.}
-
-  /admin/onboarding/{ref}:
-    get:
-      summary: Show onboarding application details with KYC documents and audit trail
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: Full registration data, KYC docs, and history.}
-
-  /admin/onboarding/{ref}/approve:
-    post:
-      summary: Approve onboarding application
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                remarks: {type: string}
-      responses:
-        '200': {description: Application approved.}
-
-  /admin/onboarding/{ref}/reject:
-    post:
-      summary: Reject onboarding application
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [remarks]
-              properties:
-                remarks: {type: string}
-      responses:
-        '200': {description: Application rejected.}
-
-  /admin/onboarding/{ref}/request-info:
-    post:
-      summary: Request additional documentation or clarification
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [remarks]
-              properties:
-                remarks: {type: string}
-      responses:
-        '200': {description: Information requested.}
-
-  /admin/onboarding/{ref}/convert:
-    post:
-      summary: Convert approved onboarding application into an active commercial Party
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                tier_ref: {type: string}
-                sales_user_ref: {type: string}
-                credit_limit: {type: number}
-                payment_terms_days: {type: integer}
-      responses:
-        '200': {description: Party created and linked.}
-
-  /admin/onboarding/{ref}/kyc-documents/{document_ref}/verify:
-    post:
-      summary: Verify or reject specific KYC document
-      tags: [Admin Parties & Onboarding]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      - name: document_ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [status]
-              properties:
-                status: {type: string, enum: [VERIFIED, REJECTED]}
-                remarks: {type: string}
-      responses:
-        '200': {description: Document status updated.}
-
-  /portal/dcrs:
-    get:
-      summary: List Daily Call Reports (DCR) for sales user or franchise
-      tags: [Daily Call Reports (DCR)]
-      security: [bearerAuth: []]
-      parameters:
-      - name: status
-        in: query
-        schema: {type: string, enum: [DRAFT, SUBMITTED, APPROVED, REJECTED]}
-      responses:
-        '200': {description: List of DCR reports.}
-    post:
-      summary: Create new Daily Call Report with field visits
-      tags: [Daily Call Reports (DCR)]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [report_date, work_type, beat, visits]
-              properties:
-                report_date: {type: string, format: date}
-                work_type: {type: string, enum: [FIELD_WORK, LEAVE, HOLIDAY, MEETING, TRAINING]}
-                beat: {type: string}
-                visits:
-                  type: array
-                  items:
-                    type: object
-                    required: [visit_time, visit_purpose, products_promoted]
-                    properties:
-                      party_ref: {type: string, nullable: true}
-                      lead_ref: {type: string, nullable: true}
-                      customer_type: {type: string}
-                      visit_time: {type: string, format: date-time}
-                      visit_purpose: {type: string}
-                      products_promoted: {type: array, items: {type: string}}
-                      samples_given: {type: array, items: {type: object}}
-                      pob_product_ref: {type: string, nullable: true}
-                      pob_quantity: {type: integer, nullable: true}
-                      pob_value: {type: number, nullable: true}
-                      feedback: {type: string}
-                      next_visit_date: {type: string, format: date}
-      responses:
-        '201': {description: DCR created.}
-
-  /portal/dcrs/{ref}:
-    get:
-      summary: Get DCR details with visits and approval history
-      tags: [Daily Call Reports (DCR)]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: DCR detail.}
-    patch:
-      summary: Update draft or rejected DCR
-      tags: [Daily Call Reports (DCR)]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                work_type: {type: string}
-                beat: {type: string}
-                visits: {type: array, items: {type: object}}
-      responses:
-        '200': {description: DCR updated.}
-
-  /portal/dcrs/{ref}/status:
-    post:
-      summary: Transition DCR status (Submit, Approve, Reject)
-      tags: [Daily Call Reports (DCR)]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [status]
-              properties:
-                status: {type: string, enum: [SUBMITTED, APPROVED, REJECTED, DRAFT]}
-                remarks: {type: string}
-      responses:
-        '200': {description: DCR transitioned.}
-
-  /admin/pdc:
-    get:
-      summary: List Post-Dated Cheques (PDC)
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: party_ref
-        in: query
-        schema: {type: string}
-      - $ref: '#/components/parameters/PageParam'
-      - $ref: '#/components/parameters/PerPageParam'
-      responses:
-        '200': {description: Paginated PDCs.}
-    post:
-      summary: Register new Post-Dated Cheque
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [party_ref, amount, cheque_number]
-              properties:
-                party_ref: {type: string}
-                amount: {type: number}
-                cheque_number: {type: string}
-                bank_name: {type: string}
-                due_date: {type: string, format: date}
-      responses:
-        '201': {description: PDC registered.}
-
-  /admin/pdc/{ref}:
-    get:
-      summary: Get PDC details
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: PDC record.}
-
-  /admin/pdc/{ref}/realize:
-    post:
-      summary: Realize PDC into cleared payment receipt
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: Cheque realized and payment recorded.}
-
-  /admin/pdc/{ref}/bounce:
-    post:
-      summary: Mark PDC as bounced with bank reason
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [reason]
-              properties:
-                reason: {type: string}
-      responses:
-        '200': {description: PDC bounced recorded.}
-
-  /admin/pdc/{ref}/cancel:
-    post:
-      summary: Cancel un-realized PDC
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [reason]
-              properties:
-                reason: {type: string}
-      responses:
-        '200': {description: PDC cancelled.}
-
-  /admin/schemes/calculate:
-    post:
-      summary: Dynamically calculate free goods quantity based on scheme rules
-      tags: [Admin Pricing & Schemes]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [product_ref, ordered_qty]
-              properties:
-                product_ref: {type: string}
-                ordered_qty: {type: integer, minimum: 1}
-                tier_ref: {type: string, nullable: true}
-                date: {type: string, format: date}
-      responses:
-        '200':
-          description: Calculation output with paid, free, and total fulfilment quantities.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  paid_qty: {type: integer, example: 100}
-                  free_qty: {type: integer, example: 10}
-                  total_fulfil: {type: integer, example: 110}
-                  scheme_refs: {type: array, items: {type: string}}
-
-  /admin/pricing/resolve:
-    post:
-      summary: Dynamically resolve applicable product price across hierarchy
-      tags: [Admin Pricing & Schemes]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [product_ref]
-              properties:
-                product_ref: {type: string}
-                party_ref: {type: string, nullable: true}
-                tier_ref: {type: string, nullable: true}
-                date: {type: string, format: date}
-      responses:
-        '200':
-          description: Resolved unit rate and rate source hierarchy.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  rate: {type: number, example: 15.00}
-                  rate_source: {type: string, enum: [PARTY, TIER, DEFAULT]}
-                  price_ref: {type: string, nullable: true}
-
-  /admin/territories/resolve:
-    post:
-      summary: Resolve assigned party territory by pincode or district
-      tags: [Admin Territories]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [party_ref, pincode]
-              properties:
-                party_ref: {type: string}
-                pincode: {type: string}
-                district_ref: {type: string, nullable: true}
-                date: {type: string, format: date}
-      responses:
-        '200': {description: Resolved territory allocation mapping.}
-
-  /admin/territories/validate:
-    post:
-      summary: Validate party territory exclusivity lock for ordering
-      tags: [Admin Territories]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [party_ref, pincode]
-              properties:
-                party_ref: {type: string}
-                pincode: {type: string}
-                date: {type: string, format: date}
-      responses:
-        '200':
-          description: Territory validation status.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  allowed: {type: boolean}
-                  reason: {type: string, nullable: true}
-
-  /admin/territories/override:
-    post:
-      summary: Record administrative territory override for order approval
-      tags: [Admin Territories]
-      security: [bearerAuth: []]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [order_ref, party_ref, pincode, reason]
-              properties:
-                order_ref: {type: string}
-                party_ref: {type: string}
-                pincode: {type: string}
-                reason: {type: string, minLength: 2}
-      responses:
-        '201': {description: Override recorded.}
-
-  /admin/outstanding:
-    get:
-      summary: View party ledger outstanding balances and ageing buckets
-      tags: [Admin Payments]
-      security: [bearerAuth: []]
-      parameters:
-      - name: party_ref
-        in: query
-        schema: {type: string}
-      - name: bucket
-        in: query
-        description: Ageing bucket filter (0-30, 31-60, 61-90, 90+)
-        schema: {type: string}
-      - $ref: '#/components/parameters/PageParam'
-      - $ref: '#/components/parameters/PerPageParam'
-      responses:
-        '200':
-          description: Party outstanding with ageing bucket breakdown.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: {type: array, items: {type: object}}
-                  meta: {type: object}
-
-  /notifications:
-    get:
-      summary: Poll in-app notifications for authenticated user
-      tags: [Notifications]
-      security: [bearerAuth: []]
-      parameters:
-      - name: unread_only
-        in: query
-        schema: {type: boolean}
-      responses:
-        '200': {description: List of notifications.}
-
-  /notifications/read-all:
-    post:
-      summary: Mark all notifications as read
-      tags: [Notifications]
-      security: [bearerAuth: []]
-      responses:
-        '200': {description: All notifications marked as read.}
-
-  /notifications/{ref}/read:
-    post:
-      summary: Mark individual notification as read
-      tags: [Notifications]
-      security: [bearerAuth: []]
-      parameters:
-      - name: ref
-        in: path
-        required: true
-        schema: {type: string}
-      responses:
-        '200': {description: Notification marked as read.}
