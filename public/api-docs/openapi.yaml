@@ -177,6 +177,8 @@ components:
           oneOf:
           - type: object
           - type: array
+            items:
+              type: object
           nullable: true
         meta:
           type: object
