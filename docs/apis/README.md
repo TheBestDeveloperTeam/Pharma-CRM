@@ -1,6 +1,7 @@
 # Pharma CRM — API Documentation
 
 > **Complete API Reference:** See [`PHARMA_CRM_UNIFIED_MASTER_DOCUMENTATION.md` §28](../PHARMA_CRM_UNIFIED_MASTER_DOCUMENTATION.md#28-complete-api-route-registry)
+> **Comprehensive 9+ Edge Case Audit Report:** See [`API_TESTING_AND_AUDIT_REPORT.md`](API_TESTING_AND_AUDIT_REPORT.md) for 465-endpoint test verification.
 
 ## Quick Reference
 
