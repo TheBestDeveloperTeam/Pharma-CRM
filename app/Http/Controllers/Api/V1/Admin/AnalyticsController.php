@@ -22,7 +22,19 @@ final class AnalyticsController
     {
         $c = $this->ctx();
         $this->auth->requirePermission($c, 'dashboard', 'view');
-        return Response::json(200, $this->service->dashboard($c));
+        try {
+            return Response::json(200, $this->service->dashboard($c));
+        } catch (\Throwable $e) {
+            return Response::json(500, [
+                'success' => false,
+                'error' => [
+                    'code' => 'DASHBOARD_ERROR',
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ],
+            ]);
+        }
     }
 
     // Individual Dashboard Widgets (DSH-001 to DSH-011)
