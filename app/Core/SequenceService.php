@@ -83,10 +83,10 @@ final class SequenceService
     {
         $period = $period ?? self::currentYearPeriod();
 
-        // Self-heal: If counter is for PARTY and uninitialized or behind existing data in parties table, baseline it
+        // Self-heal: If counter is for PARTY, scan all existing party codes in the franchise to ensure sequence starts above the highest allocated
         if ($key === 'PARTY') {
             try {
-                $stmtMax = $this->pdo->prepare("SELECT party_code FROM parties WHERE franchise_ref = ? ORDER BY id DESC LIMIT 50");
+                $stmtMax = $this->pdo->prepare("SELECT party_code FROM parties WHERE franchise_ref = ?");
                 $stmtMax->execute([$franchiseRef]);
                 $codes = $stmtMax->fetchAll(\PDO::FETCH_COLUMN) ?: [];
                 $maxNum = 0;

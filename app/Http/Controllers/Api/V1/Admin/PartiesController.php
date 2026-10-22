@@ -161,10 +161,10 @@ final class PartiesController
         $this->authorization->requirePermission($ctx, 'parties', 'view');
 
         $stmt = $this->pdo->prepare(
-            "SELECT party_ref, party_name, party_code, firm_name, city_ref, state_ref, status, credit_limit
+            "SELECT party_ref, firm_name, contact_name, party_code, city_ref, state_ref, status, credit_limit
              FROM parties
              WHERE franchise_ref = ? AND status = 'ACTIVE'
-             ORDER BY party_name ASC"
+             ORDER BY firm_name ASC"
         );
         $stmt->execute([$franchiseRef]);
         return Response::json(200, $stmt->fetchAll(\PDO::FETCH_ASSOC));
