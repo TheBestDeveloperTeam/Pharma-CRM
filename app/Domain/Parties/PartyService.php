@@ -21,8 +21,11 @@ final class PartyService
 
         // Auto-generate party code if not supplied
         if (empty($data['party_code'])) {
-            $num = $this->sequences->nextNumber($data['org_ref'], $franchiseRef, 'PARTY');
-            $data['party_code'] = 'PTY-' . str_pad((string)$num, 5, '0', STR_PAD_LEFT);
+            do {
+                $num = $this->sequences->nextNumber($data['org_ref'], $franchiseRef, 'PARTY');
+                $candidateCode = 'PTY-' . str_pad((string)$num, 5, '0', STR_PAD_LEFT);
+            } while ($this->parties->findByCode($franchiseRef, $candidateCode));
+            $data['party_code'] = $candidateCode;
         } else {
             // Check uniqueness within franchise
             $existing = $this->parties->findByCode($franchiseRef, $data['party_code']);
