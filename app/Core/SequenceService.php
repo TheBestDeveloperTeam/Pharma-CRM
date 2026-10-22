@@ -82,6 +82,35 @@ final class SequenceService
     public function nextNumber(string $orgRef, string $franchiseRef, string $key, ?string $period = null): int
     {
         $period = $period ?? self::currentYearPeriod();
+
+        // Self-heal: If counter is for PARTY and uninitialized or behind existing data in parties table, baseline it
+        if ($key === 'PARTY') {
+            try {
+                $stmtMax = $this->pdo->prepare("SELECT party_code FROM parties WHERE franchise_ref = ? ORDER BY id DESC LIMIT 50");
+                $stmtMax->execute([$franchiseRef]);
+                $codes = $stmtMax->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+                $maxNum = 0;
+                foreach ($codes as $code) {
+                    if (preg_match('/(\d+)$/', (string)$code, $m)) {
+                        $num = (int)$m[1];
+                        if ($num > $maxNum) {
+                            $maxNum = $num;
+                        }
+                    }
+                }
+                if ($maxNum > 0) {
+                    $stmtInit = $this->pdo->prepare(
+                        "INSERT INTO sequence_counters (org_ref, franchise_ref, counter_key, period_key, last_value)
+                         VALUES (:o, :f, :k, :p, :maxVal)
+                         ON DUPLICATE KEY UPDATE last_value = GREATEST(last_value, :maxVal)"
+                    );
+                    $stmtInit->execute([':o' => $orgRef, ':f' => $franchiseRef, ':k' => $key, ':p' => $period, ':maxVal' => $maxNum]);
+                }
+            } catch (\Throwable) {
+                // Ignore fallback error and continue with normal atomic counter increment
+            }
+        }
+
         $stmt = $this->pdo->prepare(
             "INSERT INTO sequence_counters
                  (org_ref, franchise_ref, counter_key, period_key, last_value)

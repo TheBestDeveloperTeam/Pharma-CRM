@@ -321,20 +321,15 @@ final class PartiesController
         
         // Ensure unique party_code if not supplied
         if ($create && empty($data['party_code'])) {
-            $stmt = $this->pdo->prepare("SELECT party_code FROM parties WHERE franchise_ref = ? ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$franchiseRef]);
-            $lastCode = (string)$stmt->fetchColumn();
-            $nextNum = 1;
-            if (preg_match('/(\d+)$/', $lastCode, $m)) {
-                $nextNum = ((int)$m[1]) + 1;
+            $seqService = Container::getInstance()->make(\App\Core\SequenceService::class);
+            $num = $seqService->nextNumber($ctx->orgRef, $franchiseRef, 'PARTY');
+            $candidate = 'PTY-' . str_pad((string)$num, 5, '0', STR_PAD_LEFT);
+
+            // In case of fragmentation, loop until completely free
+            while ($this->parties->findByCode($franchiseRef, $candidate)) {
+                $num = $seqService->nextNumber($ctx->orgRef, $franchiseRef, 'PARTY');
+                $candidate = 'PTY-' . str_pad((string)$num, 5, '0', STR_PAD_LEFT);
             }
-            do {
-                $candidate = 'PTY-' . str_pad((string)$nextNum, 5, '0', STR_PAD_LEFT);
-                $stmtCheck = $this->pdo->prepare("SELECT 1 FROM parties WHERE franchise_ref = ? AND party_code = ? LIMIT 1");
-                $stmtCheck->execute([$franchiseRef, $candidate]);
-                $exists = (bool)$stmtCheck->fetchColumn();
-                $nextNum++;
-            } while ($exists);
             $data['party_code'] = $candidate;
         }
 

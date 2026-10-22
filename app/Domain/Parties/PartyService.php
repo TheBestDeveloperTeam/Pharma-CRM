@@ -19,12 +19,20 @@ final class PartyService
     {
         $franchiseRef = $data['franchise_ref'];
 
-        // Auto-generate party code if not supplied
+        // Auto-generate party code if not supplied or if colliding
         if (empty($data['party_code'])) {
+            $attempts = 0;
             do {
                 $num = $this->sequences->nextNumber($data['org_ref'], $franchiseRef, 'PARTY');
                 $candidateCode = 'PTY-' . str_pad((string)$num, 5, '0', STR_PAD_LEFT);
-            } while ($this->parties->findByCode($franchiseRef, $candidateCode));
+                $attempts++;
+            } while ($this->parties->findByCode($franchiseRef, $candidateCode) && $attempts < 20);
+
+            // Ultimate safety fallback if table has fragmented/manual codes
+            if ($this->parties->findByCode($franchiseRef, $candidateCode)) {
+                $candidateCode = 'PTY-' . strtoupper(bin2hex(random_bytes(3)));
+            }
+
             $data['party_code'] = $candidateCode;
         } else {
             // Check uniqueness within franchise
