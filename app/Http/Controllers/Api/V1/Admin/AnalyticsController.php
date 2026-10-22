@@ -20,7 +20,6 @@ final class AnalyticsController
 
     public function dashboard(Request $r): Response
     {
-        return Response::json(200, ['probe' => 'ok']);
         $c = $this->ctx();
         $this->auth->requirePermission($c, 'dashboard', 'view');
         try {
