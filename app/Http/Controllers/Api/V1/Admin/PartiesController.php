@@ -318,6 +318,26 @@ final class PartiesController
     {
         $data = $clean; $data['org_ref'] = $ctx->orgRef; $data['franchise_ref'] = $franchiseRef; $data['created_by_ref'] = $ctx->userRef; $data['sales_user_ref'] = $ctx->scopeFor('parties') === 'ALL' ? ($clean['sales_user_ref'] ?? $ctx->userRef) : $ctx->userRef; if ($create) $data['status'] = 'ACTIVE';
         if (!isset($data['payment_terms_days']) && !empty($data['payment_terms']) && preg_match('/\d+/', (string)$data['payment_terms'], $m)) $data['payment_terms_days'] = (int)$m[0];
+        
+        // Ensure unique party_code if not supplied
+        if ($create && empty($data['party_code'])) {
+            $stmt = $this->pdo->prepare("SELECT party_code FROM parties WHERE franchise_ref = ? ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$franchiseRef]);
+            $lastCode = (string)$stmt->fetchColumn();
+            $nextNum = 1;
+            if (preg_match('/(\d+)$/', $lastCode, $m)) {
+                $nextNum = ((int)$m[1]) + 1;
+            }
+            do {
+                $candidate = 'PTY-' . str_pad((string)$nextNum, 5, '0', STR_PAD_LEFT);
+                $stmtCheck = $this->pdo->prepare("SELECT 1 FROM parties WHERE franchise_ref = ? AND party_code = ? LIMIT 1");
+                $stmtCheck->execute([$franchiseRef, $candidate]);
+                $exists = (bool)$stmtCheck->fetchColumn();
+                $nextNum++;
+            } while ($exists);
+            $data['party_code'] = $candidate;
+        }
+
         return $data;
     }
 
