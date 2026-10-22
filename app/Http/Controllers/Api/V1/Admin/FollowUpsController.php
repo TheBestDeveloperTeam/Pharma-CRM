@@ -56,7 +56,18 @@ final class FollowUpsController
     {
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'followUps', 'create');
-        $clean = Validation::validate($r->all(), [
+        $payload = $r->all();
+        if (!isset($payload['activity_type']) && isset($payload['follow_up_type'])) {
+            $payload['activity_type'] = $payload['follow_up_type'];
+        }
+        if (!isset($payload['next_action']) && (isset($payload['notes']) || isset($payload['remark']))) {
+            $payload['next_action'] = $payload['notes'] ?? $payload['remark'];
+        }
+        if (!isset($payload['next_follow_up_at']) && isset($payload['scheduled_at'])) {
+            $payload['next_follow_up_at'] = $payload['scheduled_at'];
+        }
+
+        $clean = Validation::validate($payload, [
             'activity_type'     => 'required|string',
             'next_action'       => 'required|string',
             'next_follow_up_at' => 'required|string',
@@ -65,7 +76,7 @@ final class FollowUpsController
         // Only an ALL-scope user may schedule a follow-up for someone else.
         $canAssignOthers = $ctx->isSuper() || $ctx->scopeFor('followUps') === 'ALL';
 
-        $data = array_merge($r->all(), [
+        $data = array_merge($payload, [
             'org_ref'           => $ctx->orgRef,
             'franchise_ref'     => $ctx->franchiseRef,
             'assigned_user_ref' => $canAssignOthers ? ($r->input('assigned_user_ref') ?? $ctx->userRef) : $ctx->userRef,

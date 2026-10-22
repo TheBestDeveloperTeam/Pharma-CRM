@@ -118,6 +118,12 @@ final class LeadService
             throw new NotFoundException('LEAD_NOT_FOUND', 'Lead not found.');
         }
 
+        $db = \App\Core\Container::getInstance()->make(\App\Core\Database::class);
+        $userExists = $db->fetchOne("SELECT user_ref FROM users WHERE user_ref = :u AND status = 'ACTIVE' LIMIT 1", [':u' => $newAssigneeRef]);
+        if (!$userExists) {
+            throw new NotFoundException('USER_NOT_FOUND', "Assignee user '{$newAssigneeRef}' does not exist or is inactive.");
+        }
+
         $fromAssignee = $lead['assigned_user_ref'];
         $ok = $this->leads->assign($franchiseRef, $leadRef, $newAssigneeRef);
 

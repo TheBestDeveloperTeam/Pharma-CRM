@@ -35,6 +35,10 @@ return function(\App\Core\Router $router): void {
     $router->get('/api/v1/geo/pincodes', [\App\Http\Controllers\Api\V1\GeoController::class, 'pincodes']);
     $router->get('/api/v1/geo/pincodes/{pin}', [\App\Http\Controllers\Api\V1\GeoController::class, 'pincode']);
     $router->get('/api/v1/geo/search', [\App\Http\Controllers\Api\V1\GeoController::class, 'search']);
+    $router->post('/api/v1/geo/states', [\App\Http\Controllers\Api\V1\GeoController::class, 'createState']);
+    $router->post('/api/v1/geo/districts', [\App\Http\Controllers\Api\V1\GeoController::class, 'createDistrict']);
+    $router->post('/api/v1/geo/cities', [\App\Http\Controllers\Api\V1\GeoController::class, 'createCity']);
+    $router->post('/api/v1/geo/pincodes', [\App\Http\Controllers\Api\V1\GeoController::class, 'createPincode']);
 
     // Admin Geo Management
     $router->post('/api/v1/admin/geo/states', [\App\Http\Controllers\Api\V1\GeoController::class, 'createState']);
@@ -70,6 +74,7 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/super/impersonate/{ref}', [\App\Http\Controllers\Api\V1\Super\ImpersonationController::class, 'impersonate']);
     $router->get('/api/v1/super/dashboard/stats', [\App\Http\Controllers\Api\V1\Super\SuperMetricsController::class, 'stats']);
     $router->get('/api/v1/super/audit', [\App\Http\Controllers\Api\V1\Super\SuperMetricsController::class, 'audit']);
+    $router->get('/api/v1/super/audit-logs', [\App\Http\Controllers\Api\V1\Super\SuperMetricsController::class, 'audit']);
     $router->get('/api/v1/super/security-events', [\App\Http\Controllers\Api\V1\Super\SuperMetricsController::class, 'securityEvents']);
 
     // Franchise Admin Routes
@@ -391,6 +396,7 @@ return function(\App\Core\Router $router): void {
     // P4: Inventory Batches & Stock
     $router->get('/api/v1/admin/inventory/stock-summary', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'stockSummary']);
     $router->get('/api/v1/admin/inventory/near-expiry', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'nearExpiry']);
+    $router->get('/api/v1/admin/near-expiry', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'nearExpiry']);
     $router->get('/api/v1/admin/inventory/expired', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'expired']);
     $router->get('/api/v1/admin/inventory/movements', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'movements']);
     $router->get('/api/v1/admin/inventory/batches', [\App\Http\Controllers\Api\V1\Admin\InventoryController::class, 'index']);
@@ -542,6 +548,7 @@ return function(\App\Core\Router $router): void {
     $router->get('/api/v1/portal/dispatches', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'listDispatches']);
     $router->get('/api/v1/portal/dispatches/{ref}', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'showDispatch']);
     $router->get('/api/v1/portal/payments', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'payments']);
+    $router->get('/api/v1/portal/ledger', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'ledger']);
     $router->get('/api/v1/portal/outstanding/ageing', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'outstandingAgeing']);
     $router->get('/api/v1/portal/outstanding', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'outstanding']);
     $router->get('/api/v1/portal/schemes', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'schemes']);

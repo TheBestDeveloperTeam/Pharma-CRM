@@ -27,7 +27,31 @@ final class InventoryController
     {
         $ctx = TenantContext::get(); 
         $this->authorization->requirePermission($ctx, 'inventory', 'create'); 
-        $clean = Validation::validate($r->all(), ['product_ref' => 'required|string', 'batch_no' => 'required|string', 'expiry_date' => 'required|date:Y-m-d', 'qty' => 'required|integer|min:1', 'manufacturing_date' => 'date:Y-m-d']); 
+
+        $payload = $r->all();
+        if (!isset($payload['batch_no']) && isset($payload['batch_number'])) {
+            $payload['batch_no'] = $payload['batch_number'];
+        }
+        if (!isset($payload['qty']) && isset($payload['quantity'])) {
+            $payload['qty'] = $payload['quantity'];
+        }
+        if (!isset($payload['manufacturing_date']) && isset($payload['mfg_date'])) {
+            $payload['manufacturing_date'] = $payload['mfg_date'];
+        }
+
+        $clean = Validation::validate($payload, [
+            'product_ref'        => 'required|string',
+            'batch_no'           => 'required|string',
+            'expiry_date'        => 'required|date:Y-m-d',
+            'qty'                => 'required|integer|min:1',
+            'manufacturing_date' => 'date:Y-m-d',
+        ]);
+
+        if (!empty($clean['manufacturing_date']) && !empty($clean['expiry_date'])) {
+            if (strtotime($clean['expiry_date']) <= strtotime($clean['manufacturing_date'])) {
+                throw new \App\Core\Exceptions\ValidationException('INVALID_EXPIRY', 'Expiry date must be after manufacturing date.');
+            }
+        }
         
         $tx = new \App\Core\Transaction(\App\Core\Database::connection());
         $after = $tx->run(function() use ($ctx, $clean, $r) {

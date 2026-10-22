@@ -148,7 +148,9 @@ final class PortalController
             if ($qty <= 0) continue;
 
             $prod = $this->productRepo->findByRef($franchiseRef, $prodRef);
-            if (!$prod || $prod['status'] !== 'ACTIVE') continue;
+            if (!$prod || $prod['status'] !== 'ACTIVE') {
+                throw new \App\Core\Exceptions\ValidationException('INVALID_PRODUCT', "Product '{$prodRef}' does not exist or is inactive in catalogue.");
+            }
 
             $price = $this->priceResolver->resolve($franchiseRef, $prodRef, $ctx->partyRef, $tierRef, $date);
             $unitRate = (float)$price['rate'];
@@ -521,6 +523,34 @@ final class PortalController
             'total_outstanding' => round($total, 2),
             'buckets'           => array_map(fn($v) => round($v, 2), $buckets),
             'invoices'          => $invoices,
+        ]);
+    }
+
+    /**
+     * PRT-010: Distributor view transaction ledger statements
+     */
+    public function ledger(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        $franchiseRef = $ctx->requireFranchise();
+        $partyRef = $ctx->partyRef;
+
+        $creditService = \App\Core\Container::getInstance()->make(\App\Domain\Parties\PartyCreditService::class);
+        $exposure = $creditService->check($franchiseRef, $partyRef, 0.0);
+
+        $stmtInvoices = $this->pdo->prepare("SELECT invoice_ref, invoice_no, invoice_date, grand_total, paid_total, (grand_total - paid_total) as balance, status, created_at FROM invoices WHERE franchise_ref = :f AND party_ref = :p ORDER BY invoice_date DESC LIMIT 50");
+        $stmtInvoices->execute([':f' => $franchiseRef, ':p' => $partyRef]);
+        $invoices = $stmtInvoices->fetchAll(\PDO::FETCH_ASSOC);
+
+        $stmtPayments = $this->pdo->prepare("SELECT payment_ref, payment_no, payment_date, amount, allocated_amount, mode, reference_no, status, created_at FROM payments WHERE franchise_ref = :f AND party_ref = :p ORDER BY payment_date DESC LIMIT 50");
+        $stmtPayments->execute([':f' => $franchiseRef, ':p' => $partyRef]);
+        $payments = $stmtPayments->fetchAll(\PDO::FETCH_ASSOC);
+
+        return Response::json(200, [
+            'party_ref'    => $partyRef,
+            'credit_info'  => $exposure,
+            'invoices'     => $invoices,
+            'payments'     => $payments,
         ]);
     }
 

@@ -65,7 +65,18 @@ final class ProductsController
         $this->authorization->requirePermission($ctx, 'products', 'create');
         $franchiseRef = $ctx->requireFranchise();
 
-        $clean = Validation::validate($r->all(), [
+        $payload = $r->all();
+        if (!isset($payload['franchise_rate'])) {
+            if (isset($payload['pts'])) {
+                $payload['franchise_rate'] = $payload['pts'];
+            } elseif (isset($payload['ptr'])) {
+                $payload['franchise_rate'] = $payload['ptr'];
+            } elseif (isset($payload['mrp'])) {
+                $payload['franchise_rate'] = round((float)$payload['mrp'] * 0.7, 2);
+            }
+        }
+
+        $clean = Validation::validate($payload, [
             'sku'            => 'required|string',
             'product_name'   => 'required|string',
             'franchise_rate' => 'required|numeric|min:0',
