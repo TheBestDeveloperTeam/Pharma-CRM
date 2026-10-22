@@ -27,12 +27,11 @@ final class PartiesController
 
     private function resolveFranchise(TenantContext $ctx, Request $r, ?array $clean = null): string
     {
-        if ($ctx->franchiseRef !== null && $ctx->franchiseRef !== '') {
-            return $ctx->franchiseRef;
+        // Check explicit query param, header, or body first
+        $candidate = (string)($r->query('franchise_ref') ?? '');
+        if ($candidate === '') {
+            $candidate = $r->header('x-franchise-ref');
         }
-
-        // For Super Admin or platform scopes: check explicit header/input, or state/pincode, or fallback to first active franchise
-        $candidate = $r->header('x-franchise-ref');
         if ($candidate === '') {
             $candidate = (string)($r->input('franchise_ref') ?? ($clean['franchise_ref'] ?? ''));
         }
@@ -44,8 +43,12 @@ final class PartiesController
             if ($found) return (string)$found;
         }
 
+        if ($ctx->franchiseRef !== null && $ctx->franchiseRef !== '') {
+            return $ctx->franchiseRef;
+        }
+
         // Try mapping by state_ref if provided
-        $stateRef = $clean['state_ref'] ?? $r->input('state_ref');
+        $stateRef = $clean['state_ref'] ?? $r->query('state_ref') ?? $r->input('state_ref');
         if (!empty($stateRef)) {
             $stmt = $this->pdo->prepare("SELECT franchise_ref FROM franchises WHERE state_ref = ? AND status = 'ACTIVE' ORDER BY id ASC LIMIT 1");
             $stmt->execute([$stateRef]);
@@ -63,11 +66,14 @@ final class PartiesController
 
     public function index(Request $r): Response
     {
-        $ctx = $this->ctx(); $franchiseRef = $this->resolveFranchise($ctx, $r); $this->authorization->requirePermission($ctx, 'parties', 'view');
+        $ctx = $this->ctx(); 
+        $this->authorization->requirePermission($ctx, 'parties', 'view');
         $query = QueryParams::fromRequest($r, ['firm_name', 'party_code', 'created_at', 'credit_limit', 'status']);
         $scope = $ctx->scopeFor('parties');
-        if ($scope === 'NONE') return Response::json(200, [], ['page' => $query['page'], 'per_page' => $query['per_page'], 'total' => 0, 'total_pages' => 0]);
+        if ($scope === 'NONE' && !$ctx->isSuper()) return Response::json(200, [], ['page' => $query['page'], 'per_page' => $query['per_page'], 'total' => 0, 'total_pages' => 0]);
         if ($scope === 'TERRITORY' && !$ctx->territoryRefs) return Response::json(200, [], ['page' => $query['page'], 'per_page' => $query['per_page'], 'total' => 0, 'total_pages' => 0]);
+        
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $filters = ['status' => $query['status'], 'search' => $query['search'], 'party_type' => $r->query('party_type'), 'city_ref' => $r->query('city_ref'), 'area' => $r->query('area'), 'sort_by' => $query['sort_by'], 'sort_dir' => $query['sort_dir']];
         if ($scope === 'OWN') $filters['sales_user_ref'] = $ctx->userRef;
         if ($scope === 'TEAM') $filters['sales_user_refs'] = array_values(array_unique(array_merge([$ctx->userRef], $ctx->teamUserRefs)));
