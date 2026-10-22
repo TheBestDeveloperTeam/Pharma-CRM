@@ -25,9 +25,45 @@ final class PartiesController
 
     private function ctx(): TenantContext { return TenantContext::get(); }
 
+    private function resolveFranchise(TenantContext $ctx, Request $r, ?array $clean = null): string
+    {
+        if ($ctx->franchiseRef !== null && $ctx->franchiseRef !== '') {
+            return $ctx->franchiseRef;
+        }
+
+        // For Super Admin or platform scopes: check explicit header/input, or state/pincode, or fallback to first active franchise
+        $candidate = $r->header('x-franchise-ref');
+        if ($candidate === '') {
+            $candidate = (string)($r->input('franchise_ref') ?? ($clean['franchise_ref'] ?? ''));
+        }
+
+        if ($candidate !== '') {
+            $stmt = $this->pdo->prepare("SELECT franchise_ref FROM franchises WHERE franchise_ref = ? LIMIT 1");
+            $stmt->execute([$candidate]);
+            $found = $stmt->fetchColumn();
+            if ($found) return (string)$found;
+        }
+
+        // Try mapping by state_ref if provided
+        $stateRef = $clean['state_ref'] ?? $r->input('state_ref');
+        if (!empty($stateRef)) {
+            $stmt = $this->pdo->prepare("SELECT franchise_ref FROM franchises WHERE state_ref = ? AND status = 'ACTIVE' ORDER BY id ASC LIMIT 1");
+            $stmt->execute([$stateRef]);
+            $found = $stmt->fetchColumn();
+            if ($found) return (string)$found;
+        }
+
+        // Fallback to primary active franchise
+        $stmt = $this->pdo->query("SELECT franchise_ref FROM franchises WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT 1");
+        $found = $stmt->fetchColumn();
+        if ($found) return (string)$found;
+
+        return $ctx->requireFranchise();
+    }
+
     public function index(Request $r): Response
     {
-        $ctx = $this->ctx(); $franchiseRef = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'parties', 'view');
+        $ctx = $this->ctx(); $franchiseRef = $this->resolveFranchise($ctx, $r); $this->authorization->requirePermission($ctx, 'parties', 'view');
         $query = QueryParams::fromRequest($r, ['firm_name', 'party_code', 'created_at', 'credit_limit', 'status']);
         $scope = $ctx->scopeFor('parties');
         if ($scope === 'NONE') return Response::json(200, [], ['page' => $query['page'], 'per_page' => $query['per_page'], 'total' => 0, 'total_pages' => 0]);
@@ -42,7 +78,7 @@ final class PartiesController
 
     public function show(Request $r): Response
     {
-        $ctx = $this->ctx(); $franchiseRef = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'parties', 'view'); $ref = (string)$r->param('ref');
+        $ctx = $this->ctx(); $franchiseRef = $this->resolveFranchise($ctx, $r); $this->authorization->requirePermission($ctx, 'parties', 'view'); $ref = (string)$r->param('ref');
         $party = $this->parties->findByRef($franchiseRef, $ref); if (!$party) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $party['sales_user_ref'] ?? null, $this->firstTerritory($franchiseRef, $ref), $franchiseRef);
         $party['product_interests'] = $this->parties->listProductInterests($franchiseRef, $ref); $party['credit'] = $this->creditService->check($franchiseRef, $ref); $party['territories'] = $this->territories($franchiseRef, $ref);
@@ -51,29 +87,42 @@ final class PartiesController
 
     public function store(Request $r): Response
     {
-        $ctx = $this->ctx(); $this->authorization->requirePermission($ctx, 'parties', 'create'); $clean = $this->validateParty($r, true, $ctx); $data = $this->partyData($clean, $ctx);
-        $db = Container::getInstance()->make(\App\Core\Database::class);
-        $after = $db->transaction(function() use ($ctx, $clean, $data) {
-            $partyRef = $this->partyService->create($data); 
-            if (!empty($clean['product_refs'])) $this->parties->replaceProductInterests($ctx->requireFranchise(), $partyRef, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
-            $after = $this->parties->findByRef($ctx->requireFranchise(), $partyRef); 
-            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.created', entityType: 'party', entityRef: $partyRef, after: $after ?? $data); 
-            return $after;
-        });
-        return Response::json(201, $after);
+        $ctx = $this->ctx(); 
+        $this->authorization->requirePermission($ctx, 'parties', 'create'); 
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
+        $clean = $this->validateParty($r, true, $ctx, $franchiseRef); 
+        $data = $this->partyData($clean, $ctx, $franchiseRef);
+        
+        try {
+            $db = Container::getInstance()->make(\App\Core\Database::class);
+            $after = $db->transaction(function() use ($ctx, $franchiseRef, $clean, $data) {
+                $partyRef = $this->partyService->create($data); 
+                if (!empty($clean['product_refs'])) $this->parties->replaceProductInterests($franchiseRef, $partyRef, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
+                $after = $this->parties->findByRef($franchiseRef, $partyRef); 
+                $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.created', entityType: 'party', entityRef: $partyRef, after: $after ?? $data, franchiseRef: $franchiseRef); 
+                return $after;
+            });
+            return Response::json(201, $after);
+        } catch (\App\Core\Exceptions\AppException $e) {
+            throw $e;
+        } catch (\PDOException $e) {
+            throw new ValidationException('DATABASE_ERROR', 'Failed to save party: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            throw new ValidationException('PARTY_CREATION_FAILED', 'Party creation error: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $r): Response
     {
-        $ctx = $this->ctx(); $franchiseRef = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'edit'); $before = $this->parties->findByRef($franchiseRef, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
-        $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($franchiseRef, $ref), $franchiseRef); $clean = $this->validateParty($r, false, $ctx); $data = $this->partyData($clean, $ctx, false); unset($data['party_ref'], $data['party_code'], $data['created_by_ref'], $data['franchise_ref'], $data['org_ref'], $data['status'], $data['opening_outstanding']);
+        $ctx = $this->ctx(); $franchiseRef = $this->resolveFranchise($ctx, $r); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'edit'); $before = $this->parties->findByRef($franchiseRef, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
+        $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($franchiseRef, $ref), $franchiseRef); $clean = $this->validateParty($r, false, $ctx, $franchiseRef); $data = $this->partyData($clean, $ctx, $franchiseRef, false); unset($data['party_ref'], $data['party_code'], $data['created_by_ref'], $data['franchise_ref'], $data['org_ref'], $data['status'], $data['opening_outstanding']);
         
         $db = Container::getInstance()->make(\App\Core\Database::class);
         $after = $db->transaction(function() use ($ctx, $franchiseRef, $ref, $clean, $data, $before) {
             $this->partyService->update($franchiseRef, $ref, $data); 
             if (array_key_exists('product_refs', $clean)) $this->parties->replaceProductInterests($franchiseRef, $ref, $clean['product_refs'], $ctx->orgRef, $ctx->userRef);
             $after = $this->parties->findByRef($franchiseRef, $ref); 
-            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.updated', entityType: 'party', entityRef: $ref, before: $before, after: $after ?? $data); 
+            $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.updated', entityType: 'party', entityRef: $ref, before: $before, after: $after ?? $data, franchiseRef: $franchiseRef); 
             return $after;
         });
         
@@ -82,25 +131,25 @@ final class PartiesController
 
     public function status(Request $r): Response
     {
-        $ctx = $this->ctx(); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
+        $ctx = $this->ctx(); $f = $this->resolveFranchise($ctx, $r); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); $status = Validation::validate($r->all(), ['status' => 'required|enum:ACTIVE,INACTIVE'])['status']; $this->parties->setStatus($f, $ref, $status); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.status_changed', entityType: 'party', entityRef: $ref, before: $before, after: ['status' => $status]); return Response::json(200, ['party_ref' => $ref, 'status' => $status]);
     }
 
     public function archive(Request $r): Response
     {
-        $ctx = $this->ctx(); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'archive'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
+        $ctx = $this->ctx(); $f = $this->resolveFranchise($ctx, $r); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'archive'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); $this->partyService->archive($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.archived', entityType: 'party', entityRef: $ref, before: $before, after: ['status' => 'ARCHIVED']); return Response::json(200, ['party_ref' => $ref, 'status' => 'ARCHIVED']);
     }
 
     public function restore(Request $r): Response
     {
-        $ctx = $this->ctx(); $f = $ctx->requireFranchise(); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'archive'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
+        $ctx = $this->ctx(); $f = $this->resolveFranchise($ctx, $r); $ref = (string)$r->param('ref'); $this->authorization->requirePermission($ctx, 'parties', 'archive'); $before = $this->parties->findByRef($f, $ref); if (!$before) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $before['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); $this->partyService->restore($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'party.restored', entityType: 'party', entityRef: $ref, before: $before, after: ['status' => 'ACTIVE']); return Response::json(200, ['party_ref' => $ref, 'status' => 'ACTIVE']);
     }
 
     public function ledger(Request $r): Response
     {
-        $ctx = $this->ctx(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'parties', 'view'); $ref = (string)$r->param('ref'); $party = $this->parties->findByRef($f, $ref); if (!$party) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
+        $ctx = $this->ctx(); $f = $this->resolveFranchise($ctx, $r); $this->authorization->requirePermission($ctx, 'parties', 'view'); $ref = (string)$r->param('ref'); $party = $this->parties->findByRef($f, $ref); if (!$party) throw new NotFoundException('PARTY_NOT_FOUND', 'Party not found.');
         $this->authorization->requireRecordScope($ctx, 'parties', $party['sales_user_ref'] ?? null, $this->firstTerritory($f, $ref), $f); return Response::json(200, $this->creditService->check($f, $ref, (float)$r->query('proposed_exposure', 0)));
     }
 
@@ -108,7 +157,7 @@ final class PartiesController
     public function dropdown(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'view');
 
         $stmt = $this->pdo->prepare(
@@ -125,7 +174,7 @@ final class PartiesController
     public function orders(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'view');
         $ref = (string)$r->param('ref');
 
@@ -138,7 +187,7 @@ final class PartiesController
     public function invoices(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'view');
         $ref = (string)$r->param('ref');
 
@@ -151,7 +200,7 @@ final class PartiesController
     public function payments(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'view');
         $ref = (string)$r->param('ref');
 
@@ -164,7 +213,7 @@ final class PartiesController
     public function updateCreditLimit(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'edit');
         $ref = (string)$r->param('ref');
         $clean = Validation::validate($r->all(), ['credit_limit' => 'required|numeric|min:0']);
@@ -177,7 +226,7 @@ final class PartiesController
     public function suspend(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate');
         $ref = (string)$r->param('ref');
         $this->parties->setStatus($franchiseRef, $ref, 'INACTIVE');
@@ -188,14 +237,14 @@ final class PartiesController
     public function activate(Request $r): Response
     {
         $ctx = $this->ctx();
-        $franchiseRef = $ctx->requireFranchise();
+        $franchiseRef = $this->resolveFranchise($ctx, $r);
         $this->authorization->requirePermission($ctx, 'parties', 'activateDeactivate');
         $ref = (string)$r->param('ref');
         $this->parties->setStatus($franchiseRef, $ref, 'ACTIVE');
         return Response::json(200, ['party_ref' => $ref, 'status' => 'ACTIVE']);
     }
 
-    private function validateParty(Request $r, bool $create, TenantContext $ctx): array
+    private function validateParty(Request $r, bool $create, TenantContext $ctx, string $franchiseRef): array
     {
         $payload = $r->all();
         foreach (['contact_name','mobile','whatsapp','email','gstin','pincode','payment_terms','payment_terms_days','drug_license_validity','agreement_from','agreement_to'] as $optional) if (array_key_exists($optional, $payload) && $payload[$optional] === '') $payload[$optional] = null;
@@ -203,21 +252,71 @@ final class PartiesController
         $clean = Validation::validate($payload, $rules);
         if (!$create && array_key_exists('opening_outstanding', $clean)) throw new ValidationException('OPENING_OUTSTANDING_IMMUTABLE', 'opening_outstanding can only be set when creating a party.');
         if (($clean['agreement_to'] ?? '') !== '' && ($clean['agreement_from'] ?? '') !== '' && $clean['agreement_to'] < $clean['agreement_from']) throw new ValidationException('INVALID_AGREEMENT_DATES', 'agreement_to must be on or after agreement_from.');
-        if (!empty($clean['pincode'])) { $stmt = $this->pdo->prepare('SELECT 1 FROM pincodes WHERE pincode = ? LIMIT 1'); $stmt->execute([$clean['pincode']]); if (!$stmt->fetchColumn()) throw new ValidationException('INVALID_PINCODE', 'pincode is not present in the geography master.'); }
+        
+        // Dynamic Pincode Auto-Provisioning & Reference Linking
+        if (!empty($clean['pincode'])) {
+            $stmt = $this->pdo->prepare('SELECT city_ref, district_ref, state_ref FROM pincodes WHERE pincode = ? LIMIT 1');
+            $stmt->execute([$clean['pincode']]);
+            $existingPin = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$existingPin) {
+                // Determine state_ref & district_ref
+                $stateRef = $clean['state_ref'] ?? null;
+                $districtRef = $clean['district_ref'] ?? null;
+                $cityRef = $clean['city_ref'] ?? null;
+
+                if (!$stateRef) {
+                    // Try to infer state_ref from franchise
+                    $stmtF = $this->pdo->prepare("SELECT state_ref FROM franchises WHERE franchise_ref = ? LIMIT 1");
+                    $stmtF->execute([$franchiseRef]);
+                    $stateRef = $stmtF->fetchColumn() ?: 'STA-DELHI000000000001';
+                }
+
+                if (!$districtRef) {
+                    $stmtD = $this->pdo->prepare("SELECT district_ref FROM districts WHERE state_ref = ? ORDER BY id ASC LIMIT 1");
+                    $stmtD->execute([$stateRef]);
+                    $districtRef = $stmtD->fetchColumn() ?: 'DST-NEWDELHI00000001';
+                }
+
+                if (!$cityRef) {
+                    $stmtC = $this->pdo->prepare("SELECT city_ref FROM cities WHERE district_ref = ? ORDER BY id ASC LIMIT 1");
+                    $stmtC->execute([$districtRef]);
+                    $cityRef = $stmtC->fetchColumn() ?: null;
+                }
+
+                // Dynamically insert validated unique pincode into geography master
+                $stmtInsertPin = $this->pdo->prepare(
+                    "INSERT INTO pincodes (pincode, city_ref, district_ref, state_ref) VALUES (?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE state_ref = VALUES(state_ref), district_ref = VALUES(district_ref)"
+                );
+                $stmtInsertPin->execute([$clean['pincode'], $cityRef, $districtRef, $stateRef]);
+
+                // Auto-fill party's geographical references if they were empty
+                if (empty($clean['state_ref'])) $clean['state_ref'] = $stateRef;
+                if (empty($clean['district_ref'])) $clean['district_ref'] = $districtRef;
+                if (empty($clean['city_ref']) && $cityRef) $clean['city_ref'] = $cityRef;
+            } else {
+                // Use master reference if missing in request
+                if (empty($clean['state_ref']) && !empty($existingPin['state_ref'])) $clean['state_ref'] = $existingPin['state_ref'];
+                if (empty($clean['district_ref']) && !empty($existingPin['district_ref'])) $clean['district_ref'] = $existingPin['district_ref'];
+                if (empty($clean['city_ref']) && !empty($existingPin['city_ref'])) $clean['city_ref'] = $existingPin['city_ref'];
+            }
+        }
+
         $exclude = (string)($r->param('ref') ?? '');
         foreach (['mobile' => 'mobile', 'gstin' => 'gstin', 'drug_license_no' => 'drug_license_no'] as $input => $column) {
-            if (!empty($clean[$input])) { $sql = "SELECT party_ref FROM parties WHERE franchise_ref = ? AND {$column} = ?" . ($exclude !== '' ? ' AND party_ref <> ?' : '') . ' LIMIT 1'; $params = [$ctx->requireFranchise(), $clean[$input]]; if ($exclude !== '') $params[] = $exclude; $stmt = $this->pdo->prepare($sql); $stmt->execute($params); if ($stmt->fetchColumn()) throw new ValidationException('DUPLICATE_PARTY_IDENTIFIER', "{$input} is already used by another party."); }
+            if (!empty($clean[$input])) { $sql = "SELECT party_ref FROM parties WHERE franchise_ref = ? AND {$column} = ?" . ($exclude !== '' ? ' AND party_ref <> ?' : '') . ' LIMIT 1'; $params = [$franchiseRef, $clean[$input]]; if ($exclude !== '') $params[] = $exclude; $stmt = $this->pdo->prepare($sql); $stmt->execute($params); if ($stmt->fetchColumn()) throw new ValidationException('DUPLICATE_PARTY_IDENTIFIER', "{$input} is already used by another party."); }
         }
-        if (!empty($clean['firm_name']) && !empty($clean['city_ref'])) { $sql = 'SELECT party_ref FROM parties WHERE franchise_ref = ? AND firm_name = ? AND city_ref = ?' . ($exclude !== '' ? ' AND party_ref <> ?' : '') . ' LIMIT 1'; $params = [$ctx->requireFranchise(), $clean['firm_name'], $clean['city_ref']]; if ($exclude !== '') $params[] = $exclude; $stmt = $this->pdo->prepare($sql); $stmt->execute($params); if ($stmt->fetchColumn()) throw new ValidationException('DUPLICATE_PARTY', 'A party with the same firm name and city already exists.'); }
-        if (!empty($clean['tier_ref'])) { $tier = $this->tiers->findByRef($ctx->requireFranchise(), (string)$clean['tier_ref']); if (!$tier || ($tier['status'] ?? '') !== 'ACTIVE') throw new ValidationException('INVALID_PRICING_TIER', 'tier_ref must reference an active pricing tier.'); }
-        if (!empty($clean['sales_user_ref'])) { $stmt = $this->pdo->prepare("SELECT 1 FROM users WHERE franchise_ref = ? AND user_ref = ? AND status = 'ACTIVE' LIMIT 1"); $stmt->execute([$ctx->requireFranchise(), $clean['sales_user_ref']]); if (!$stmt->fetchColumn()) throw new ValidationException('INVALID_SALES_USER', 'sales_user_ref must reference an active user in this franchise.'); }
-        foreach (($clean['product_refs'] ?? []) as $productRef) if (!$this->products->findByRef($ctx->requireFranchise(), (string)$productRef)) throw new ValidationException('INVALID_PRODUCT', "Product {$productRef} not found.");
+        if (!empty($clean['firm_name']) && !empty($clean['city_ref'])) { $sql = 'SELECT party_ref FROM parties WHERE franchise_ref = ? AND firm_name = ? AND city_ref = ?' . ($exclude !== '' ? ' AND party_ref <> ?' : '') . ' LIMIT 1'; $params = [$franchiseRef, $clean['firm_name'], $clean['city_ref']]; if ($exclude !== '') $params[] = $exclude; $stmt = $this->pdo->prepare($sql); $stmt->execute($params); if ($stmt->fetchColumn()) throw new ValidationException('DUPLICATE_PARTY', 'A party with the same firm name and city already exists.'); }
+        if (!empty($clean['tier_ref'])) { $tier = $this->tiers->findByRef($franchiseRef, (string)$clean['tier_ref']); if (!$tier || ($tier['status'] ?? '') !== 'ACTIVE') throw new ValidationException('INVALID_PRICING_TIER', 'tier_ref must reference an active pricing tier.'); }
+        if (!empty($clean['sales_user_ref'])) { $stmt = $this->pdo->prepare("SELECT 1 FROM users WHERE franchise_ref = ? AND user_ref = ? AND status = 'ACTIVE' LIMIT 1"); $stmt->execute([$franchiseRef, $clean['sales_user_ref']]); if (!$stmt->fetchColumn()) throw new ValidationException('INVALID_SALES_USER', 'sales_user_ref must reference an active user in this franchise.'); }
+        foreach (($clean['product_refs'] ?? []) as $productRef) if (!$this->products->findByRef($franchiseRef, (string)$productRef)) throw new ValidationException('INVALID_PRODUCT', "Product {$productRef} not found.");
         return $clean;
     }
 
-    private function partyData(array $clean, TenantContext $ctx, bool $create = true): array
+    private function partyData(array $clean, TenantContext $ctx, string $franchiseRef, bool $create = true): array
     {
-        $data = $clean; $data['org_ref'] = $ctx->orgRef; $data['franchise_ref'] = $ctx->requireFranchise(); $data['created_by_ref'] = $ctx->userRef; $data['sales_user_ref'] = $ctx->scopeFor('parties') === 'ALL' ? ($clean['sales_user_ref'] ?? $ctx->userRef) : $ctx->userRef; if ($create) $data['status'] = 'ACTIVE';
+        $data = $clean; $data['org_ref'] = $ctx->orgRef; $data['franchise_ref'] = $franchiseRef; $data['created_by_ref'] = $ctx->userRef; $data['sales_user_ref'] = $ctx->scopeFor('parties') === 'ALL' ? ($clean['sales_user_ref'] ?? $ctx->userRef) : $ctx->userRef; if ($create) $data['status'] = 'ACTIVE';
         if (!isset($data['payment_terms_days']) && !empty($data['payment_terms']) && preg_match('/\d+/', (string)$data['payment_terms'], $m)) $data['payment_terms_days'] = (int)$m[0];
         return $data;
     }

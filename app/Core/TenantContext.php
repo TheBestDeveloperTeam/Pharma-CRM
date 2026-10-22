@@ -52,7 +52,13 @@ final class TenantContext
 
     public function can(string $module, string $action): bool
     {
-        return $this->isSuper() || $this->isAdmin() || in_array('admin', $this->roles, true) || in_array($action, $this->permissions[$module] ?? [], true);
+        if ($this->isSuper() || $this->isAdmin() || in_array('admin', $this->roles, true)) {
+            return true;
+        }
+        if ($module === 'portal' && $this->isPartyBound() && ($this->isDistributor() || in_array('distributor', $this->roles, true))) {
+            return true;
+        }
+        return in_array($action, $this->permissions[$module] ?? [], true);
     }
 
     public function scopeFor(string $module): string

@@ -31,7 +31,7 @@ final class PartyService
             }
         }
 
-        $data['party_ref'] = $data['party_ref'] ?? RefGenerator::generate('PTY');
+        $data['party_ref'] = $data['party_ref'] ?? RefGenerator::generate('PAR');
         return $this->parties->create($data);
     }
 

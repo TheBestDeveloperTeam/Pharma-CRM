@@ -35,7 +35,8 @@ class AuditService
         ?string       $entityRef = null,
         ?array        $before = null,
         ?array        $after = null,
-        ?string       $reason = null
+        ?string       $reason = null,
+        ?string       $franchiseRef = null,
     ): void {
         $auditRef  = RefGenerator::make('AUD');
         $ip        = $_SERVER['REMOTE_ADDR'] ?? null;
@@ -45,7 +46,7 @@ class AuditService
         $this->repository->insert([
             'audit_ref'        => $auditRef,
             'org_ref'          => $ctx->orgRef,
-            'franchise_ref'    => $ctx->franchiseRef,
+            'franchise_ref'    => $franchiseRef ?? $ctx->franchiseRef,
             'actor_ref'        => $ctx->userRef,
             'actor_role'       => $ctx->role,
             'impersonator_ref' => $ctx->impersonatorRef,

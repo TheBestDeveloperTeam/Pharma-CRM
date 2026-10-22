@@ -91,6 +91,9 @@ final class AuthorizationService
         if ($ctx->isAdmin() || in_array('admin', $ctx->roles, true) || in_array('ROLE-MUMBAI-ADMIN0001', $ctx->roles, true)) {
             return true;
         }
+        if ($module === 'portal' && $ctx->isPartyBound() && ($ctx->isDistributor() || in_array('distributor', $ctx->roles, true))) {
+            return true;
+        }
         return in_array($action, $ctx->permissions[$module] ?? [], true);
     }
 
