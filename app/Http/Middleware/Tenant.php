@@ -53,17 +53,22 @@ final class Tenant
 
         if ($headerFranchise !== '') {
             if ($ctx->franchiseRef !== null && $headerFranchise !== $ctx->franchiseRef) {
-                if (Container::getInstance()->has(\App\Domain\Audit\AuditService::class)) {
-                    /** @var \App\Domain\Audit\AuditService $audit */
-                    $audit = Container::getInstance()->make(\App\Domain\Audit\AuditService::class);
-                    $audit->log(
-                        ctx: $ctx,
-                        category: 'SECURITY',
-                        action: 'tenant.header_mismatch',
-                        entityType: 'franchise',
-                        entityRef: $headerFranchise,
-                        reason: "Header: {$headerFranchise} vs Token: {$ctx->franchiseRef}"
-                    );
+                try {
+                    if (Container::getInstance()->has(\App\Domain\Audit\AuditService::class)) {
+                        /** @var \App\Domain\Audit\AuditService $audit */
+                        $audit = Container::getInstance()->make(\App\Domain\Audit\AuditService::class);
+                        $audit->log(
+                            ctx: $ctx,
+                            category: 'SECURITY',
+                            action: 'tenant.header_mismatch',
+                            entityType: 'franchise',
+                            entityRef: $headerFranchise,
+                            reason: "Header: {$headerFranchise} vs Token: {$ctx->franchiseRef}",
+                            franchiseRef: $ctx->franchiseRef
+                        );
+                    }
+                } catch (\Throwable) {
+                    // Suppress audit log failure so security exception is delivered intact
                 }
                 throw new ForbiddenException('TENANT_MISMATCH', 'X-Franchise-Ref header does not match authenticated tenant.');
             } elseif ($ctx->franchiseRef === null && $ctx->isSuperAdmin()) {
