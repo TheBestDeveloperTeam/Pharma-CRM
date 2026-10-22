@@ -8,7 +8,16 @@ use App\Support\Money;
 /** Sole invoice-outstanding authority: only active, non-reversed allocations reduce an invoice. */
 final class OutstandingService {
  public function __construct(private Database $db,private PartyScopePredicate $scope){}
- public function rowsForContext(TenantContext $ctx,?string $partyRef=null):array{$p=[':f'=>$ctx->requireFranchise()];$w=["i.franchise_ref=:f","i.status='POSTED'",$this->scope->clause($ctx,'p',$p,'payments')];if($partyRef!==null&&$partyRef!==''){$w[]='i.party_ref=:party';$p[':party']=$partyRef;}return $this->age($this->rows(implode(' AND ',$w),$p));}
+ public function rowsForContext(TenantContext $ctx,?string $partyRef=null):array{
+     $franchiseRef = $ctx->franchiseRef;
+     if (($franchiseRef === null || $franchiseRef === '') && $ctx->isSuper()) {
+         $franchiseRef = (string)($this->db->fetchColumn("SELECT franchise_ref FROM franchises WHERE status = 'ACTIVE' ORDER BY id ASC LIMIT 1") ?: '');
+     }
+     if ($franchiseRef === null || $franchiseRef === '') {
+         $franchiseRef = $ctx->requireFranchise();
+     }
+     $p=[':f'=>$franchiseRef];$w=["i.franchise_ref=:f","i.status='POSTED'",$this->scope->clause($ctx,'p',$p,'payments')];if($partyRef!==null&&$partyRef!==''){$w[]='i.party_ref=:party';$p[':party']=$partyRef;}return $this->age($this->rows(implode(' AND ',$w),$p));
+ }
  /** Compatibility read for non-request internal callers. */
  public function invoiceRows(string $franchiseRef,?string $partyRef=null):array{$p=[':f'=>$franchiseRef];$w=["i.franchise_ref=:f","i.status='POSTED'"];if($partyRef){$w[]='i.party_ref=:party';$p[':party']=$partyRef;}return $this->rows(implode(' AND ',$w),$p);}
  public function withAgeing(string $franchiseRef,?string $partyRef=null):array{return $this->age($this->invoiceRows($franchiseRef,$partyRef));}
