@@ -83,11 +83,18 @@ if (PHP_SAPI !== 'cli') {
                 $request->origin()
             );
         } catch (\Throwable $e) {
-            // Log it, return generic 500 with CORS headers intact
+            // Log it, return detailed 500 with CORS headers intact
             error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             $response = \App\Core\Http\CorsPolicy::apply(
-                \App\Core\Response::error(500, 'INTERNAL_ERROR',
-                    \App\Support\Config::get('app.debug') ? $e->getMessage() : 'An internal error occurred.'),
+                \App\Core\Response::json(500, [
+                    'success' => false,
+                    'error' => [
+                        'code' => 'INTERNAL_ERROR',
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ],
+                ]),
                 $request->origin()
             );
         }
