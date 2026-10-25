@@ -35,10 +35,17 @@ final class BearerAuth
     public function __invoke(Request $r, callable $next): Response
     {
         // Check if route is public
+        $isPublic = false;
         foreach (self::EXCLUDED_PREFIXES as $prefix) {
             if (str_starts_with($r->path, $prefix) || $r->path === rtrim($prefix, '/')) {
-                return $next($r);
+                $isPublic = true;
+                break;
             }
+        }
+
+        $token = $r->bearerToken();
+        if ($isPublic && $token === '') {
+            return $next($r);
         }
 
         // Web shell views can pass through without API bearer token (client JS manages auth)
