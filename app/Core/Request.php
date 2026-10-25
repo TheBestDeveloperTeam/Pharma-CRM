@@ -205,10 +205,11 @@ final class Request
     /** Check if path starts with the given prefix (for surface detection). */
     public function surface(): string
     {
-        if (str_starts_with($this->path, '/super')) return 'super';
-        if (str_starts_with($this->path, '/admin')) return 'admin';
-        if (str_starts_with($this->path, '/sales')) return 'sales';
-        if (str_starts_with($this->path, '/portal')) return 'portal';
+        $p = str_starts_with($this->path, '/api/v1') ? substr($this->path, 7) : $this->path;
+        if (str_starts_with($p, '/super')) return 'super';
+        if (str_starts_with($p, '/admin')) return 'admin';
+        if (str_starts_with($p, '/sales')) return 'sales';
+        if (str_starts_with($p, '/portal')) return 'portal';
         return 'api';
     }
 }
