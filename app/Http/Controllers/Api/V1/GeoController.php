@@ -423,12 +423,12 @@ final class GeoController
 
     private function requireGeoPermission(): void
     {
+        if (!\App\Core\Container::getInstance()->has(TenantContext::class)) {
+            throw new \App\Core\Exceptions\UnauthorizedException('TOKEN_REQUIRED', 'Authentication required for geographic master modifications.');
+        }
         $ctx = TenantContext::get();
-        if ($this->authorization) {
-            $this->authorization->requirePermission($ctx, 'settings', 'edit');
-        } else {
-            $auth = \App\Core\Container::getInstance()->make(\App\Domain\Authorization\AuthorizationService::class);
-            $auth->requirePermission($ctx, 'settings', 'edit');
+        if (!$ctx->isSuper()) {
+            throw new ForbiddenException('FORBIDDEN_PLATFORM_MASTER', 'Only Super Admin can mutate platform geographic masters.');
         }
     }
 }
