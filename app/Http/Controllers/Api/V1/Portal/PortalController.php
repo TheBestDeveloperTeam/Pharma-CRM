@@ -144,7 +144,7 @@ final class PortalController
 
         foreach ($items as $item) {
             $prodRef = $item['product_ref'] ?? '';
-            $qty = (int)($item['qty'] ?? $item['paid_qty'] ?? 0);
+            $qty = (int)($item['quantity'] ?? $item['qty'] ?? $item['paid_qty'] ?? 0);
             if ($qty <= 0) continue;
 
             $prod = $this->productRepo->findByRef($franchiseRef, $prodRef);
