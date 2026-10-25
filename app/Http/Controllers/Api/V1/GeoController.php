@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Core\{Request, Response, Database, RefGenerator, Validation, TenantContext};
-use App\Core\Exceptions\{NotFoundException, ForbiddenException};
+use App\Core\Exceptions\{NotFoundException, ForbiddenException, ConflictException, ValidationException};
 use App\Domain\Authorization\AuthorizationService;
 
 final class GeoController
@@ -189,12 +189,19 @@ final class GeoController
             'state_code' => 'required|string',
             'state_name' => 'required|string',
         ]);
+
+        $code = strtoupper($clean['state_code']);
+        $existing = $this->db->fetchOne("SELECT state_ref FROM states WHERE state_code = ? LIMIT 1", [$code]);
+        if ($existing) {
+            throw new ConflictException('DUPLICATE_STATE_CODE', "State with code '{$code}' already exists.");
+        }
+
         $ref = RefGenerator::generate('STT');
         $this->db->execute(
             "INSERT INTO states (state_ref, state_code, state_name) VALUES (?, ?, ?)",
-            [$ref, strtoupper($clean['state_code']), $clean['state_name']]
+            [$ref, $code, $clean['state_name']]
         );
-        return Response::json(201, ['state_ref' => $ref, 'state_code' => $clean['state_code'], 'state_name' => $clean['state_name']]);
+        return Response::json(201, ['state_ref' => $ref, 'state_code' => $code, 'state_name' => $clean['state_name']]);
     }
 
     /** GEO-003: Update state */
@@ -314,10 +321,21 @@ final class GeoController
             'district_ref' => 'required|string',
             'state_ref'    => 'required|string',
         ]);
+
+        $pin = trim($clean['pincode']);
+        if (!preg_match('/^[1-9][0-9]{5}$/', $pin)) {
+            throw new ValidationException('INVALID_PINCODE_FORMAT', 'Pincode must be exactly 6 digits.');
+        }
+
+        $existing = $this->db->fetchOne("SELECT pincode FROM pincodes WHERE pincode = ? LIMIT 1", [$pin]);
+        if ($existing) {
+            throw new ConflictException('DUPLICATE_PINCODE', "Pincode '{$pin}' already exists.");
+        }
+
         $cityRef = $r->input('city_ref');
         $this->db->execute(
             "INSERT INTO pincodes (pincode, city_ref, district_ref, state_ref) VALUES (?, ?, ?, ?)",
-            [$clean['pincode'], $cityRef, $clean['district_ref'], $clean['state_ref']]
+            [$pin, $cityRef, $clean['district_ref'], $clean['state_ref']]
         );
         return Response::json(201, array_merge($clean, ['city_ref' => $cityRef]));
     }
@@ -405,9 +423,12 @@ final class GeoController
 
     private function requireGeoPermission(): void
     {
+        $ctx = TenantContext::get();
         if ($this->authorization) {
-            $ctx = TenantContext::get();
             $this->authorization->requirePermission($ctx, 'settings', 'edit');
+        } else {
+            $auth = \App\Core\Container::getInstance()->make(\App\Domain\Authorization\AuthorizationService::class);
+            $auth->requirePermission($ctx, 'settings', 'edit');
         }
     }
 }
