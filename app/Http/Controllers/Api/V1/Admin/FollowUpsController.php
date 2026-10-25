@@ -57,8 +57,12 @@ final class FollowUpsController
         $ctx = TenantContext::get();
         $this->authorization->requirePermission($ctx, 'followUps', 'create');
         $payload = $r->all();
-        if (!isset($payload['activity_type']) && isset($payload['follow_up_type'])) {
-            $payload['activity_type'] = $payload['follow_up_type'];
+        if (!isset($payload['activity_type'])) {
+            if (isset($payload['follow_up_type'])) {
+                $payload['activity_type'] = $payload['follow_up_type'];
+            } elseif (isset($payload['followup_type'])) {
+                $payload['activity_type'] = $payload['followup_type'];
+            }
         }
         if (!isset($payload['next_action']) && (isset($payload['notes']) || isset($payload['remark']))) {
             $payload['next_action'] = $payload['notes'] ?? $payload['remark'];
