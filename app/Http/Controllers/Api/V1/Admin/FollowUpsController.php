@@ -67,6 +67,10 @@ final class FollowUpsController
             $payload['next_follow_up_at'] = $payload['scheduled_at'];
         }
 
+        if (empty($payload['lead_ref']) && empty($payload['party_ref'])) {
+            throw new \App\Core\Exceptions\ValidationException('TARGET_REQUIRED', 'Either lead_ref or party_ref is required.');
+        }
+
         $clean = Validation::validate($payload, [
             'activity_type'     => 'required|string',
             'next_action'       => 'required|string',
@@ -81,6 +85,9 @@ final class FollowUpsController
             'franchise_ref'     => $ctx->franchiseRef,
             'assigned_user_ref' => $canAssignOthers ? ($r->input('assigned_user_ref') ?? $ctx->userRef) : $ctx->userRef,
             'created_by_ref'    => $ctx->userRef,
+            'remark'            => $payload['remark'] ?? null,
+            'party_ref'         => $payload['party_ref'] ?? null,
+            'lead_ref'          => $payload['lead_ref'] ?? null,
         ]);
 
         $fuRef = $this->followUpService->create($data);

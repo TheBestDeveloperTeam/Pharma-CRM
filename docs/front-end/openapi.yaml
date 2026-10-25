@@ -1805,11 +1805,31 @@ paths:
     get:
       summary: List follow-up queue
       tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: status
+        in: query
+        schema: {type: string, enum: [PENDING, COMPLETED, MISSED, CANCELLED]}
+      - name: lead_ref
+        in: query
+        schema: {type: string}
+      - name: party_ref
+        in: query
+        schema: {type: string}
+      - name: assigned_user_ref
+        in: query
+        schema: {type: string}
+      - name: page
+        in: query
+        schema: {type: integer, default: 1}
+      - name: per_page
+        in: query
+        schema: {type: integer, default: 50}
       responses:
         '200':
           description: Follow-ups list.
     post:
       summary: Schedule follow-up
+      description: Schedule a follow-up for a lead or party. Either lead_ref or party_ref must be provided.
       tags: [Admin Leads & Follow-ups]
       requestBody:
         required: true
@@ -1817,14 +1837,147 @@ paths:
           application/json:
             schema:
               type: object
-              required: [lead_ref, next_action, next_follow_up_at]
+              required: [next_action, next_follow_up_at]
               properties:
-                lead_ref: {type: string}
-                next_action: {type: string, example: "Call regarding catalogue"}
-                next_follow_up_at: {type: string, format: date-time}
+                lead_ref:
+                  type: string
+                  description: Lead reference (optional if party_ref is provided)
+                  example: "LED-000000000001"
+                party_ref:
+                  type: string
+                  description: Party reference (optional if lead_ref is provided)
+                  example: "PTY-000000000001"
+                activity_type:
+                  type: string
+                  enum: [CALL, VISIT, WHATSAPP, EMAIL, MEETING, OTHER]
+                  default: CALL
+                  example: "CALL"
+                next_action:
+                  type: string
+                  example: "Call regarding catalogue"
+                next_follow_up_at:
+                  type: string
+                  format: date-time
+                  example: "2026-10-26T15:00:00Z"
+                remark:
+                  type: string
+                  description: Initial note or remark for this follow-up
+                  example: "Initial call discussion notes"
+                assigned_user_ref:
+                  type: string
+                  description: Assignee user reference (optional)
       responses:
         '201':
-          description: Follow-up scheduled.
+          description: Follow-up scheduled successfully.
+        '400':
+          description: Target lead_ref or party_ref missing, or invalid payload.
+
+  /admin/follow-ups/{ref}:
+    get:
+      summary: Get follow-up details
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: Follow-up details.
+        '404':
+          description: Follow-up not found.
+    patch:
+      summary: Update follow-up details
+      description: Update follow-up action, schedule, activity type, or remark without forcing a status change.
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                next_action: {type: string}
+                next_follow_up_at: {type: string, format: date-time}
+                activity_type: {type: string, enum: [CALL, VISIT, WHATSAPP, EMAIL, MEETING, OTHER]}
+                remark: {type: string}
+                status: {type: string, enum: [PENDING, COMPLETED, MISSED, CANCELLED]}
+      responses:
+        '200':
+          description: Follow-up updated successfully.
+        '404':
+          description: Follow-up not found.
+
+  /admin/follow-ups/{ref}/remarks:
+    get:
+      summary: List remarks history for follow-up
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      responses:
+        '200':
+          description: List of remarks.
+        '404':
+          description: Follow-up not found.
+    post:
+      summary: Add standalone remark to follow-up
+      description: Save an additional remark to an existing follow-up without changing status or schedule date.
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [remark]
+              properties:
+                remark:
+                  type: string
+                  description: Standalone remark to append to the follow-up
+                  example: "Customer asked to call back next week after review."
+      responses:
+        '201':
+          description: Remark added successfully.
+        '404':
+          description: Follow-up not found.
+
+  /admin/follow-ups/{ref}/cancel:
+    post:
+      summary: Cancel a follow-up
+      tags: [Admin Leads & Follow-ups]
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: "Client cancelled requirements"
+      responses:
+        '200':
+          description: Follow-up cancelled.
+        '404':
+          description: Follow-up not found.
 
   /admin/follow-ups/{ref}/complete:
     post:
