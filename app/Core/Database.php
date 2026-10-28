@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 namespace App\Core;
 
@@ -27,6 +27,8 @@ final class Database
 
             // Enforce strict mode per session (belt + suspenders on top of server config)
             self::$pdo->exec("SET sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+            self::$pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+            self::$pdo->exec("SET collation_connection = 'utf8mb4_unicode_ci'");
             self::$pdo->exec("SET time_zone = '+00:00'"); // Always UTC at DB level
         }
 
