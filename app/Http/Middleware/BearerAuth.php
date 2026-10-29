@@ -16,6 +16,7 @@ final class BearerAuth
         '/api/v1/webhooks/',
         '/api/v1/onboarding/',
         '/api/v1/upload',
+        '/upload',
         '/api/v1/geo/',
         '/geo/',
         '/super/login',

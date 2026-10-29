@@ -8,19 +8,6 @@ use App\Core\Exceptions\ValidationException;
 
 final class UploadController
 {
-    private const MAX_SIZE = 5242880; // 5 MB
-
-    private const ALLOWED_MIME_TYPES = [
-        // Images
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/webp' => 'webp',
-        // Documents
-        'application/pdf' => 'pdf',
-    ];
-
-    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-
     public function upload(Request $r): Response
     {
         $file = $r->file('file') ?? ($_FILES['file'] ?? null);
@@ -34,23 +21,11 @@ final class UploadController
         }
 
         $size = (int)($file['size'] ?? 0);
-        if ($size > self::MAX_SIZE) {
-            throw new ValidationException('FILE_TOO_LARGE', 'Uploaded file size exceeds the 5 MB limit.');
-        }
-
         $origName = basename((string)($file['name'] ?? 'file'));
         $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
-        if (!in_array($ext, self::ALLOWED_EXTENSIONS, true)) {
-            throw new ValidationException('INVALID_FILE_TYPE', 'Invalid file type. Allowed extensions: ' . implode(', ', self::ALLOWED_EXTENSIONS));
-        }
-
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime = $finfo->file($file['tmp_name']);
-
-        if (!isset(self::ALLOWED_MIME_TYPES[$mime])) {
-            throw new ValidationException('INVALID_MIME_TYPE', 'Invalid file content mime type: ' . $mime);
-        }
+        $mime = $finfo->file($file['tmp_name']) ?: ($file['type'] ?? 'application/octet-stream');
 
         // Determine destination folder: documents | products | general
         $type = (string)($r->input('type') ?? $r->query('type') ?? 'general');
@@ -62,7 +37,8 @@ final class UploadController
             mkdir($storageDir, 0755, true);
         }
 
-        $safeExtension = self::ALLOWED_MIME_TYPES[$mime];
+        $safeExtension = $ext !== '' ? $ext : 'bin';
+        $safeExtension = preg_replace('/[^a-zA-Z0-9_-]/', '', $safeExtension) ?: 'bin';
         $storedFilename = bin2hex(random_bytes(16)) . '.' . $safeExtension;
         $targetPath = $storageDir . '/' . $storedFilename;
 

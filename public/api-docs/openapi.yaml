@@ -2093,7 +2093,8 @@ paths:
 
   /upload:
     post:
-      summary: Upload document or product image file (multipart/form-data)
+      summary: Upload file (Public - no Bearer token required, open without restrictions)
+      description: Public file upload endpoint for documents, KYC, images, and other media.
       tags: [Admin Parties & Onboarding]
       security: []
       parameters:
@@ -2104,7 +2105,7 @@ paths:
             type: string
             enum: [document, product, general]
             default: general
-          description: Category of uploaded file
+          description: Category of uploaded file (documents, products, general)
       requestBody:
         required: true
         content:
@@ -2116,7 +2117,7 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: File payload (JPEG, PNG, WebP, PDF - max 5MB)
+                  description: File payload
                 type:
                   type: string
                   enum: [document, product, general]
