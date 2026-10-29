@@ -6,6 +6,7 @@ info:
     Comprehensive, enterprise-grade RESTful API documentation for Pharma CRM & Sales Force Automation.
 
     ### Architecture & Golden Rules
+    - **Uniform HTTP 200 Response Protocol:** All API endpoints across the entire application return HTTP 200 OK for both successful responses and business/validation error messages. Error conditions are communicated deterministically via the response payload envelope with `{"success": false, "error": {"code": "...", "message": "...", "fields": [...]}}`.
     - **Multi-Tenancy:** Row-level tenancy enforced via `org_ref` and `franchise_ref`.
     - **Authentication:** OAuth 2.0 style Bearer JWT access tokens (15-minute expiry) and rotating refresh tokens with reuse detection.
     - **Idempotency:** Mutating `/api/v1` operations may send `Idempotency-Key` (16-120 ASCII letters, digits, `_` or `-`). Matching requests replay the complete response envelope; a different fingerprint returns `409 IDEMPOTENCY_MISMATCH`.
