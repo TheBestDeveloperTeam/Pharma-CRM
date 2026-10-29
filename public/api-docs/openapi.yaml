@@ -2091,6 +2091,51 @@ paths:
         '201':
           description: Onboarding invite token created.
 
+  /upload:
+    post:
+      summary: Upload document or product image file (multipart/form-data)
+      tags: [Admin Parties & Onboarding]
+      security: []
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [document, product, general]
+            default: general
+          description: Category of uploaded file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File payload (JPEG, PNG, WebP, PDF - max 5MB)
+                type:
+                  type: string
+                  enum: [document, product, general]
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  file_reference: {type: string}
+                  file_name: {type: string}
+                  file_size: {type: integer}
+                  mime_type: {type: string}
+                  url: {type: string}
+        '422':
+          description: Validation error
+
   /onboarding/register:
     post:
       summary: Public distributor registration submission
@@ -2102,22 +2147,78 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token, party_name, contact_person, mobile, state_code, district_name]
+              required:
+                - token
+                - firm_name
+                - constitution_type
+                - contact_name
+                - designation
+                - mobile
+                - email
+                - gstin
+                - pan
+                - drug_license_no
+                - drug_license_validity
+                - billing_address
+                - shipping_address
+                - pincode
+                - preferred_product_categories
+                - password
+                - documents
               properties:
                 token: {type: string}
-                party_name: {type: string}
-                contact_person: {type: string}
+                firm_name: {type: string}
+                constitution_type:
+                  type: string
+                  enum: [Proprietorship, Partnership, Pvt Ltd, LLP]
+                contact_name: {type: string}
+                designation: {type: string}
                 mobile: {type: string}
                 email: {type: string, format: email}
-                state_code: {type: string}
-                district_name: {type: string}
-                pincode: {type: string}
                 gstin: {type: string}
                 pan: {type: string}
                 drug_license_no: {type: string}
+                drug_license_validity: {type: string, format: date}
+                billing_address: {type: string}
+                shipping_address: {type: string}
+                state_ref: {type: string}
+                district_ref: {type: string}
+                city_ref: {type: string}
+                area: {type: string}
+                pincode: {type: string}
+                bank_account_number: {type: string}
+                bank_ifsc: {type: string}
+                bank_name: {type: string}
+                preferred_product_categories:
+                  type: array
+                  items: {type: string}
+                expected_monthly_business: {type: number}
+                password: {type: string}
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, file_reference, file_name]
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - Drug Licence
+                          - GST Certificate
+                          - PAN
+                          - Cancelled Cheque
+                          - Partnership Deed / Incorporation Certificate
+                      file_reference: {type: string}
+                      file_name: {type: string}
       responses:
         '201':
-          description: Registration submitted.
+          description: Registration submitted successfully.
+        '404':
+          description: Invalid invite token
+        '409':
+          description: Invite already used or duplicate party identifiers
+        '422':
+          description: Validation error or expired token
 
   /admin/onboarding:
     get:

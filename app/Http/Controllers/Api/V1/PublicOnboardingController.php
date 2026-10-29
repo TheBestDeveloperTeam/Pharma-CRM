@@ -18,7 +18,8 @@ final class PublicOnboardingController
 
     public function register(Request $r): Response
     {
-        return Response::json(201, $this->service->register((string)$r->input('token'), $r->all()));
+        $token = (string)$r->input('token', '');
+        return Response::json(201, $this->service->register($token, $r->all()));
     }
 
     public function validateToken(Request $r): Response

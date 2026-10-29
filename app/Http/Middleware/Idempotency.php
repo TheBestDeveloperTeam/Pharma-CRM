@@ -26,7 +26,7 @@ final class Idempotency
         }
 
         // Exclude oauth token and public endpoints from strict idempotency
-        if (str_starts_with($r->path, '/api/v1/oauth/') || str_starts_with($r->path, '/api/v1/webhooks/')) {
+        if (str_starts_with($r->path, '/api/v1/oauth/') || str_starts_with($r->path, '/api/v1/webhooks/') || str_starts_with($r->path, '/api/v1/onboarding/') || str_starts_with($r->path, '/api/v1/upload')) {
             return $next($r);
         }
 

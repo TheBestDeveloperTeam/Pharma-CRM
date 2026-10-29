@@ -6,6 +6,7 @@ final class Request
 {
     private array  $body;
     private array  $headers;
+    private array  $files;
     private string $rawBody;
     private string $clientIp;
 
@@ -23,6 +24,8 @@ final class Request
         string $rawBody,
         array  $headers,
         string $clientIp,
+        array  $files = [],
+        array  $parsedBody = []
     ) {
         $this->method   = $method;
         $this->path     = $path;
@@ -30,18 +33,22 @@ final class Request
         $this->rawBody  = $rawBody;
         $this->headers  = $headers;
         $this->clientIp = $clientIp;
-        $this->body     = [];
+        $this->files    = $files;
+        $this->body     = $parsedBody;
 
-        // Parse JSON body (only for applicable methods)
-        if ($rawBody !== '' && in_array($method, ['POST','PUT','PATCH'], true)) {
-            if (strlen($rawBody) > 1_048_576) { // 1 MB limit
-                throw new \App\Core\Exceptions\ValidationException('REQUEST_BODY_TOO_LARGE');
+        // Parse JSON body if body not already populated and rawBody present
+        if (empty($this->body) && $rawBody !== '' && in_array($method, ['POST','PUT','PATCH'], true)) {
+            $contentType = $headers['content-type'] ?? '';
+            if (str_contains($contentType, 'application/json') || (!str_contains($contentType, 'multipart/form-data') && !str_contains($contentType, 'application/x-www-form-urlencoded'))) {
+                if (strlen($rawBody) > 1_048_576) { // 1 MB limit
+                    throw new \App\Core\Exceptions\ValidationException('REQUEST_BODY_TOO_LARGE');
+                }
+                $decoded = json_decode($rawBody, true);
+                if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                    throw new \App\Core\Exceptions\ValidationException('REQUEST_BODY_INVALID_JSON');
+                }
+                $this->body = is_array($decoded) ? $decoded : [];
             }
-            $decoded = json_decode($rawBody, true);
-            if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
-                throw new \App\Core\Exceptions\ValidationException('REQUEST_BODY_INVALID_JSON');
-            }
-            $this->body = is_array($decoded) ? $decoded : [];
         }
     }
 
@@ -91,7 +98,11 @@ final class Request
         // Raw body
         $rawBody = file_get_contents('php://input') ?: '';
 
-        return new self($method, $path, $query, $rawBody, $headers, $ip);
+        // Form post and uploaded files
+        $parsedBody = !empty($_POST) ? $_POST : [];
+        $files = !empty($_FILES) ? $_FILES : [];
+
+        return new self($method, $path, $query, $rawBody, $headers, $ip, $files, $parsedBody);
     }
 
     /**
@@ -103,7 +114,9 @@ final class Request
         array  $query = [],
         string $rawBody = '',
         array  $headers = [],
-        string $clientIp = '127.0.0.1'
+        string $clientIp = '127.0.0.1',
+        array  $files = [],
+        array  $parsedBody = []
     ): self {
         if (str_contains($path, '?')) {
             [$path, $qs] = explode('?', $path, 2);
@@ -112,10 +125,22 @@ final class Request
         }
         $path = rtrim($path, '/') ?: '/';
         $path = (string)preg_replace('#/+#', '/', $path);
-        return new self(strtoupper($method), $path, $query, $rawBody, $headers, $clientIp);
+        return new self(strtoupper($method), $path, $query, $rawBody, $headers, $clientIp, $files, $parsedBody);
     }
 
     // ── Accessors ──────────────────────────────────────────────────────────
+
+    /** Get uploaded files array or specific file by key */
+    public function file(string $key): mixed
+    {
+        return $this->files[$key] ?? null;
+    }
+
+    /** Get all uploaded files */
+    public function files(): array
+    {
+        return $this->files;
+    }
 
     /** Get URL route parameter (e.g. {ref}). */
     public function param(string $key, mixed $default = null): mixed

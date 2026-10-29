@@ -269,6 +269,9 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/territories/validate', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'validate']);
     $router->post('/api/v1/admin/territories/override', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'override']);
 
+    // File & Media Upload
+    $router->post('/api/v1/upload', [\App\Http\Controllers\Api\V1\UploadController::class, 'upload']);
+
     // Onboarding Invites & Public Registration
     $router->get('/api/v1/onboarding/validate', [\App\Http\Controllers\Api\V1\PublicOnboardingController::class, 'validateToken']);
     $router->get('/api/v1/onboarding/invite-context', [\App\Http\Controllers\Api\V1\PublicOnboardingController::class, 'inviteContext']);
