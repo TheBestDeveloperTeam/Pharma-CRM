@@ -73,7 +73,7 @@ final class Response
         ];
 
         return new self(
-            $status,
+            200,
             (string)json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
             array_merge(['Content-Type' => 'application/json; charset=UTF-8'], $extraHeaders)
         );

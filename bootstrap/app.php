@@ -86,7 +86,7 @@ if (PHP_SAPI !== 'cli') {
             // Log it, return detailed 500 with CORS headers intact
             error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
             $response = \App\Core\Http\CorsPolicy::apply(
-                \App\Core\Response::json(500, [
+                \App\Core\Response::json(200, [
                     'success' => false,
                     'error' => [
                         'code' => 'INTERNAL_ERROR',
