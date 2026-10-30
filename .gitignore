@@ -22,6 +22,10 @@
 Thumbs.db
 composer.lock
 .env.production
+.env.ftp
+ftp-credentials.json
+deploy_ftp.py
+deploy_ftp.ps1
 .ssh/
 composer.phar
 Pharma-CRM-Easy-Solutions.zip
