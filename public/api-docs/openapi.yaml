@@ -918,6 +918,203 @@ paths:
         '200':
           description: Resolved geographic details.
 
+  /geo/cities:
+    get:
+      summary: List all Indian cities
+      tags: [Geo]
+      security: []
+      responses:
+        '200':
+          description: List of cities.
+    post:
+      summary: Create new city entry
+      tags: [Geo]
+      security: []
+      responses:
+        '201':
+          description: City created.
+
+  /geo/pincodes:
+    get:
+      summary: List all Indian pincodes
+      tags: [Geo]
+      security: []
+      responses:
+        '200':
+          description: List of pincodes.
+    post:
+      summary: Create new pincode entry
+      tags: [Geo]
+      security: []
+      responses:
+        '201':
+          description: Pincode created.
+
+  /geo/states/{state_ref}/districts:
+    get:
+      summary: List districts by state reference
+      tags: [Geo]
+      security: []
+      parameters:
+      - {name: state_ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: List of districts.
+
+  /geo/districts/{district_ref}/cities:
+    get:
+      summary: List cities by district reference
+      tags: [Geo]
+      security: []
+      parameters:
+      - {name: district_ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: List of cities.
+
+  /geo/cities/{city_ref}/pincodes:
+    get:
+      summary: List pincodes by city reference
+      tags: [Geo]
+      security: []
+      parameters:
+      - {name: city_ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: List of pincodes.
+
+  /geo/search:
+    get:
+      summary: Unified geographic search across state, district, city, and pincode
+      tags: [Geo]
+      security: []
+      parameters:
+      - {name: q, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Search results.
+
+  # Admin Geographic Master CRUD (Super Admin / Admin Management)
+  /admin/geo/states:
+    post:
+      summary: Create state
+      tags: [Admin Geo Master]
+      responses:
+        '201':
+          description: State created.
+
+  /admin/geo/states/{ref}:
+    parameters:
+    - {name: ref, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Show state details
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: State detail.
+    patch:
+      summary: Update state
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: State updated.
+    delete:
+      summary: Delete state
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: State deleted.
+
+  /admin/geo/districts:
+    post:
+      summary: Create district
+      tags: [Admin Geo Master]
+      responses:
+        '201':
+          description: District created.
+
+  /admin/geo/districts/{ref}:
+    parameters:
+    - {name: ref, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Show district details
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: District detail.
+    patch:
+      summary: Update district
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: District updated.
+    delete:
+      summary: Delete district
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: District deleted.
+
+  /admin/geo/cities:
+    post:
+      summary: Create city
+      tags: [Admin Geo Master]
+      responses:
+        '201':
+          description: City created.
+
+  /admin/geo/cities/{ref}:
+    parameters:
+    - {name: ref, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Show city details
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: City detail.
+    patch:
+      summary: Update city
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: City updated.
+    delete:
+      summary: Delete city
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: City deleted.
+
+  /admin/geo/pincodes:
+    post:
+      summary: Create pincode entry
+      tags: [Admin Geo Master]
+      responses:
+        '201':
+          description: Pincode created.
+
+  /admin/geo/pincodes/{ref}:
+    parameters:
+    - {name: ref, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Show pincode details
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: Pincode detail.
+    patch:
+      summary: Update pincode
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: Pincode updated.
+    delete:
+      summary: Delete pincode
+      tags: [Admin Geo Master]
+      responses:
+        '200':
+          description: Pincode deleted.
+
   # ============================================================================
   # Super Admin Endpoints
   # ============================================================================
@@ -2522,6 +2719,10 @@ paths:
       summary: Update territory allocation dates/exclusivity
       tags: [Admin Territories]
       responses: {'200': {description: Territory allocation updated.}}
+    delete:
+      summary: Delete territory allocation
+      tags: [Admin Territories]
+      responses: {'200': {description: Territory allocation deleted.}}
 
   /admin/territories/{ref}/status:
     post:
