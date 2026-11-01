@@ -179,8 +179,7 @@ final class OrderService
             $order = $this->orderRepo->findByRefForUpdate($franchiseRef, $orderRef); if (!$order) throw new ValidationException('ORDER_NOT_FOUND', 'Order not found.');
             OrderStateMachine::assertCanTransition($order['status'], 'CONFIRMED');
             $facts = $this->validateAuthoritative($franchiseRef, $order, true);
-            if ($facts['territory_status'] === TerritoryResolver::UNASSIGNED) throw new ValidationException('TERRITORY_POLICY_PENDING', 'Territory is UNASSIGNED; Order behavior requires approved policy.');
-            if ($facts['territory_status'] === TerritoryResolver::CONFLICT) throw new ValidationException('TERRITORY_CONFLICT', 'Territory resolution returned CONFLICT.');
+            // Territory policy is optional reference only — UNASSIGNED or CONFLICT does not block order confirmation
             $credit = $this->partyCreditService->checkForConfirmation($franchiseRef, $order['party_ref'], (string)$order['grand_total']);
             if ($credit['credit_breached']) throw new ValidationException('CREDIT_LIMIT_EXCEEDED', 'Projected exposure exceeds the party credit limit.');
             $allocLines = [];
@@ -197,8 +196,7 @@ final class OrderService
         if (!$order) throw new ValidationException('ORDER_NOT_FOUND', 'Order not found.');
         OrderStateMachine::assertCanTransition($order['status'], 'SUBMITTED');
         $facts = $this->validateAuthoritative($franchiseRef, $order, false);
-        if ($facts['territory_status'] === TerritoryResolver::UNASSIGNED) throw new ValidationException('TERRITORY_POLICY_PENDING', 'Territory is UNASSIGNED; Order behavior requires approved policy.');
-        if ($facts['territory_status'] === TerritoryResolver::CONFLICT) throw new ValidationException('TERRITORY_CONFLICT', 'Territory resolution returned CONFLICT.');
+        // Territory policy is optional reference only — UNASSIGNED or CONFLICT does not block order submission
         if (!$this->orderRepo->updateStatusIfCurrent($franchiseRef, $orderRef, 'DRAFT', 'SUBMITTED', $actorRef, 'Order submitted')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order state changed concurrently.');
         return ['order_ref' => $orderRef, 'status' => 'SUBMITTED'];
     }

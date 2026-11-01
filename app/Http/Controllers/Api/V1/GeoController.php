@@ -359,6 +359,18 @@ final class GeoController
         return Response::json(200, $row);
     }
 
+    /** Show single pincode */
+    public function showPincode(Request $r): Response
+    {
+        $pin = $r->param("ref");
+        $row = $this->db->fetchOne(
+            "SELECT p.pincode, p.city_ref, p.district_ref, p.state_ref, c.city_name, d.district_name, s.state_name, s.state_code FROM pincodes p LEFT JOIN cities c ON c.city_ref = p.city_ref LEFT JOIN districts d ON d.district_ref = p.district_ref LEFT JOIN states s ON s.state_ref = p.state_ref WHERE p.pincode = ? LIMIT 1",
+            [$pin]
+        );
+        if (!$row) throw new NotFoundException("PINCODE_NOT_FOUND", "Pincode not found.");
+        return Response::json(200, $row);
+    }
+
     /** GEO-020: Delete pincode */
     public function deletePincode(Request $r): Response
     {

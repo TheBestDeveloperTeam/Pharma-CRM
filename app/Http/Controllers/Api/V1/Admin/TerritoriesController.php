@@ -51,6 +51,18 @@ final class TerritoriesController
         $clean = Validation::validate($r->all(), ['effective_from' => 'required|date:Y-m-d', 'effective_to' => 'date:Y-m-d', 'is_exclusive' => 'bool']); $this->territoryService->update($f, $ref, array_merge($clean, ['updated_by_ref' => $ctx->userRef])); $after = $this->territories->findByRef($f, $ref); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'territory.updated', entityType: 'party_territory', entityRef: $ref, before: $before, after: $after ?? $clean); return Response::json(200, $after);
     }
 
+    public function delete(Request $r): Response
+    {
+        $ctx = TenantContext::get(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'territory', 'edit');
+        $ref = (string)$r->param('ref');
+        $before = $this->territories->findByRef($f, $ref);
+        if (!$before) throw new NotFoundException('TERRITORY_NOT_FOUND', 'Territory allocation not found.');
+        $this->checkScope($ctx, $before);
+        $this->territories->delete($f, $ref);
+        $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'territory.deleted', entityType: 'party_territory', entityRef: $ref, before: $before);
+        return Response::json(200, ['territory_ref' => $ref, 'deleted' => true]);
+    }
+
     public function status(Request $r): Response
     {
         $ctx = TenantContext::get(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'territory', 'edit'); $ref = (string)$r->param('ref'); $before = $this->territories->findByRef($f, $ref); if (!$before) throw new NotFoundException('TERRITORY_NOT_FOUND', 'Territory allocation not found.'); $this->checkScope($ctx, $before); $status = Validation::validate($r->all(), ['status' => 'required|enum:ACTIVE,INACTIVE'])['status']; $this->territories->update($f, $ref, ['status' => $status]); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'territory.status_changed', entityType: 'party_territory', entityRef: $ref, before: $before, after: ['status' => $status]); return Response::json(200, ['territory_ref' => $ref, 'status' => $status]);

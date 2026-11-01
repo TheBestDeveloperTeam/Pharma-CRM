@@ -95,6 +95,11 @@ final class SqlPartyTerritoryRepository implements PartyTerritoryRepositoryInter
         return $this->db->prepare($sql)->execute($params);
     }
 
+public function delete(string $franchiseRef, string $territoryRef): bool
+    {
+        return $this->db->prepare("DELETE FROM party_territories WHERE franchise_ref = :f AND territory_ref = :r")->execute([':f' => $franchiseRef, ':r' => $territoryRef]);
+    }
+
     public function checkExclusiveConflict(
         string $franchiseRef,
         string $level,

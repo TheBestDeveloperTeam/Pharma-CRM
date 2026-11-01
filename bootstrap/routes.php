@@ -54,6 +54,7 @@ return function(\App\Core\Router $router): void {
     $router->patch('/api/v1/admin/geo/cities/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updateCity']);
     $router->delete('/api/v1/admin/geo/cities/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deleteCity']);
     $router->post('/api/v1/admin/geo/pincodes', [\App\Http\Controllers\Api\V1\GeoController::class, 'createPincode']);
+    $router->get('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'showPincode']);
     $router->patch('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updatePincode']);
     $router->delete('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deletePincode']);
 
@@ -264,6 +265,7 @@ return function(\App\Core\Router $router): void {
     $router->post('/api/v1/admin/territories', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'store']);
     $router->get('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'show']);
     $router->patch('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'update']);
+    $router->delete('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'delete']);
     $router->post('/api/v1/admin/territories/{ref}/status', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'status']);
     $router->post('/api/v1/admin/territories/resolve', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'resolve']);
     $router->post('/api/v1/admin/territories/validate', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'validate']);
