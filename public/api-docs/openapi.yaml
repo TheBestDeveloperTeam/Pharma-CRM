@@ -4545,8 +4545,8 @@ paths:
 
   /admin/audit/entity/{entity_type}/{entity_ref}:
     get:
-      summary: Entity audit {entity_type}
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'entityAudit on /admin/audit/entity/{entity_type}/{entity_ref}.
+      summary: Entity Audit - Entity
+      description: Executes entity audit - entity within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4577,8 +4577,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     get:
-      summary: Entity audit {entity_type}
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'entityAudit on /admin/audit/entity/{entity_type}/{entity_ref}.
+      summary: Entity Audit - Entity
+      description: Executes entity audit - entity within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4611,7 +4611,7 @@ paths:
   /admin/audit/export:
     get:
       summary: Export Export
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'export on /admin/audit/export.
+      description: Executes export export within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4633,7 +4633,7 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
     get:
       summary: Export Export
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'export on /admin/audit/export.
+      description: Executes export export within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4655,8 +4655,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/audit/security-events:
     get:
-      summary: Security events Security events
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'securityEvents on /admin/audit/security-events.
+      summary: Security Events - Security Events
+      description: Executes security events - security events within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4677,8 +4677,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     get:
-      summary: Security events Security events
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'securityEvents on /admin/audit/security-events.
+      summary: Security Events - Security Events
+      description: Executes security events - security events within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4700,8 +4700,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/audit/user/{user_ref}:
     get:
-      summary: User audit User
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'userAudit on /admin/audit/user/{user_ref}.
+      summary: User Audit - User
+      description: Executes user audit - user within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4727,8 +4727,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     get:
-      summary: User audit User
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'userAudit on /admin/audit/user/{user_ref}.
+      summary: User Audit - User
+      description: Executes user audit - user within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4756,7 +4756,7 @@ paths:
   /admin/audit/{ref}:
     get:
       summary: Show Audit
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'show on /admin/audit/{ref}.
+      description: Executes show audit within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4783,7 +4783,7 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
     get:
       summary: Show Audit
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuditLogsController->'show on /admin/audit/{ref}.
+      description: Executes show audit within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4810,8 +4810,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/beats:
     get:
-      summary: List beats Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listBeats on /admin/beats.
+      summary: List Beats - Beats
+      description: Executes list beats - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -4832,8 +4832,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create beat Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createBeat on /admin/beats.
+      summary: Create Beat - Beats
+      description: Executes create beat - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -4859,8 +4859,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/beats/{ref}:
     patch:
-      summary: Update beat Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateBeat on /admin/beats/{ref}.
+      summary: Update Beat - Beats
+      description: Executes update beat - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -4892,8 +4892,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/follow-up-stats:
     get:
-      summary: Follow up stats Follow up stats
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'followUpStats on /admin/dashboard/follow-up-stats.
+      summary: Follow Up Stats - Follow Up Stats
+      description: Executes follow up stats - follow up stats within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4915,8 +4915,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/lead-conversion-stage:
     get:
-      summary: Lead conversion stage Lead conversion stage
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'leadConversionStage on /admin/dashboard/lead-conversion-stage.
+      summary: Lead Conversion Stage - Lead Conversion Stage
+      description: Executes lead conversion stage - lead conversion stage within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4938,8 +4938,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/lead-stats:
     get:
-      summary: Lead stats Lead stats
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'leadStats on /admin/dashboard/lead-stats.
+      summary: Lead Stats - Lead Stats
+      description: Executes lead stats - lead stats within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4961,8 +4961,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/near-expiry-value:
     get:
-      summary: Near expiry value Near expiry value
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'nearExpiryValue on /admin/dashboard/near-expiry-value.
+      summary: Near Expiry Value - Near Expiry Value
+      description: Executes near expiry value - near expiry value within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -4984,8 +4984,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/order-stats:
     get:
-      summary: Order stats Order stats
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'orderStats on /admin/dashboard/order-stats.
+      summary: Order Stats - Order Stats
+      description: Executes order stats - order stats within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5007,8 +5007,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/orders-sales-trend:
     get:
-      summary: Orders sales trend Orders sales trend
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'ordersSalesTrend on /admin/dashboard/orders-sales-trend.
+      summary: Orders Sales Trend - Orders Sales Trend
+      description: Executes orders sales trend - orders sales trend within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5030,8 +5030,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/outstanding-ageing:
     get:
-      summary: Outstanding ageing Outstanding ageing
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'outstandingAgeing on /admin/dashboard/outstanding-ageing.
+      summary: Outstanding Ageing - Outstanding Ageing
+      description: Executes outstanding ageing - outstanding ageing within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5053,8 +5053,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/outstanding-summary:
     get:
-      summary: Outstanding summary Outstanding summary
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'outstandingSummary on /admin/dashboard/outstanding-summary.
+      summary: Outstanding Summary - Outstanding Summary
+      description: Executes outstanding summary - outstanding summary within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5076,8 +5076,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/sales-team-productivity:
     get:
-      summary: Sales team productivity Sales team productivity
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'salesTeamProductivity on /admin/dashboard/sales-team-productivity.
+      summary: Sales Team Productivity - Sales Team Productivity
+      description: Executes sales team productivity - sales team productivity within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5099,8 +5099,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/sla-breach-trend:
     get:
-      summary: Sla breach trend Sla breach trend
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'slaBreachTrend on /admin/dashboard/sla-breach-trend.
+      summary: Sla Breach Trend - Sla Breach Trend
+      description: Executes sla breach trend - sla breach trend within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5122,8 +5122,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dashboard/territory-violations:
     get:
-      summary: Territory violations Territory violations
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'territoryViolations on /admin/dashboard/territory-violations.
+      summary: Territory Violations - Territory Violations
+      description: Executes territory violations - territory violations within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -5145,8 +5145,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/coverage:
     get:
-      summary: Coverage report Coverage
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'coverageReport on /admin/dcr-reports/coverage.
+      summary: Coverage Report - Coverage
+      description: Executes coverage report - coverage within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5168,8 +5168,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/daily-summary:
     get:
-      summary: Daily summary Daily summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'dailySummary on /admin/dcr-reports/daily-summary.
+      summary: Daily Summary - Daily Summary
+      description: Executes daily summary - daily summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5191,8 +5191,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/expense:
     get:
-      summary: Expense report Expense
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'expenseReport on /admin/dcr-reports/expense.
+      summary: Expense Report - Expense
+      description: Executes expense report - expense within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5214,8 +5214,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/missed-dcr:
     get:
-      summary: Missed dcr report Missed dcr
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'missedDcrReport on /admin/dcr-reports/missed-dcr.
+      summary: Missed Dcr Report - Missed Dcr
+      description: Executes missed dcr report - missed dcr within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5237,8 +5237,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/monthly-summary:
     get:
-      summary: Monthly summary Monthly summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'monthlySummary on /admin/dcr-reports/monthly-summary.
+      summary: Monthly Summary - Monthly Summary
+      description: Executes monthly summary - monthly summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5260,8 +5260,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/pob-summary:
     get:
-      summary: Pob summary report Pob summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'pobSummaryReport on /admin/dcr-reports/pob-summary.
+      summary: Pob Summary Report - Pob Summary
+      description: Executes pob summary report - pob summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5283,8 +5283,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/product-promotion:
     get:
-      summary: Product promotion report Product promotion
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'productPromotionReport on /admin/dcr-reports/product-promotion.
+      summary: Product Promotion Report - Product Promotion
+      description: Executes product promotion report - product promotion within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5306,8 +5306,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcr-reports/sample-gift:
     get:
-      summary: Sample gift report Sample gift
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'sampleGiftReport on /admin/dcr-reports/sample-gift.
+      summary: Sample Gift Report - Sample Gift
+      description: Executes sample gift report - sample gift within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5330,7 +5330,7 @@ paths:
   /admin/dcrs:
     get:
       summary: Index Dcrs
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'index on /admin/dcrs.
+      description: Executes index dcrs within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5352,7 +5352,7 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
       summary: Store Dcrs
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'store on /admin/dcrs.
+      description: Executes store dcrs within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5379,7 +5379,7 @@ paths:
   /admin/dcrs/{ref}:
     get:
       summary: Show Dcrs
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'show on /admin/dcrs/{ref}.
+      description: Executes show dcrs within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5406,7 +5406,7 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
       summary: Update Dcrs
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'update on /admin/dcrs/{ref}.
+      description: Executes update dcrs within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5439,7 +5439,7 @@ paths:
   /admin/dcrs/{ref}/approve:
     post:
       summary: Approve Approve
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'approve on /admin/dcrs/{ref}/approve.
+      description: Executes approve approve within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5472,7 +5472,7 @@ paths:
   /admin/dcrs/{ref}/reject:
     post:
       summary: Reject Reject
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'reject on /admin/dcrs/{ref}/reject.
+      description: Executes reject reject within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5505,7 +5505,7 @@ paths:
   /admin/dcrs/{ref}/reopen:
     post:
       summary: Reopen Reopen
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'reopen on /admin/dcrs/{ref}/reopen.
+      description: Executes reopen reopen within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5538,7 +5538,7 @@ paths:
   /admin/dcrs/{ref}/status:
     post:
       summary: Status Status
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'status on /admin/dcrs/{ref}/status.
+      description: Executes status status within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5571,7 +5571,7 @@ paths:
   /admin/dcrs/{ref}/submit:
     post:
       summary: Submit Submit
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'submit on /admin/dcrs/{ref}/submit.
+      description: Executes submit submit within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5604,7 +5604,7 @@ paths:
   /admin/dcrs/{ref}/visits:
     get:
       summary: Visits Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'visits on /admin/dcrs/{ref}/visits.
+      description: Executes visits visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5630,8 +5630,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Add visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'addVisit on /admin/dcrs/{ref}/visits.
+      summary: Add Visit - Visits
+      description: Executes add visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5663,8 +5663,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dcrs/{ref}/visits/{visit_ref}:
     patch:
-      summary: Update visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateVisit on /admin/dcrs/{ref}/visits/{visit_ref}.
+      summary: Update Visit - Visits
+      description: Executes update visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5700,8 +5700,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     delete:
-      summary: Delete visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'deleteVisit on /admin/dcrs/{ref}/visits/{visit_ref}.
+      summary: Delete Visit - Visits
+      description: Executes delete visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5732,7 +5732,7 @@ paths:
   /admin/dispatches/pending:
     get:
       summary: Pending Pending
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'pending on /admin/dispatches/pending.
+      description: Executes pending pending within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5754,8 +5754,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dispatches/{ref}/in-transit:
     post:
-      summary: In transit In transit
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'inTransit on /admin/dispatches/{ref}/in-transit.
+      summary: In Transit - In Transit
+      description: Executes in transit - in transit within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5787,8 +5787,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/dispatches/{ref}/lr:
     patch:
-      summary: Update lr Lr
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'updateLr on /admin/dispatches/{ref}/lr.
+      summary: Update Lr - Lr
+      description: Executes update lr - lr within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5821,7 +5821,7 @@ paths:
   /admin/dispatches/{ref}/packed:
     post:
       summary: Packed Packed
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'packed on /admin/dispatches/{ref}/packed.
+      description: Executes packed packed within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5854,7 +5854,7 @@ paths:
   /admin/dispatches/{ref}/ship:
     post:
       summary: Ship Ship
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'ship on /admin/dispatches/{ref}/ship.
+      description: Executes ship ship within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5887,7 +5887,7 @@ paths:
   /admin/dispatches/{ref}/timeline:
     get:
       summary: Timeline Timeline
-      description: Operation \App\Http\Controllers\Api\V1\Admin\DispatchesController->'timeline on /admin/dispatches/{ref}/timeline.
+      description: Executes timeline timeline within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -5914,8 +5914,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/field-customers:
     get:
-      summary: List field customers Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listFieldCustomers on /admin/field-customers.
+      summary: List Field Customers - Field Customers
+      description: Executes list field customers - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5936,8 +5936,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createFieldCustomer on /admin/field-customers.
+      summary: Create Field Customer - Field Customers
+      description: Executes create field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5963,8 +5963,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/field-customers/{ref}:
     get:
-      summary: Show field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'showFieldCustomer on /admin/field-customers/{ref}.
+      summary: Show Field Customer - Field Customers
+      description: Executes show field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -5990,8 +5990,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateFieldCustomer on /admin/field-customers/{ref}.
+      summary: Update Field Customer - Field Customers
+      description: Executes update field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -6023,8 +6023,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/field-customers/{ref}/status:
     post:
-      summary: Status field customer Status
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'statusFieldCustomer on /admin/field-customers/{ref}/status.
+      summary: Status Field Customer - Status
+      description: Executes status field customer - status within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -6057,7 +6057,7 @@ paths:
   /admin/inventory/batches/{ref}/damage:
     post:
       summary: Damage Damage
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'damage on /admin/inventory/batches/{ref}/damage.
+      description: Executes damage damage within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6089,8 +6089,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/inventory/batches/{ref}/movements:
     get:
-      summary: Batch movements Movements
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'batchMovements on /admin/inventory/batches/{ref}/movements.
+      summary: Batch Movements - Movements
+      description: Executes batch movements - movements within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6118,7 +6118,7 @@ paths:
   /admin/inventory/batches/{ref}/quarantine:
     post:
       summary: Quarantine Quarantine
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'quarantine on /admin/inventory/batches/{ref}/quarantine.
+      description: Executes quarantine quarantine within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6151,7 +6151,7 @@ paths:
   /admin/inventory/batches/{ref}/unquarantine:
     post:
       summary: Unquarantine Unquarantine
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'unquarantine on /admin/inventory/batches/{ref}/unquarantine.
+      description: Executes unquarantine unquarantine within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6184,7 +6184,7 @@ paths:
   /admin/inventory/expired:
     get:
       summary: Expired Expired
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'expired on /admin/inventory/expired.
+      description: Executes expired expired within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6206,8 +6206,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/inventory/stock-summary:
     get:
-      summary: Stock summary Stock summary
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'stockSummary on /admin/inventory/stock-summary.
+      summary: Stock Summary - Stock Summary
+      description: Executes stock summary - stock summary within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6230,7 +6230,7 @@ paths:
   /admin/invoices/{ref}/dispatch:
     get:
       summary: Dispatch Dispatch
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InvoicesController->'dispatch on /admin/invoices/{ref}/dispatch.
+      description: Executes dispatch dispatch within Admin Billing & Invoices. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Billing & Invoices]
       security:
         - bearerAuth: []
@@ -6258,7 +6258,7 @@ paths:
   /admin/invoices/{ref}/items:
     get:
       summary: Items Items
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InvoicesController->'items on /admin/invoices/{ref}/items.
+      description: Executes items items within Admin Billing & Invoices. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Billing & Invoices]
       security:
         - bearerAuth: []
@@ -6286,7 +6286,7 @@ paths:
   /admin/invoices/{ref}/payments:
     get:
       summary: Payments Payments
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InvoicesController->'payments on /admin/invoices/{ref}/payments.
+      description: Executes payments payments within Admin Billing & Invoices. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Billing & Invoices]
       security:
         - bearerAuth: []
@@ -6313,8 +6313,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/leads/bulk-assign:
     post:
-      summary: Bulk assign Bulk assign
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'bulkAssign on /admin/leads/bulk-assign.
+      summary: Bulk Assign - Bulk Assign
+      description: Executes bulk assign - bulk assign within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6340,8 +6340,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/leads/check-duplicate:
     get:
-      summary: Duplicate check Check duplicate
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'duplicateCheck on /admin/leads/check-duplicate.
+      summary: Duplicate Check - Check Duplicate
+      description: Executes duplicate check - check duplicate within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6364,7 +6364,7 @@ paths:
   /admin/leads/{ref}/convert:
     post:
       summary: Convert Convert
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'convert on /admin/leads/{ref}/convert.
+      description: Executes convert convert within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6396,8 +6396,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/leads/{ref}/follow-ups:
     get:
-      summary: Follow ups Follow ups
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'followUps on /admin/leads/{ref}/follow-ups.
+      summary: Follow Ups - Follow Ups
+      description: Executes follow ups - follow ups within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6425,7 +6425,7 @@ paths:
   /admin/leads/{ref}/remarks:
     get:
       summary: Remarks Remarks
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'remarks on /admin/leads/{ref}/remarks.
+      description: Executes remarks remarks within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6451,8 +6451,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Add remark Remarks
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'addRemark on /admin/leads/{ref}/remarks.
+      summary: Add Remark - Remarks
+      description: Executes add remark - remarks within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6485,7 +6485,7 @@ paths:
   /admin/leads/{ref}/timeline:
     get:
       summary: Timeline Timeline
-      description: Operation \App\Http\Controllers\Api\V1\Admin\LeadsController->'timeline on /admin/leads/{ref}/timeline.
+      description: Executes timeline timeline within Admin Leads & Follow-ups. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Leads & Follow-ups]
       security:
         - bearerAuth: []
@@ -6512,8 +6512,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/masters:
     get:
-      summary: List all Masters
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'listAll on /admin/masters.
+      summary: List All - Masters
+      description: Executes list all - masters within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6536,7 +6536,7 @@ paths:
   /admin/masters/{category}:
     get:
       summary: Index Masters
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'index on /admin/masters/{category}.
+      description: Executes index masters within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6563,7 +6563,7 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
       summary: Create Masters
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'create on /admin/masters/{category}.
+      description: Executes create masters within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6595,8 +6595,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/masters/{category}/{ref}:
     get:
-      summary: Show {category}
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'show on /admin/masters/{category}/{ref}.
+      summary: Show Masters
+      description: Executes show masters within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6627,8 +6627,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update {category}
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'update on /admin/masters/{category}/{ref}.
+      summary: Update Masters
+      description: Executes update masters within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6666,7 +6666,7 @@ paths:
   /admin/masters/{category}/{ref}/status:
     post:
       summary: Status Status
-      description: Operation \App\Http\Controllers\Api\V1\Admin\CatalogMastersController->'status on /admin/masters/{category}/{ref}/status.
+      description: Executes status status within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -6703,8 +6703,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/near-expiry:
     get:
-      summary: Near expiry Near expiry
-      description: Operation \App\Http\Controllers\Api\V1\Admin\InventoryController->'nearExpiry on /admin/near-expiry.
+      summary: Near Expiry - Near Expiry
+      description: Executes near expiry - near expiry within Admin Inventory. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Inventory]
       security:
         - bearerAuth: []
@@ -6726,8 +6726,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/notifications/manage-templates:
     get:
-      summary: Manage templates Manage templates
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'manageTemplates on /admin/notifications/manage-templates.
+      summary: Manage Templates - Manage Templates
+      description: Executes manage templates - manage templates within General. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [General]
       security:
         - bearerAuth: []
@@ -6749,8 +6749,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/notifications/send:
     post:
-      summary: Send system Send
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'sendSystem on /admin/notifications/send.
+      summary: Send System - Send
+      description: Executes send system - send within General. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [General]
       security:
         - bearerAuth: []
@@ -6777,7 +6777,7 @@ paths:
   /admin/onboarding/invites/{ref}/resend:
     post:
       summary: Resend Resend
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OnboardingController->'resend on /admin/onboarding/invites/{ref}/resend.
+      description: Executes resend resend within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -6810,7 +6810,7 @@ paths:
   /admin/onboarding/invites/{ref}/revoke:
     post:
       summary: Revoke Revoke
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OnboardingController->'revoke on /admin/onboarding/invites/{ref}/revoke.
+      description: Executes revoke revoke within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -6843,7 +6843,7 @@ paths:
   /admin/onboarding/{ref}/documents:
     get:
       summary: Documents Documents
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OnboardingController->'documents on /admin/onboarding/{ref}/documents.
+      description: Executes documents documents within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -6871,7 +6871,7 @@ paths:
   /admin/onboarding/{ref}/timeline:
     get:
       summary: Timeline Timeline
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OnboardingController->'timeline on /admin/onboarding/{ref}/timeline.
+      description: Executes timeline timeline within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -6899,7 +6899,7 @@ paths:
   /admin/orders/blocked:
     get:
       summary: Blocked Blocked
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'blocked on /admin/orders/blocked.
+      description: Executes blocked blocked within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -6921,8 +6921,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/orders/pending-billing:
     get:
-      summary: Pending billing Pending billing
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'pendingBilling on /admin/orders/pending-billing.
+      summary: Pending Billing - Pending Billing
+      description: Executes pending billing - pending billing within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -6944,8 +6944,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/orders/pending-dispatch:
     get:
-      summary: Pending dispatch Pending dispatch
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'pendingDispatch on /admin/orders/pending-dispatch.
+      summary: Pending Dispatch - Pending Dispatch
+      description: Executes pending dispatch - pending dispatch within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -6968,7 +6968,7 @@ paths:
   /admin/orders/{ref}/dispatches:
     get:
       summary: Dispatches Dispatches
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'dispatches on /admin/orders/{ref}/dispatches.
+      description: Executes dispatches dispatches within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -6996,7 +6996,7 @@ paths:
   /admin/orders/{ref}/invoices:
     get:
       summary: Invoices Invoices
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'invoices on /admin/orders/{ref}/invoices.
+      description: Executes invoices invoices within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7024,7 +7024,7 @@ paths:
   /admin/orders/{ref}/items:
     get:
       summary: Items Items
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'items on /admin/orders/{ref}/items.
+      description: Executes items items within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7052,7 +7052,7 @@ paths:
   /admin/orders/{ref}/payments:
     get:
       summary: Payments Payments
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'payments on /admin/orders/{ref}/payments.
+      description: Executes payments payments within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7080,7 +7080,7 @@ paths:
   /admin/orders/{ref}/reopen:
     post:
       summary: Reopen Reopen
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'reopen on /admin/orders/{ref}/reopen.
+      description: Executes reopen reopen within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7113,7 +7113,7 @@ paths:
   /admin/orders/{ref}/reservations:
     get:
       summary: Reservations Reservations
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'reservations on /admin/orders/{ref}/reservations.
+      description: Executes reservations reservations within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7141,7 +7141,7 @@ paths:
   /admin/orders/{ref}/timeline:
     get:
       summary: Timeline Timeline
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OrdersController->'timeline on /admin/orders/{ref}/timeline.
+      description: Executes timeline timeline within Admin Orders. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Orders]
       security:
         - bearerAuth: []
@@ -7169,7 +7169,7 @@ paths:
   /admin/outstanding/ageing:
     get:
       summary: Ageing Ageing
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OutstandingController->'ageing on /admin/outstanding/ageing.
+      description: Executes ageing ageing within Admin Payments. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Payments]
       security:
         - bearerAuth: []
@@ -7191,8 +7191,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/outstanding/party/{party_ref}:
     get:
-      summary: Party outstanding Party
-      description: Operation \App\Http\Controllers\Api\V1\Admin\OutstandingController->'partyOutstanding on /admin/outstanding/party/{party_ref}.
+      summary: Party Outstanding - Party
+      description: Executes party outstanding - party within Admin Payments. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Payments]
       security:
         - bearerAuth: []
@@ -7220,7 +7220,7 @@ paths:
   /admin/parties/dropdown:
     get:
       summary: Dropdown Dropdown
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'dropdown on /admin/parties/dropdown.
+      description: Executes dropdown dropdown within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7243,7 +7243,7 @@ paths:
   /admin/parties/{ref}/activate:
     post:
       summary: Activate Activate
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'activate on /admin/parties/{ref}/activate.
+      description: Executes activate activate within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7275,8 +7275,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/parties/{ref}/credit-limit:
     post:
-      summary: Update credit limit Credit limit
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'updateCreditLimit on /admin/parties/{ref}/credit-limit.
+      summary: Update Credit Limit - Credit Limit
+      description: Executes update credit limit - credit limit within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7309,7 +7309,7 @@ paths:
   /admin/parties/{ref}/invoices:
     get:
       summary: Invoices Invoices
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'invoices on /admin/parties/{ref}/invoices.
+      description: Executes invoices invoices within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7337,7 +7337,7 @@ paths:
   /admin/parties/{ref}/orders:
     get:
       summary: Orders Orders
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'orders on /admin/parties/{ref}/orders.
+      description: Executes orders orders within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7365,7 +7365,7 @@ paths:
   /admin/parties/{ref}/payments:
     get:
       summary: Payments Payments
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'payments on /admin/parties/{ref}/payments.
+      description: Executes payments payments within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7393,7 +7393,7 @@ paths:
   /admin/parties/{ref}/suspend:
     post:
       summary: Suspend Suspend
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PartiesController->'suspend on /admin/parties/{ref}/suspend.
+      description: Executes suspend suspend within Admin Parties & Onboarding. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Parties & Onboarding]
       security:
         - bearerAuth: []
@@ -7426,7 +7426,7 @@ paths:
   /admin/payments/{ref}/receipt:
     get:
       summary: Receipt Receipt
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PaymentsController->'receipt on /admin/payments/{ref}/receipt.
+      description: Executes receipt receipt within Admin Payments. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Payments]
       security:
         - bearerAuth: []
@@ -7453,8 +7453,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/pob:
     get:
-      summary: List pob Pob
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listPob on /admin/pob.
+      summary: List Pob - Pob
+      description: Executes list pob - pob within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -7476,8 +7476,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/pob/convert-to-order:
     post:
-      summary: Convert to order Convert to order
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'convertToOrder on /admin/pob/convert-to-order.
+      summary: Convert To Order - Convert To Order
+      description: Executes convert to order - convert to order within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -7504,7 +7504,7 @@ paths:
   /admin/prices/{ref}/history:
     get:
       summary: History History
-      description: Operation \App\Http\Controllers\Api\V1\Admin\PricesController->'history on /admin/prices/{ref}/history.
+      description: Executes history history within Admin Pricing & Schemes. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Pricing & Schemes]
       security:
         - bearerAuth: []
@@ -7532,7 +7532,7 @@ paths:
   /admin/products/dropdown:
     get:
       summary: Dropdown Dropdown
-      description: Operation \App\Http\Controllers\Api\V1\Admin\ProductsController->'dropdown on /admin/products/dropdown.
+      description: Executes dropdown dropdown within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -7555,7 +7555,7 @@ paths:
   /admin/products/{ref}/batches:
     get:
       summary: Batches Batches
-      description: Operation \App\Http\Controllers\Api\V1\Admin\ProductsController->'batches on /admin/products/{ref}/batches.
+      description: Executes batches batches within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -7583,7 +7583,7 @@ paths:
   /admin/products/{ref}/prices:
     get:
       summary: Prices Prices
-      description: Operation \App\Http\Controllers\Api\V1\Admin\ProductsController->'prices on /admin/products/{ref}/prices.
+      description: Executes prices prices within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -7611,7 +7611,7 @@ paths:
   /admin/products/{ref}/schemes:
     get:
       summary: Schemes Schemes
-      description: Operation \App\Http\Controllers\Api\V1\Admin\ProductsController->'schemes on /admin/products/{ref}/schemes.
+      description: Executes schemes schemes within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -7638,8 +7638,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/products/{ref}/stock-summary:
     get:
-      summary: Stock summary Stock summary
-      description: Operation \App\Http\Controllers\Api\V1\Admin\ProductsController->'stockSummary on /admin/products/{ref}/stock-summary.
+      summary: Stock Summary - Stock Summary
+      description: Executes stock summary - stock summary within Admin Products. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Products]
       security:
         - bearerAuth: []
@@ -7666,8 +7666,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/batch-inventory:
     get:
-      summary: Batch inventory Batch inventory
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'batchInventory on /admin/reports/batch-inventory.
+      summary: Batch Inventory - Batch Inventory
+      description: Executes batch inventory - batch inventory within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7690,7 +7690,7 @@ paths:
   /admin/reports/conversion:
     get:
       summary: Conversion Conversion
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'conversion on /admin/reports/conversion.
+      description: Executes conversion conversion within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7712,8 +7712,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/dispatch-pending:
     get:
-      summary: Dispatch pending Dispatch pending
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'dispatchPending on /admin/reports/dispatch-pending.
+      summary: Dispatch Pending - Dispatch Pending
+      description: Executes dispatch pending - dispatch pending within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7735,8 +7735,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/lead-source:
     get:
-      summary: Lead source Lead source
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'leadSource on /admin/reports/lead-source.
+      summary: Lead Source - Lead Source
+      description: Executes lead source - lead source within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7758,8 +7758,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/near-expiry:
     get:
-      summary: Near expiry report Near expiry
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'nearExpiryReport on /admin/reports/near-expiry.
+      summary: Near Expiry Report - Near Expiry
+      description: Executes near expiry report - near expiry within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7781,8 +7781,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/order-status:
     get:
-      summary: Order status Order status
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'orderStatus on /admin/reports/order-status.
+      summary: Order Status - Order Status
+      description: Executes order status - order status within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7804,8 +7804,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/party-sales:
     get:
-      summary: Party sales Party sales
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'partySales on /admin/reports/party-sales.
+      summary: Party Sales - Party Sales
+      description: Executes party sales - party sales within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7827,8 +7827,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/payment-outstanding:
     get:
-      summary: Payment outstanding Payment outstanding
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'paymentOutstanding on /admin/reports/payment-outstanding.
+      summary: Payment Outstanding - Payment Outstanding
+      description: Executes payment outstanding - payment outstanding within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7850,8 +7850,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/product-sales:
     get:
-      summary: Product sales Product sales
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'productSales on /admin/reports/product-sales.
+      summary: Product Sales - Product Sales
+      description: Executes product sales - product sales within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7873,8 +7873,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/response-time:
     get:
-      summary: Response time Response time
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'responseTime on /admin/reports/response-time.
+      summary: Response Time - Response Time
+      description: Executes response time - response time within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7896,8 +7896,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/sales-team-productivity:
     get:
-      summary: Sales team productivity report Sales team productivity
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'salesTeamProductivityReport on /admin/reports/sales-team-productivity.
+      summary: Sales Team Productivity Report - Sales Team Productivity
+      description: Executes sales team productivity report - sales team productivity within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7919,8 +7919,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/scheme-utilization:
     get:
-      summary: Scheme utilization Scheme utilization
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'schemeUtilization on /admin/reports/scheme-utilization.
+      summary: Scheme Utilization - Scheme Utilization
+      description: Executes scheme utilization - scheme utilization within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7942,8 +7942,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/territory-sales:
     get:
-      summary: Territory sales Territory sales
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'territorySales on /admin/reports/territory-sales.
+      summary: Territory Sales - Territory Sales
+      description: Executes territory sales - territory sales within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7965,8 +7965,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/territory-violations:
     get:
-      summary: Territory violations report Territory violations
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'territoryViolationsReport on /admin/reports/territory-violations.
+      summary: Territory Violations Report - Territory Violations
+      description: Executes territory violations report - territory violations within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -7988,8 +7988,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/webhook-failures:
     get:
-      summary: Webhook failures Webhook failures
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'webhookFailures on /admin/reports/webhook-failures.
+      summary: Webhook Failures - Webhook Failures
+      description: Executes webhook failures - webhook failures within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -8011,8 +8011,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/reports/whatsapp-delivery:
     get:
-      summary: Whatsapp delivery Whatsapp delivery
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AnalyticsController->'whatsappDelivery on /admin/reports/whatsapp-delivery.
+      summary: Whatsapp Delivery - Whatsapp Delivery
+      description: Executes whatsapp delivery - whatsapp delivery within Admin Reports. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Reports]
       security:
         - bearerAuth: []
@@ -8035,7 +8035,7 @@ paths:
   /admin/roles/matrix:
     get:
       summary: Matrix Matrix
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuthorizationController->'matrix on /admin/roles/matrix.
+      description: Executes matrix matrix within Admin Users. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Users]
       security:
         - bearerAuth: []
@@ -8058,7 +8058,7 @@ paths:
   /admin/roles/{ref}/activate:
     post:
       summary: Activate Activate
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuthorizationController->'activate on /admin/roles/{ref}/activate.
+      description: Executes activate activate within Admin Users. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Users]
       security:
         - bearerAuth: []
@@ -8091,7 +8091,7 @@ paths:
   /admin/roles/{ref}/deactivate:
     post:
       summary: Deactivate Deactivate
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuthorizationController->'deactivate on /admin/roles/{ref}/deactivate.
+      description: Executes deactivate deactivate within Admin Users. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Users]
       security:
         - bearerAuth: []
@@ -8123,8 +8123,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/roles/{ref}/users:
     get:
-      summary: Role users Users
-      description: Operation \App\Http\Controllers\Api\V1\Admin\AuthorizationController->'roleUsers on /admin/roles/{ref}/users.
+      summary: Role Users - Users
+      description: Executes role users - users within Admin Users. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Users]
       security:
         - bearerAuth: []
@@ -8152,7 +8152,7 @@ paths:
   /admin/schemes/active:
     get:
       summary: Active Active
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SchemesController->'active on /admin/schemes/active.
+      description: Executes active active within Admin Pricing & Schemes. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Pricing & Schemes]
       security:
         - bearerAuth: []
@@ -8174,8 +8174,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/schemes/{ref}/clone:
     post:
-      summary: Clone scheme Clone
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SchemesController->'cloneScheme on /admin/schemes/{ref}/clone.
+      summary: Clone Scheme - Clone
+      description: Executes clone scheme - clone within Admin Pricing & Schemes. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Pricing & Schemes]
       security:
         - bearerAuth: []
@@ -8207,8 +8207,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/credit-policy:
     get:
-      summary: Get credit policy Credit policy
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getCreditPolicy on /admin/settings/credit-policy.
+      summary: Get Credit Policy - Credit Policy
+      description: Executes get credit policy - credit policy within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8229,8 +8229,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update credit policy Credit policy
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateCreditPolicy on /admin/settings/credit-policy.
+      summary: Update Credit Policy - Credit Policy
+      description: Executes update credit policy - credit policy within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8256,8 +8256,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/dcr-config:
     get:
-      summary: Get dcr config Dcr config
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getDcrConfig on /admin/settings/dcr-config.
+      summary: Get Dcr Config - Dcr Config
+      description: Executes get dcr config - dcr config within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8278,8 +8278,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update dcr config Dcr config
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateDcrConfig on /admin/settings/dcr-config.
+      summary: Update Dcr Config - Dcr Config
+      description: Executes update dcr config - dcr config within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8305,8 +8305,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/invite-config:
     get:
-      summary: Get invite config Invite config
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getInviteConfig on /admin/settings/invite-config.
+      summary: Get Invite Config - Invite Config
+      description: Executes get invite config - invite config within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8327,8 +8327,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update invite config Invite config
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateInviteConfig on /admin/settings/invite-config.
+      summary: Update Invite Config - Invite Config
+      description: Executes update invite config - invite config within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8354,8 +8354,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/min-shelf-life:
     get:
-      summary: Get min shelf life Min shelf life
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getMinShelfLife on /admin/settings/min-shelf-life.
+      summary: Get Min Shelf Life - Min Shelf Life
+      description: Executes get min shelf life - min shelf life within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8376,8 +8376,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update min shelf life Min shelf life
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateMinShelfLife on /admin/settings/min-shelf-life.
+      summary: Update Min Shelf Life - Min Shelf Life
+      description: Executes update min shelf life - min shelf life within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8403,8 +8403,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/near-expiry-thresholds:
     get:
-      summary: Get near expiry thresholds Near expiry thresholds
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getNearExpiryThresholds on /admin/settings/near-expiry-thresholds.
+      summary: Get Near Expiry Thresholds - Near Expiry Thresholds
+      description: Executes get near expiry thresholds - near expiry thresholds within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8425,8 +8425,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update near expiry thresholds Near expiry thresholds
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateNearExpiryThresholds on /admin/settings/near-expiry-thresholds.
+      summary: Update Near Expiry Thresholds - Near Expiry Thresholds
+      description: Executes update near expiry thresholds - near expiry thresholds within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8452,8 +8452,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/scheme-stacking:
     get:
-      summary: Get scheme stacking Scheme stacking
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getSchemeStacking on /admin/settings/scheme-stacking.
+      summary: Get Scheme Stacking - Scheme Stacking
+      description: Executes get scheme stacking - scheme stacking within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8474,8 +8474,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update scheme stacking Scheme stacking
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateSchemeStacking on /admin/settings/scheme-stacking.
+      summary: Update Scheme Stacking - Scheme Stacking
+      description: Executes update scheme stacking - scheme stacking within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8501,8 +8501,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/sla:
     get:
-      summary: Get sla Sla
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getSla on /admin/settings/sla.
+      summary: Get Sla - Sla
+      description: Executes get sla - sla within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8523,8 +8523,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update sla Sla
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateSla on /admin/settings/sla.
+      summary: Update Sla - Sla
+      description: Executes update sla - sla within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8550,8 +8550,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/settings/territory-policy:
     get:
-      summary: Get territory policy Territory policy
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'getTerritoryPolicy on /admin/settings/territory-policy.
+      summary: Get Territory Policy - Territory Policy
+      description: Executes get territory policy - territory policy within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8572,8 +8572,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update territory policy Territory policy
-      description: Operation \App\Http\Controllers\Api\V1\Admin\SettingsController->'updateTerritoryPolicy on /admin/settings/territory-policy.
+      summary: Update Territory Policy - Territory Policy
+      description: Executes update territory policy - territory policy within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -8599,8 +8599,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/tour-plans:
     get:
-      summary: List tour plans Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listTourPlans on /admin/tour-plans.
+      summary: List Tour Plans - Tour Plans
+      description: Executes list tour plans - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -8621,8 +8621,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create tour plan Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createTourPlan on /admin/tour-plans.
+      summary: Create Tour Plan - Tour Plans
+      description: Executes create tour plan - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -8648,8 +8648,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/tour-plans/{ref}:
     patch:
-      summary: Update tour plan Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateTourPlan on /admin/tour-plans/{ref}.
+      summary: Update Tour Plan - Tour Plans
+      description: Executes update tour plan - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -8681,8 +8681,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/tour-plans/{ref}/actual-comparison:
     get:
-      summary: Tour plan comparison Actual comparison
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'tourPlanComparison on /admin/tour-plans/{ref}/actual-comparison.
+      summary: Tour Plan Comparison - Actual Comparison
+      description: Executes tour plan comparison - actual comparison within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -8709,8 +8709,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/transporters/{ref}:
     get:
-      summary: Show transporter Transporters
-      description: Operation \App\Http\Controllers\Api\V1\Admin\MastersController->'showTransporter on /admin/transporters/{ref}.
+      summary: Show Transporter - Transporters
+      description: Executes show transporter - transporters within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -8736,8 +8736,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update transporter Transporters
-      description: Operation \App\Http\Controllers\Api\V1\Admin\MastersController->'updateTransporter on /admin/transporters/{ref}.
+      summary: Update Transporter - Transporters
+      description: Executes update transporter - transporters within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -8769,8 +8769,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/transporters/{ref}/status:
     post:
-      summary: Transporter status Status
-      description: Operation \App\Http\Controllers\Api\V1\Admin\MastersController->'transporterStatus on /admin/transporters/{ref}/status.
+      summary: Transporter Status - Status
+      description: Executes transporter status - status within Admin Dispatches. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Dispatches]
       security:
         - bearerAuth: []
@@ -8803,7 +8803,7 @@ paths:
   /admin/users/dropdown:
     get:
       summary: Dropdown Dropdown
-      description: Operation \App\Http\Controllers\Api\V1\Admin\UsersController->'dropdown on /admin/users/dropdown.
+      description: Executes dropdown dropdown within Admin Users. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Users]
       security:
         - bearerAuth: []
@@ -8825,8 +8825,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-events:
     get:
-      summary: List events Webhook events
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'listEvents on /admin/webhook-events.
+      summary: List Events - Webhook Events
+      description: Executes list events - webhook events within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8848,8 +8848,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-events/failures:
     get:
-      summary: Failed events Failures
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'failedEvents on /admin/webhook-events/failures.
+      summary: Failed Events - Failures
+      description: Executes failed events - failures within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8871,8 +8871,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-events/{ref}:
     get:
-      summary: Show event Webhook events
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'showEvent on /admin/webhook-events/{ref}.
+      summary: Show Event - Webhook Events
+      description: Executes show event - webhook events within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8899,8 +8899,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-events/{ref}/retry:
     post:
-      summary: Retry event Retry
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'retryEvent on /admin/webhook-events/{ref}/retry.
+      summary: Retry Event - Retry
+      description: Executes retry event - retry within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8932,8 +8932,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-sources/{ref}:
     get:
-      summary: Show Webhook sources
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'show on /admin/webhook-sources/{ref}.
+      summary: Show Webhook Sources
+      description: Executes show webhook sources within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8959,8 +8959,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     delete:
-      summary: Delete Webhook sources
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'delete on /admin/webhook-sources/{ref}.
+      summary: Delete Webhook Sources
+      description: Executes delete webhook sources within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -8985,8 +8985,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-sources/{ref}/events:
     get:
-      summary: Source events Events
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'sourceEvents on /admin/webhook-sources/{ref}/events.
+      summary: Source Events - Events
+      description: Executes source events - events within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -9013,8 +9013,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/webhook-sources/{ref}/regenerate-secret:
     post:
-      summary: Regenerate secret Regenerate secret
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'regenerateSecret on /admin/webhook-sources/{ref}/regenerate-secret.
+      summary: Regenerate Secret - Regenerate Secret
+      description: Executes regenerate secret - regenerate secret within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -9047,7 +9047,7 @@ paths:
   /admin/webhook-sources/{ref}/test:
     post:
       summary: Test Test
-      description: Operation \App\Http\Controllers\Api\V1\Admin\WebhookSourcesController->'test on /admin/webhook-sources/{ref}/test.
+      description: Executes test test within Webhooks. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Webhooks]
       security:
         - bearerAuth: []
@@ -9079,8 +9079,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/delivery-report:
     get:
-      summary: Whats app delivery report Delivery report
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'whatsAppDeliveryReport on /admin/whatsapp/delivery-report.
+      summary: Whats App Delivery Report - Delivery Report
+      description: Executes whats app delivery report - delivery report within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9102,8 +9102,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/messages:
     get:
-      summary: List whats app messages Messages
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'listWhatsAppMessages on /admin/whatsapp/messages.
+      summary: List Whats App Messages - Messages
+      description: Executes list whats app messages - messages within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9125,8 +9125,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/messages/{ref}:
     get:
-      summary: Show whats app message Messages
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'showWhatsAppMessage on /admin/whatsapp/messages/{ref}.
+      summary: Show Whats App Message - Messages
+      description: Executes show whats app message - messages within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9153,8 +9153,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/messages/{ref}/retry:
     post:
-      summary: Retry whats app message Retry
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'retryWhatsAppMessage on /admin/whatsapp/messages/{ref}/retry.
+      summary: Retry Whats App Message - Retry
+      description: Executes retry whats app message - retry within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9186,8 +9186,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/send:
     post:
-      summary: Send whats app Send
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'sendWhatsApp on /admin/whatsapp/send.
+      summary: Send Whats App - Send
+      description: Executes send whats app - send within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9213,8 +9213,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/templates:
     get:
-      summary: List whats app templates Templates
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'listWhatsAppTemplates on /admin/whatsapp/templates.
+      summary: List Whats App Templates - Templates
+      description: Executes list whats app templates - templates within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9235,8 +9235,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create whats app template Templates
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'createWhatsAppTemplate on /admin/whatsapp/templates.
+      summary: Create Whats App Template - Templates
+      description: Executes create whats app template - templates within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9262,8 +9262,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /admin/whatsapp/templates/{ref}:
     patch:
-      summary: Update whats app template Templates
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'updateWhatsAppTemplate on /admin/whatsapp/templates/{ref}.
+      summary: Update Whats App Template - Templates
+      description: Executes update whats app template - templates within Admin Masters. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Admin Masters]
       security:
         - bearerAuth: []
@@ -9295,8 +9295,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /auth/change-password:
     post:
-      summary: Change password Change password
-      description: Operation \App\Http\Controllers\Api\V1\AuthController->'changePassword on /auth/change-password.
+      summary: Change Password - Change Password
+      description: Executes change password - change password within Auth. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Auth]
       security:
         - bearerAuth: []
@@ -9322,8 +9322,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /auth/effective-permissions:
     get:
-      summary: Effective permissions Effective permissions
-      description: Operation \App\Http\Controllers\Api\V1\AuthController->'effectivePermissions on /auth/effective-permissions.
+      summary: Effective Permissions - Effective Permissions
+      description: Executes effective permissions - effective permissions within Auth. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Auth]
       security:
         - bearerAuth: []
@@ -9345,8 +9345,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /auth/logout-all:
     post:
-      summary: Logout all Logout all
-      description: Operation \App\Http\Controllers\Api\V1\AuthController->'logoutAll on /auth/logout-all.
+      summary: Logout All - Logout All
+      description: Executes logout all - logout all within Auth. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Auth]
       security:
         - bearerAuth: []
@@ -9372,8 +9372,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /auth/refresh-token:
     post:
-      summary: Refresh token Refresh token
-      description: Operation \App\Http\Controllers\Api\V1\AuthController->'refreshToken on /auth/refresh-token.
+      summary: Refresh Token - Refresh Token
+      description: Executes refresh token - refresh token within Auth. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Auth]
       security:
         - bearerAuth: []
@@ -9400,7 +9400,7 @@ paths:
   /auth/sessions:
     get:
       summary: Sessions Sessions
-      description: Operation \App\Http\Controllers\Api\V1\AuthController->'sessions on /auth/sessions.
+      description: Executes sessions sessions within Auth. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Auth]
       security:
         - bearerAuth: []
@@ -9422,8 +9422,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /notifications/unread-count:
     get:
-      summary: Unread count Unread count
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'unreadCount on /notifications/unread-count.
+      summary: Unread Count - Unread Count
+      description: Executes unread count - unread count within Notifications. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Notifications]
       security:
         - bearerAuth: []
@@ -9446,7 +9446,7 @@ paths:
   /notifications/{ref}:
     delete:
       summary: Delete Notifications
-      description: Operation \App\Http\Controllers\Api\V1\NotificationsController->'delete on /notifications/{ref}.
+      description: Executes delete notifications within Notifications. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Notifications]
       security:
         - bearerAuth: []
@@ -9471,8 +9471,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /onboarding/invite-context:
     get:
-      summary: Invite context Invite context
-      description: Operation \App\Http\Controllers\Api\V1\PublicOnboardingController->'inviteContext on /onboarding/invite-context.
+      summary: Invite Context - Invite Context
+      description: Executes invite context - invite context within General. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [General]
       security:
         - bearerAuth: []
@@ -9494,8 +9494,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /onboarding/validate:
     get:
-      summary: Validate token Validate
-      description: Operation \App\Http\Controllers\Api\V1\PublicOnboardingController->'validateToken on /onboarding/validate.
+      summary: Validate Token - Validate
+      description: Executes validate token - validate within General. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [General]
       security:
         - bearerAuth: []
@@ -9517,8 +9517,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/beats:
     get:
-      summary: List beats Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listBeats on /portal/beats.
+      summary: List Beats - Beats
+      description: Executes list beats - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9539,8 +9539,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create beat Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createBeat on /portal/beats.
+      summary: Create Beat - Beats
+      description: Executes create beat - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9566,8 +9566,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/beats/{ref}:
     patch:
-      summary: Update beat Beats
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateBeat on /portal/beats/{ref}.
+      summary: Update Beat - Beats
+      description: Executes update beat - beats within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9600,7 +9600,7 @@ paths:
   /portal/dashboard:
     get:
       summary: Dashboard Dashboard
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'dashboard on /portal/dashboard.
+      description: Executes dashboard dashboard within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -9622,8 +9622,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/coverage:
     get:
-      summary: Coverage report Coverage
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'coverageReport on /portal/dcr-reports/coverage.
+      summary: Coverage Report - Coverage
+      description: Executes coverage report - coverage within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9645,8 +9645,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/daily-summary:
     get:
-      summary: Daily summary Daily summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'dailySummary on /portal/dcr-reports/daily-summary.
+      summary: Daily Summary - Daily Summary
+      description: Executes daily summary - daily summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9668,8 +9668,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/expense:
     get:
-      summary: Expense report Expense
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'expenseReport on /portal/dcr-reports/expense.
+      summary: Expense Report - Expense
+      description: Executes expense report - expense within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9691,8 +9691,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/missed-dcr:
     get:
-      summary: Missed dcr report Missed dcr
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'missedDcrReport on /portal/dcr-reports/missed-dcr.
+      summary: Missed Dcr Report - Missed Dcr
+      description: Executes missed dcr report - missed dcr within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9714,8 +9714,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/monthly-summary:
     get:
-      summary: Monthly summary Monthly summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'monthlySummary on /portal/dcr-reports/monthly-summary.
+      summary: Monthly Summary - Monthly Summary
+      description: Executes monthly summary - monthly summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9737,8 +9737,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/pob-summary:
     get:
-      summary: Pob summary report Pob summary
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'pobSummaryReport on /portal/dcr-reports/pob-summary.
+      summary: Pob Summary Report - Pob Summary
+      description: Executes pob summary report - pob summary within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9760,8 +9760,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/product-promotion:
     get:
-      summary: Product promotion report Product promotion
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'productPromotionReport on /portal/dcr-reports/product-promotion.
+      summary: Product Promotion Report - Product Promotion
+      description: Executes product promotion report - product promotion within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9783,8 +9783,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcr-reports/sample-gift:
     get:
-      summary: Sample gift report Sample gift
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'sampleGiftReport on /portal/dcr-reports/sample-gift.
+      summary: Sample Gift Report - Sample Gift
+      description: Executes sample gift report - sample gift within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9807,7 +9807,7 @@ paths:
   /portal/dcrs/{ref}/approve:
     post:
       summary: Approve Approve
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'approve on /portal/dcrs/{ref}/approve.
+      description: Executes approve approve within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9840,7 +9840,7 @@ paths:
   /portal/dcrs/{ref}/reject:
     post:
       summary: Reject Reject
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'reject on /portal/dcrs/{ref}/reject.
+      description: Executes reject reject within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9873,7 +9873,7 @@ paths:
   /portal/dcrs/{ref}/reopen:
     post:
       summary: Reopen Reopen
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'reopen on /portal/dcrs/{ref}/reopen.
+      description: Executes reopen reopen within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9906,7 +9906,7 @@ paths:
   /portal/dcrs/{ref}/submit:
     post:
       summary: Submit Submit
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'submit on /portal/dcrs/{ref}/submit.
+      description: Executes submit submit within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9939,7 +9939,7 @@ paths:
   /portal/dcrs/{ref}/visits:
     get:
       summary: Visits Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'visits on /portal/dcrs/{ref}/visits.
+      description: Executes visits visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9965,8 +9965,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Add visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'addVisit on /portal/dcrs/{ref}/visits.
+      summary: Add Visit - Visits
+      description: Executes add visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -9998,8 +9998,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dcrs/{ref}/visits/{visit_ref}:
     patch:
-      summary: Update visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateVisit on /portal/dcrs/{ref}/visits/{visit_ref}.
+      summary: Update Visit - Visits
+      description: Executes update visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10035,8 +10035,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     delete:
-      summary: Delete visit Visits
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'deleteVisit on /portal/dcrs/{ref}/visits/{visit_ref}.
+      summary: Delete Visit - Visits
+      description: Executes delete visit - visits within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10066,8 +10066,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/dispatches/{ref}:
     get:
-      summary: Show dispatch Dispatches
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'showDispatch on /portal/dispatches/{ref}.
+      summary: Show Dispatch - Dispatches
+      description: Executes show dispatch - dispatches within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10094,8 +10094,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/field-customers:
     get:
-      summary: List field customers Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listFieldCustomers on /portal/field-customers.
+      summary: List Field Customers - Field Customers
+      description: Executes list field customers - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10116,8 +10116,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createFieldCustomer on /portal/field-customers.
+      summary: Create Field Customer - Field Customers
+      description: Executes create field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10143,8 +10143,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/field-customers/{ref}:
     get:
-      summary: Show field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'showFieldCustomer on /portal/field-customers/{ref}.
+      summary: Show Field Customer - Field Customers
+      description: Executes show field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10170,8 +10170,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update field customer Field customers
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateFieldCustomer on /portal/field-customers/{ref}.
+      summary: Update Field Customer - Field Customers
+      description: Executes update field customer - field customers within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10203,8 +10203,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/field-customers/{ref}/status:
     post:
-      summary: Status field customer Status
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'statusFieldCustomer on /portal/field-customers/{ref}/status.
+      summary: Status Field Customer - Status
+      description: Executes status field customer - status within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10236,8 +10236,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/invoices/{ref}:
     get:
-      summary: Show invoice Invoices
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'showInvoice on /portal/invoices/{ref}.
+      summary: Show Invoice - Invoices
+      description: Executes show invoice - invoices within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10264,8 +10264,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/invoices/{ref}/download:
     get:
-      summary: Download invoice Download
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'downloadInvoice on /portal/invoices/{ref}/download.
+      summary: Download Invoice - Download
+      description: Executes download invoice - download within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10291,7 +10291,7 @@ paths:
   /portal/ledger:
     get:
       summary: Ledger Ledger
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'ledger on /portal/ledger.
+      description: Executes ledger ledger within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10314,7 +10314,7 @@ paths:
   /portal/notifications:
     get:
       summary: Notifications Notifications
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'notifications on /portal/notifications.
+      description: Executes notifications notifications within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10336,8 +10336,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/notifications/{ref}/read:
     post:
-      summary: Mark notification read Read
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'markNotificationRead on /portal/notifications/{ref}/read.
+      summary: Mark Notification Read - Read
+      description: Executes mark notification read - read within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10369,8 +10369,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/orders/{ref}/timeline:
     get:
-      summary: Order timeline Timeline
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'orderTimeline on /portal/orders/{ref}/timeline.
+      summary: Order Timeline - Timeline
+      description: Executes order timeline - timeline within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10397,8 +10397,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/outstanding/ageing:
     get:
-      summary: Outstanding ageing Ageing
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'outstandingAgeing on /portal/outstanding/ageing.
+      summary: Outstanding Ageing - Ageing
+      description: Executes outstanding ageing - ageing within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10421,7 +10421,7 @@ paths:
   /portal/payments:
     get:
       summary: Payments Payments
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'payments on /portal/payments.
+      description: Executes payments payments within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10443,8 +10443,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/pob:
     get:
-      summary: List pob Pob
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listPob on /portal/pob.
+      summary: List Pob - Pob
+      description: Executes list pob - pob within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10466,8 +10466,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/pob/convert-to-order:
     post:
-      summary: Convert to order Convert to order
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'convertToOrder on /portal/pob/convert-to-order.
+      summary: Convert To Order - Convert To Order
+      description: Executes convert to order - convert to order within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10494,7 +10494,7 @@ paths:
   /portal/schemes:
     get:
       summary: Schemes Schemes
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'schemes on /portal/schemes.
+      description: Executes schemes schemes within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10516,8 +10516,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/shipping-addresses:
     get:
-      summary: List shipping addresses Shipping addresses
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'listShippingAddresses on /portal/shipping-addresses.
+      summary: List Shipping Addresses - Shipping Addresses
+      description: Executes list shipping addresses - shipping addresses within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10538,8 +10538,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Add shipping address Shipping addresses
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'addShippingAddress on /portal/shipping-addresses.
+      summary: Add Shipping Address - Shipping Addresses
+      description: Executes add shipping address - shipping addresses within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10565,8 +10565,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/shipping-addresses/{ref}:
     patch:
-      summary: Update shipping address Shipping addresses
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'updateShippingAddress on /portal/shipping-addresses/{ref}.
+      summary: Update Shipping Address - Shipping Addresses
+      description: Executes update shipping address - shipping addresses within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10597,8 +10597,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     delete:
-      summary: Delete shipping address Shipping addresses
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'deleteShippingAddress on /portal/shipping-addresses/{ref}.
+      summary: Delete Shipping Address - Shipping Addresses
+      description: Executes delete shipping address - shipping addresses within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10624,7 +10624,7 @@ paths:
   /portal/support:
     get:
       summary: Support Support
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'support on /portal/support.
+      description: Executes support support within Distributor Portal. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Portal]
       security:
         - bearerAuth: []
@@ -10646,8 +10646,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/team/{ref}:
     get:
-      summary: Show team Team
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'showTeam on /portal/team/{ref}.
+      summary: Show Team - Team
+      description: Executes show team - team within Distributor Team & EA. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Team & EA]
       security:
         - bearerAuth: []
@@ -10673,8 +10673,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     patch:
-      summary: Update team Team
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'updateTeam on /portal/team/{ref}.
+      summary: Update Team - Team
+      description: Executes update team - team within Distributor Team & EA. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Team & EA]
       security:
         - bearerAuth: []
@@ -10706,8 +10706,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/team/{ref}/activate:
     post:
-      summary: Activate team Activate
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'activateTeam on /portal/team/{ref}/activate.
+      summary: Activate Team - Activate
+      description: Executes activate team - activate within Distributor Team & EA. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Team & EA]
       security:
         - bearerAuth: []
@@ -10739,8 +10739,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/team/{ref}/assign-beat:
     post:
-      summary: Assign beat Assign beat
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'assignBeat on /portal/team/{ref}/assign-beat.
+      summary: Assign Beat - Assign Beat
+      description: Executes assign beat - assign beat within Distributor Team & EA. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Team & EA]
       security:
         - bearerAuth: []
@@ -10772,8 +10772,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/team/{ref}/deactivate:
     post:
-      summary: Deactivate team Deactivate
-      description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'deactivateTeam on /portal/team/{ref}/deactivate.
+      summary: Deactivate Team - Deactivate
+      description: Executes deactivate team - deactivate within Distributor Team & EA. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Distributor Team & EA]
       security:
         - bearerAuth: []
@@ -10805,8 +10805,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/tour-plans:
     get:
-      summary: List tour plans Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'listTourPlans on /portal/tour-plans.
+      summary: List Tour Plans - Tour Plans
+      description: Executes list tour plans - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10827,8 +10827,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessEnvelope'
     post:
-      summary: Create tour plan Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'createTourPlan on /portal/tour-plans.
+      summary: Create Tour Plan - Tour Plans
+      description: Executes create tour plan - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10854,8 +10854,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/tour-plans/{ref}:
     patch:
-      summary: Update tour plan Tour plans
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'updateTourPlan on /portal/tour-plans/{ref}.
+      summary: Update Tour Plan - Tour Plans
+      description: Executes update tour plan - tour plans within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10887,8 +10887,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /portal/tour-plans/{ref}/actual-comparison:
     get:
-      summary: Tour plan comparison Actual comparison
-      description: Operation \App\Http\Controllers\Api\DCR\DcrController->'tourPlanComparison on /portal/tour-plans/{ref}/actual-comparison.
+      summary: Tour Plan Comparison - Actual Comparison
+      description: Executes tour plan comparison - actual comparison within Field Force Automation (DCR). Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Field Force Automation (DCR)]
       security:
         - bearerAuth: []
@@ -10916,7 +10916,7 @@ paths:
   /search:
     get:
       summary: Search Search
-      description: Operation \App\Http\Controllers\Api\V1\SearchController->'search on /search.
+      description: Executes search search within General. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [General]
       security:
         - bearerAuth: []
@@ -10938,8 +10938,8 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
   /super/audit-logs:
     get:
-      summary: Audit Audit logs
-      description: Operation \App\Http\Controllers\Api\V1\Super\SuperMetricsController->'audit on /super/audit-logs.
+      summary: Audit Audit Logs
+      description: Executes audit audit logs within Super Admin. Adheres to row-level multi-tenancy, immutable audit trails, and the uniform HTTP 200 JSON envelope contract.
       tags: [Super Admin]
       security:
         - bearerAuth: []
