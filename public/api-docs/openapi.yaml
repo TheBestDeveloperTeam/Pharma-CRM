@@ -1071,7 +1071,7 @@ paths:
                 state_code: {type: string, example: "MH", description: "2-letter uppercase GST state code"}
                 state_name: {type: string, example: "Maharashtra"}
       responses:
-        '201':
+        '200':
           description: State created successfully.
 
   /admin/geo/states/bulk:
@@ -1169,7 +1169,7 @@ paths:
                 state_ref: {type: string, example: "STA-MAHARASHTRA00001"}
                 district_name: {type: string, example: "Pune"}
       responses:
-        '201':
+        '200':
           description: District created.
 
   /admin/geo/districts/bulk:
@@ -1268,7 +1268,7 @@ paths:
                 district_ref: {type: string, example: "DST-MUMBAICITY0001"}
                 city_name: {type: string, example: "Andheri"}
       responses:
-        '201':
+        '200':
           description: City created.
 
   /admin/geo/cities/bulk:
@@ -1368,7 +1368,7 @@ paths:
                 district_ref: {type: string, example: "DST-MUMBAICITY0001"}
                 state_ref: {type: string, example: "STA-MAHARASHTRA00001"}
       responses:
-        '201':
+        '200':
           description: Pincode created.
 
   /admin/geo/pincodes/bulk:
@@ -1496,7 +1496,7 @@ paths:
                 org_code: {type: string, example: "ACME"}
                 org_name: {type: string, example: "Acme Healthcare"}
       responses:
-        '201':
+        '200':
           description: Organization created.
 
   /super/organizations/{ref}:
@@ -1554,7 +1554,7 @@ paths:
                 franchise_code: {type: string, example: "MUMBAI"}
                 franchise_name: {type: string, example: "Acme PCD Mumbai"}
       responses:
-        '201':
+        '200':
           description: Franchise created.
 
   /super/franchises/{ref}:
@@ -1641,7 +1641,7 @@ paths:
                 password: {type: string, format: password}
                 mobile: {type: string}
       responses:
-        '201':
+        '200':
           description: Franchise admin created.
         '404':
           description: Franchise not found.
@@ -1708,7 +1708,7 @@ paths:
                 role: {type: string, enum: [FRANCHISE_ADMIN, SALES, DISTRIBUTOR]}
                 phone: {type: string}
       responses:
-        '201':
+        '200':
           description: User created.
 
   /admin/users/{ref}:
@@ -1842,7 +1842,7 @@ paths:
               properties:
                 category_name: {type: string, example: "Antibiotics"}
       responses:
-        '201':
+        '200':
           description: Category created.
 
   /admin/categories/{ref}:
@@ -1908,7 +1908,7 @@ paths:
                 tier_name: {type: string, example: "TIER A"}
                 description: {type: string}
       responses:
-        '201':
+        '200':
           description: Pricing tier created.
         '409':
           description: Tier name duplicate.
@@ -1954,7 +1954,7 @@ paths:
                 transporter_name: {type: string, example: "V-Trans Logistics"}
                 tracking_url_template: {type: string, example: "https://vtrans.com/track/{lr}"}
       responses:
-        '201':
+        '200':
           description: Transporter created.
 
   /admin/catalog-masters/{category}:
@@ -1968,7 +1968,7 @@ paths:
     post:
       summary: Create product-related master value
       tags: [Admin Masters]
-      responses: {'201': {description: Master value created.}}
+      responses: {'200': {description: Master value created.}}
 
   /admin/catalog-masters/{category}/{ref}:
     parameters:
@@ -2034,7 +2034,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Product'
       responses:
-        '201':
+        '200':
           description: Product created.
 
   /admin/products/{ref}:
@@ -2109,7 +2109,7 @@ paths:
     post:
       summary: Create product price
       tags: [Admin Pricing & Schemes]
-      responses: {'201': {description: Pricing rate created.}}
+      responses: {'200': {description: Pricing rate created.}}
 
   /admin/prices/{ref}:
     parameters:
@@ -2156,7 +2156,7 @@ paths:
     post:
       summary: Create scheme
       tags: [Admin Pricing & Schemes]
-      responses: {'201': {description: Scheme created.}}
+      responses: {'200': {description: Scheme created.}}
 
   /admin/schemes/{ref}:
     parameters:
@@ -2219,7 +2219,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Lead'
       responses:
-        '201':
+        '200':
           description: Lead created.
 
   /admin/leads/{ref}:
@@ -2409,7 +2409,7 @@ paths:
                   type: string
                   description: Assignee user reference (optional)
       responses:
-        '201':
+        '200':
           description: Follow-up scheduled successfully.
         '400':
           description: Target lead_ref or party_ref missing, or invalid payload.
@@ -2491,7 +2491,7 @@ paths:
                   description: Standalone remark to append to the follow-up
                   example: "Customer asked to call back next week after review."
       responses:
-        '201':
+        '200':
           description: Remark added successfully.
         '404':
           description: Follow-up not found.
@@ -2630,7 +2630,7 @@ paths:
                 lead_ref: {type: string}
                 assigned_user_ref: {type: string}
       responses:
-        '201':
+        '200':
           description: Onboarding invite token created.
 
   /upload:
@@ -2664,7 +2664,7 @@ paths:
                   type: string
                   enum: [document, product, general]
       responses:
-        '201':
+        '200':
           description: File uploaded successfully
           content:
             application/json:
@@ -2754,7 +2754,7 @@ paths:
                       file_reference: {type: string}
                       file_name: {type: string}
       responses:
-        '201':
+        '200':
           description: Registration submitted successfully.
         '404':
           description: Invalid invite token
@@ -2921,7 +2921,7 @@ paths:
       summary: Create online DCR draft
       tags: [Distributor Portal]
       security: [bearerAuth: []]
-      responses: {'201': {description: DCR draft created.}, '409': {description: 
+      responses: {'200': {description: DCR draft created.}, '409': {description: 
             Duplicate owner/date.}}
 
   /portal/dcrs/{ref}:
@@ -2990,7 +2990,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Party'
       responses:
-        '201':
+        '200':
           description: Party created.
 
   /admin/parties/{ref}/ledger:
@@ -3105,7 +3105,7 @@ paths:
                 effective_to: {type: string, format: date, nullable: true, example: null}
                 is_exclusive: {type: boolean, example: false}
       responses:
-        '201':
+        '200':
           description: Territory allocation created.
 
   /admin/territories/bulk:
@@ -3271,7 +3271,7 @@ paths:
     post:
       summary: Create order draft
       tags: [Admin Orders]
-      responses: {'201': {description: Draft created with server-calculated 
+      responses: {'200': {description: Draft created with server-calculated 
             totals.}}
 
   /admin/orders/calculate:
@@ -3427,7 +3427,7 @@ paths:
     post:
       summary: Receive a stock batch
       tags: [Admin Inventory]
-      responses: {'201': {description: Batch received.}}
+      responses: {'200': {description: Batch received.}}
 
   /admin/inventory/batches/{ref}/adjust:
     post:
@@ -3613,7 +3613,7 @@ paths:
                 order_ref: {type: string}
                 due_date: {type: string, format: date}
       responses:
-        '201':
+        '200':
           description: Tax invoice generated.
 
   /admin/invoices/{ref}/cancel:
@@ -3653,7 +3653,7 @@ paths:
                 party_ref: {type: string}, amount: {type: number}, cheque_number: {
                   type: string}, bank_name: {type: string}, due_date: {type: 
                     string, format: date}}}}}}
-      responses: {'201': {description: Pending PDC registered.}, '422': {
+      responses: {'200': {description: Pending PDC registered.}, '422': {
             description: Invalid PDC or inaccessible party.}}
   /admin/pdc/{ref}:
     get:
@@ -3753,7 +3753,7 @@ paths:
                 boxes: {type: integer, minimum: 1}
                 remarks: {type: string}
       responses:
-        '201':
+        '200':
           description: Dispatch recorded.
 
   /admin/dispatches/{ref}/deliver:
@@ -3811,7 +3811,7 @@ paths:
                       invoice_ref: {type: string}
                       allocated_amount: {type: number, format: float}
       responses:
-        '201':
+        '200':
           description: Payment recorded and allocated.
 
   /admin/payments/{ref}:
@@ -3846,7 +3846,7 @@ paths:
                 invoice_ref: {type: string}
                 amount: {type: number, format: float, minimum: 0.01}
       responses:
-        '201':
+        '200':
           description: Allocation created.
 
   /admin/payments/{ref}/reverse:
@@ -3866,7 +3866,7 @@ paths:
                 reason: {type: string, example: "Cheque bounced"}
                 idempotency_key: {type: string}
       responses:
-        '201':
+        '200':
           description: Payment reversed.
         '404':
           description: Payment not found.
@@ -4054,7 +4054,7 @@ paths:
                       product_ref: {type: string}
                       paid_qty: {type: integer, example: 50}
       responses:
-        '201':
+        '200':
           description: Order placed.
 
   /portal/orders/{ref}:
@@ -4138,7 +4138,7 @@ paths:
                 password: {type: string, example: "Password@123"}
                 designation: {type: string, example: "Medical Representative"}
       responses:
-        '201':
+        '200':
           description: EA team employee created successfully.
 
   /portal/team/orders:
@@ -4188,7 +4188,7 @@ paths:
             schema:
               $ref: '#/components/schemas/RoleMutation'
       responses:
-        '201': {description: Role created.}
+        '200': {description: Role created.}
         '403': {description: Missing permission or privilege escalation.}
         '422': {description: Validation failure.}
 
@@ -4244,7 +4244,7 @@ paths:
               type: object
               properties: {name: {type: string}}
       responses:
-        '201': {description: Role cloned.}
+        '200': {description: Role cloned.}
 
   /admin/permissions:
     get:
@@ -4319,7 +4319,7 @@ paths:
               properties:
                 source_name: {type: string, example: "IndiaMART"}
       responses:
-        '201':
+        '200':
           description: Webhook source created.
 
   /webhooks/{slug}/leads:
