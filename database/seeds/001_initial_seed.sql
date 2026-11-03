@@ -5,9 +5,9 @@
 -- 4.1 OAuth Clients
 INSERT INTO oauth_clients (client_id, surface, allowed_roles, status) VALUES
 ('crm-super',  'super',  'SUPER_ADMIN',     'ACTIVE'),
-('crm-admin',  'admin',  'FRANCHISE_ADMIN', 'ACTIVE'),
+('crm-admin',  'admin',  'FRANCHISE_ADMIN,SALES,ACCOUNTANT', 'ACTIVE'),
 ('crm-sales',  'sales',  'SALES',           'ACTIVE'),
-('crm-portal', 'portal', 'DISTRIBUTOR',     'ACTIVE')
+('crm-portal', 'portal', 'DISTRIBUTOR,DISTRIBUTOR_EMPLOYEE',     'ACTIVE')
 ON DUPLICATE KEY UPDATE status = 'ACTIVE';
 
 -- 4.2 Global Geographic Hierarchy (States, Districts, Cities, Pincodes)

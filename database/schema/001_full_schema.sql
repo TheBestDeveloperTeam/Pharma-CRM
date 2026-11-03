@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS users (
   `org_ref` varchar(24) NOT NULL,
   `franchise_ref` varchar(24) DEFAULT NULL,
   `tenant_key` varchar(24) GENERATED ALWAYS AS (ifnull(`franchise_ref`,'PLATFORM')) STORED,
-  `role` enum('SUPER_ADMIN','FRANCHISE_ADMIN','SALES','DISTRIBUTOR') NOT NULL,
+  `role` enum('SUPER_ADMIN','FRANCHISE_ADMIN','SALES','ACCOUNTANT','DISTRIBUTOR','DISTRIBUTOR_EMPLOYEE') NOT NULL,
   `party_ref` varchar(24) DEFAULT NULL,
   `full_name` varchar(191) NOT NULL,
   `email` varchar(191) NOT NULL,
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 
 -- Table: role_permissions
 CREATE TABLE IF NOT EXISTS role_permissions (
-  `role` enum('SUPER_ADMIN','FRANCHISE_ADMIN','SALES','DISTRIBUTOR') NOT NULL,
+  `role` enum('SUPER_ADMIN','FRANCHISE_ADMIN','SALES','ACCOUNTANT','DISTRIBUTOR','DISTRIBUTOR_EMPLOYEE') NOT NULL,
   `permission_code` varchar(64) NOT NULL,
   `scope` enum('GLOBAL','TENANT','ASSIGNED','OWN') NOT NULL,
   PRIMARY KEY (`role`,`permission_code`)
@@ -633,6 +633,8 @@ CREATE TABLE IF NOT EXISTS parties (
   `pincode` char(6) DEFAULT NULL,
   `tier_ref` varchar(24) DEFAULT NULL,
   `sales_user_ref` varchar(24) DEFAULT NULL,
+  `distributor_approved_by_ref` varchar(24) DEFAULT NULL,
+  `distributor_approved_at` datetime DEFAULT NULL,
   `agreement_from` date DEFAULT NULL,
   `agreement_to` date DEFAULT NULL,
   `credit_limit` decimal(18,2) NOT NULL DEFAULT 0.00,
@@ -1063,11 +1065,13 @@ CREATE TABLE IF NOT EXISTS orders (
   `client_order_ref` varchar(64) NOT NULL,
   `party_ref` varchar(24) NOT NULL,
   `sales_user_ref` varchar(24) DEFAULT NULL,
+  `distributor_approved_by_ref` varchar(24) DEFAULT NULL,
+  `distributor_approved_at` datetime DEFAULT NULL,
   `channel` enum('PORTAL','SALES','ADMIN') NOT NULL,
   `order_date` date NOT NULL,
   `shipping_address` text DEFAULT NULL,
   `shipping_pincode` char(6) DEFAULT NULL,
-  `status` enum('DRAFT','SUBMITTED','CONFIRMED','PROCESSING','DISPATCHED','DELIVERED','CANCELLED') NOT NULL DEFAULT 'DRAFT',
+  `status` enum('DRAFT','PENDING_APPROVAL','SUBMITTED','CONFIRMED','PROCESSING','DISPATCHED','DELIVERED','CANCELLED') NOT NULL DEFAULT 'DRAFT',
   `territory_status` enum('OK','OVERRIDDEN','BLOCKED','UNASSIGNED','CONFLICT') NOT NULL DEFAULT 'OK',
   `subtotal` decimal(18,2) NOT NULL DEFAULT 0.00,
   `discount_total` decimal(18,2) NOT NULL DEFAULT 0.00,
@@ -1516,9 +1520,9 @@ FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'audit_logs is append-on
 -- 4.1 OAuth Clients
 INSERT INTO oauth_clients (client_id, surface, allowed_roles, status) VALUES
 ('crm-super',  'super',  'SUPER_ADMIN',     'ACTIVE'),
-('crm-admin',  'admin',  'FRANCHISE_ADMIN', 'ACTIVE'),
+('crm-admin',  'admin',  'FRANCHISE_ADMIN,SALES,ACCOUNTANT', 'ACTIVE'),
 ('crm-sales',  'sales',  'SALES',           'ACTIVE'),
-('crm-portal', 'portal', 'DISTRIBUTOR',     'ACTIVE')
+('crm-portal', 'portal', 'DISTRIBUTOR,DISTRIBUTOR_EMPLOYEE',     'ACTIVE')
 ON DUPLICATE KEY UPDATE status = 'ACTIVE';
 
 -- 4.2 Global Geographic Hierarchy (States, Districts, Cities, Pincodes)
