@@ -34,64 +34,54 @@ servers:
   description: Local PHP CLI Dev Server
 
 tags:
-- name: Health
-  description: Platform and database readiness probes
-- name: Auth
-  description: OAuth 2.0 token issuance, refresh rotation, revocation, and 
-    identity
-- name: Geo
-  description: Public India geographic hierarchy (States, Districts, Pincodes)
-- name: Super Admin
-  description: Multi-tenant organization and franchise management, 
-    impersonation, audit & platform stats
-- name: Admin Users
-  description: User management within a franchise (Admin, Sales, Distributor)
-- name: Admin Masters
-  description: Product categories, pricing tiers, transporters, templates, 
-    settings
-- name: Admin Products
-  description: Pharmaceutical catalogue, SKU, HSN, packing, and composition CRUD
-- name: Admin Pricing & Schemes
-  description: Hierarchical pricing rules, quantity schemes (10+1), and 
-    calculation endpoints
-- name: Admin Leads & Follow-ups
-  description: Lead acquisition, assignment, state machine, and mandatory 
-    follow-up tracking
-- name: Admin Parties & Onboarding
-  description: PCD franchise partners, distributors, customer onboarding 
-    invites, and ledger
-- name: Admin Territories
-  description: District/pincode territory allocations, exclusive locks, 
-    pre-billing validator & overrides
-- name: Admin Inventory
-  description: Batch receipts, FEFO allocations, physical stock adjustments, and
-    near-expiry alerts
-- name: Admin Orders
-  description: Order status contract (DRAFT -> SUBMITTED -> CONFIRMED -> 
-    PROCESSING -> DISPATCHED -> DELIVERED / CANCELLED); transition authority is 
-    module-specific.
-- name: Admin Billing & Invoices
-  description: Tax invoice generation with price/party snapshots, gapless 
-    sequence numbers, and GST breakdown
-- name: Admin Dispatches
-  description: Transporter assignment, Lorry Receipt (LR) tracking, and dispatch
-    delivery confirmation
-- name: Admin Payments
-  description: Payment recording, invoice allocation, payment reversal, and 
-    outstanding balance sync
-- name: Admin Reports
-  description: 12 comprehensive analytical, operational, and financial reports 
-    with JSON/CSV streaming
-- name: Webhooks
-  description: B2B lead generation webhook sources (HMAC-SHA256 verified) and 
-    ingestion
-- name: Notifications
-  description: In-app, Email, WhatsApp, and SMS notification dispatch, bell 
-    polling, and read tracking
-- name: Distributor Portal
-  description: Distributor self-service portal for catalogue browsing, 
-    server-side cart pricing, order placement, and invoice tracking
-
+  - name: Health
+    description: System health probes, liveness, and readiness endpoints.
+  - name: Auth
+    description: OAuth 2.0 password grant, token exchange, refresh tokens, session revocation, and password management.
+  - name: Zero-Local-Data Schemas
+    description: Dynamic server-driven UI schemas and field descriptors for zero-local-client caching.
+  - name: Super Admin
+    description: Multi-tenant SaaS platform administration, franchise creation, global audit logging, and module switches.
+  - name: Admin Users
+    description: Internal employee directory, role-based access control (RBAC), and user-to-territory mappings.
+  - name: Admin Masters
+    description: Master catalog registries (categories, dosage forms, packaging types, tax slabs, transporters, and global settings).
+  - name: Geo
+    description: Hierarchical geographic entities (States, Districts, Cities, Pincodes) with individual and bulk CRUD operations.
+  - name: Admin Territories
+    description: Operational field territories, boundary mappings, and assignment matrices.
+  - name: Admin Products
+    description: Pharmaceutical product master, SKU specifications, batch rules, and pricing master linkages.
+  - name: Admin Pricing & Schemes
+    description: Multi-tier party price lists, promotional discounts, quantity schemes, and trade schemes.
+  - name: Admin Parties & Onboarding
+    description: Commercial entities (Stockists, Retailers, Hospitals), self-registration approvals, and KYC verification.
+  - name: Admin Leads & Follow-ups
+    description: Business prospecting, doctor call scheduling, lead lifecycle conversions, and quarantined field activities.
+  - name: Admin Inventory
+    description: Goods Receipt Notes (GRN), FEFO batch stock ledgers, physical stock reconciliation, and quarantine lots.
+  - name: Admin Orders
+    description: Franchise sales order desk, credit checks, FEFO stock reservation, order holds, and fulfillment processing.
+  - name: Admin Billing & Invoices
+    description: Legally compliant GST tax invoice generation, sequence counters, credit/debit notes, and PDF exports.
+  - name: Admin Dispatches
+    description: Warehouse dispatch slips, packing slips, lorry receipts (LR), transporter assignments, and tracking.
+  - name: Admin Payments
+    description: Accounts receivable, PDC realization registry, cheque bounce handling, ledger entries, and ageing.
+  - name: Field Force Automation (DCR)
+    description: Medical Representative (MR) daily call reports, doctor tour planning, chemist visits, sample drops, and POBs.
+  - name: Distributor Portal
+    description: Dedicated B2B franchise partner commerce, online catalog, shopping cart calculation, invoices, and ledger.
+  - name: Distributor Team & EA
+    description: Franchise-owned field teams (EA / MRs), team order approvals, and scoped team lead monitoring.
+  - name: Admin Reports
+    description: Real-time business intelligence, sales team productivity, conversion ratios, and immutable audit logs.
+  - name: Webhooks
+    description: Inbound and outbound event integration engine with cryptographic signature verification.
+  - name: Notifications
+    description: In-app real-time alerting, unread counts, and channel delivery dispatchers.
+  - name: General
+    description: Universal utility, cross-module search, and platform-wide shared services.
 components:
   securitySchemes:
     bearerAuth:
@@ -1068,7 +1058,7 @@ paths:
   /admin/geo/states:
     post:
       summary: Create state master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1088,7 +1078,7 @@ paths:
     post:
       summary: Bulk upload state masters
       description: Bulk upload or update multiple states at once. If state_code exists, it will update; otherwise it creates a new state.
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1134,14 +1124,14 @@ paths:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "STA-MAHARASHTRA00001"}
     get:
       summary: Show state details
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
           description: State details.
     patch:
       summary: Update state master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1157,7 +1147,7 @@ paths:
           description: State updated.
     delete:
       summary: Delete state master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
@@ -1166,7 +1156,7 @@ paths:
   /admin/geo/districts:
     post:
       summary: Create district master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1186,7 +1176,7 @@ paths:
     post:
       summary: Bulk upload district masters
       description: Bulk upload districts linking each district to its parent state using state_ref (or state_code).
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1233,14 +1223,14 @@ paths:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "DST-MUMBAICITY0001"}
     get:
       summary: Show district details
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
           description: District details.
     patch:
       summary: Update district master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1256,7 +1246,7 @@ paths:
           description: District updated.
     delete:
       summary: Delete district master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
@@ -1265,7 +1255,7 @@ paths:
   /admin/geo/cities:
     post:
       summary: Create city master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1285,7 +1275,7 @@ paths:
     post:
       summary: Bulk upload city masters
       description: Bulk upload cities linking each city to its parent district using district_ref.
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1331,14 +1321,14 @@ paths:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "CTY-MUMBAI00000001"}
     get:
       summary: Show city details
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
           description: City details.
     patch:
       summary: Update city master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1354,7 +1344,7 @@ paths:
           description: City updated.
     delete:
       summary: Delete city master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
@@ -1363,7 +1353,7 @@ paths:
   /admin/geo/pincodes:
     post:
       summary: Create postal pincode master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1385,7 +1375,7 @@ paths:
     post:
       summary: Bulk upload postal pincode masters
       description: Bulk upload or upsert pincodes linking them to state_ref, district_ref, and optional city_ref.
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1439,14 +1429,14 @@ paths:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "400053", description: "6-digit postal pincode"}
     get:
       summary: Show pincode details
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
           description: Pincode details with resolved city, district, and state.
     patch:
       summary: Update postal pincode master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       requestBody:
         required: true
@@ -1463,7 +1453,7 @@ paths:
           description: Pincode updated.
     delete:
       summary: Delete postal pincode master
-      tags: [Admin Geo Master]
+      tags: [Geo]
       security: [bearerAuth: []]
       responses:
         '200':
@@ -9611,7 +9601,7 @@ paths:
     get:
       summary: Dashboard Dashboard
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'dashboard on /portal/dashboard.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10078,7 +10068,7 @@ paths:
     get:
       summary: Show dispatch Dispatches
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'showDispatch on /portal/dispatches/{ref}.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10248,7 +10238,7 @@ paths:
     get:
       summary: Show invoice Invoices
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'showInvoice on /portal/invoices/{ref}.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10276,7 +10266,7 @@ paths:
     get:
       summary: Download invoice Download
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'downloadInvoice on /portal/invoices/{ref}/download.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10302,7 +10292,7 @@ paths:
     get:
       summary: Ledger Ledger
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'ledger on /portal/ledger.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10325,7 +10315,7 @@ paths:
     get:
       summary: Notifications Notifications
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'notifications on /portal/notifications.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10348,7 +10338,7 @@ paths:
     post:
       summary: Mark notification read Read
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'markNotificationRead on /portal/notifications/{ref}/read.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10381,7 +10371,7 @@ paths:
     get:
       summary: Order timeline Timeline
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'orderTimeline on /portal/orders/{ref}/timeline.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10409,7 +10399,7 @@ paths:
     get:
       summary: Outstanding ageing Ageing
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'outstandingAgeing on /portal/outstanding/ageing.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10432,7 +10422,7 @@ paths:
     get:
       summary: Payments Payments
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'payments on /portal/payments.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10505,7 +10495,7 @@ paths:
     get:
       summary: Schemes Schemes
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'schemes on /portal/schemes.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10528,7 +10518,7 @@ paths:
     get:
       summary: List shipping addresses Shipping addresses
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'listShippingAddresses on /portal/shipping-addresses.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10550,7 +10540,7 @@ paths:
     post:
       summary: Add shipping address Shipping addresses
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'addShippingAddress on /portal/shipping-addresses.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       requestBody:
@@ -10577,7 +10567,7 @@ paths:
     patch:
       summary: Update shipping address Shipping addresses
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'updateShippingAddress on /portal/shipping-addresses/{ref}.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10609,7 +10599,7 @@ paths:
     delete:
       summary: Delete shipping address Shipping addresses
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'deleteShippingAddress on /portal/shipping-addresses/{ref}.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
@@ -10635,7 +10625,7 @@ paths:
     get:
       summary: Support Support
       description: Operation \App\Http\Controllers\Api\V1\Portal\PortalController->'support on /portal/support.
-      tags: [Portal & Distributor]
+      tags: [Distributor Portal]
       security:
         - bearerAuth: []
       parameters:
