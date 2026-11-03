@@ -572,6 +572,8 @@ return function(\App\Core\Router $router): void {
     $router->delete('/api/v1/portal/shipping-addresses/{ref}', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'deleteShippingAddress']);
     $router->get('/api/v1/portal/team', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'listTeam']);
     $router->post('/api/v1/portal/team', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'createTeam']);
+    $router->get('/api/v1/portal/team/orders', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'listTeamOrders']);
+    $router->post('/api/v1/portal/team/orders/{ref}/approve', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'approveTeamOrder']);
     $router->get('/api/v1/portal/team/{ref}', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'showTeam']);
     $router->patch('/api/v1/portal/team/{ref}', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'updateTeam']);
     $router->post('/api/v1/portal/team/{ref}/activate', [\App\Http\Controllers\Api\V1\Portal\PortalController::class, 'activateTeam']);

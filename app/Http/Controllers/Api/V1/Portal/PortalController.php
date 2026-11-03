@@ -784,24 +784,36 @@ final class PortalController
     }
 
     /**
-     * PRT-017: Create distributor team user
+     * PRT-017: Create distributor team user (EA / MR)
+     * Requires Franchise Code validation per UAMC spec.
      */
     public function createTeam(Request $r): Response
     {
-        $ctx = $this->getCtx('editProfile');
+        $ctx = $this->getCtx();
+        if (!$ctx->isDistributor()) {
+            throw new ForbiddenException('DISTRIBUTOR_ONLY', 'Only distributors can add team members.');
+        }
         $franchiseRef = $ctx->requireFranchise();
         $partyRef = $ctx->partyRef;
 
         $clean = Validation::validate($r->all(), [
-            'full_name' => 'required|string',
-            'email'     => 'required|email',
-            'mobile'    => 'required|string',
+            'franchise_code' => 'required|string',
+            'full_name'      => 'required|string',
+            'email'          => 'required|email',
+            'mobile'         => 'required|string',
         ]);
+
+        // Validate franchise code matches caller franchise
+        $frnCheck = $this->pdo->prepare("SELECT franchise_ref FROM franchises WHERE franchise_code = :c AND franchise_ref = :f LIMIT 1");
+        $frnCheck->execute([':c' => trim((string)$clean['franchise_code']), ':f' => $franchiseRef]);
+        if (!$frnCheck->fetchColumn()) {
+            throw new ValidationException('INVALID_FRANCHISE_CODE', 'Franchise code does not match the active distributor franchise.');
+        }
 
         $userRef = RefGenerator::generate('USR');
         $tempPassword = password_hash($r->input('password') ?: bin2hex(random_bytes(6)), PASSWORD_DEFAULT);
 
-        $stmt = $this->pdo->prepare("INSERT INTO users (user_ref, org_ref, franchise_ref, party_ref, email, mobile, full_name, role, password_hash, status, created_by_ref) VALUES (:ref, :org, :f, :p, :email, :mobile, :name, 'DISTRIBUTOR', :pwd, 'ACTIVE', :creator)");
+        $stmt = $this->pdo->prepare("INSERT INTO users (user_ref, org_ref, franchise_ref, party_ref, email, mobile, full_name, role, password_hash, status, designation, created_by_ref) VALUES (:ref, :org, :f, :p, :email, :mobile, :name, 'DISTRIBUTOR_EMPLOYEE', :pwd, 'ACTIVE', :desig, :creator)");
         $stmt->execute([
             ':ref'     => $userRef,
             ':org'     => $ctx->orgRef,
@@ -811,17 +823,71 @@ final class PortalController
             ':mobile'  => trim((string)$clean['mobile']),
             ':name'    => trim((string)$clean['full_name']),
             ':pwd'     => $tempPassword,
+            ':desig'   => $r->input('designation', 'Medical Representative (EA)'),
             ':creator' => $ctx->userRef,
         ]);
 
+        // Record hierarchy link (Distributor is the manager of EA)
+        try {
+            $stmtH = $this->pdo->prepare("INSERT INTO auth_user_hierarchy (user_ref, manager_ref, assigned_by_ref) VALUES (?, ?, ?)");
+            $stmtH->execute([$userRef, $ctx->userRef, $ctx->userRef]);
+        } catch (\Throwable $e) {}
+
         return Response::json(201, [
-            'user_ref'  => $userRef,
-            'full_name' => $clean['full_name'],
-            'email'     => $clean['email'],
-            'mobile'    => $clean['mobile'],
-            'role'      => 'DISTRIBUTOR',
-            'status'    => 'ACTIVE',
+            'user_ref'       => $userRef,
+            'full_name'      => $clean['full_name'],
+            'email'          => $clean['email'],
+            'mobile'         => $clean['mobile'],
+            'franchise_code' => $clean['franchise_code'],
+            'role'           => 'DISTRIBUTOR_EMPLOYEE',
+            'status'         => 'ACTIVE',
         ]);
+    }
+
+    /**
+     * PRT-020: List EA-originated orders for distributor approval
+     */
+    public function listTeamOrders(Request $r): Response
+    {
+        $ctx = $this->getCtx();
+        if (!$ctx->isDistributor()) {
+            throw new ForbiddenException('DISTRIBUTOR_ONLY', 'Only distributors can view team orders.');
+        }
+        $franchiseRef = $ctx->requireFranchise();
+        $partyRef = $ctx->partyRef;
+
+        $stmt = $this->pdo->prepare("
+            SELECT o.order_ref, o.order_no, o.order_date, o.status, o.grand_total, o.created_by_ref, u.full_name as ea_name, u.mobile as ea_mobile
+            FROM orders o
+            JOIN users u ON u.user_ref = o.created_by_ref
+            WHERE o.franchise_ref = :f AND o.party_ref = :p AND u.role = 'DISTRIBUTOR_EMPLOYEE'
+            ORDER BY o.id DESC
+        ");
+        $stmt->execute([':f' => $franchiseRef, ':p' => $partyRef]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return Response::json(200, $rows);
+    }
+
+    /**
+     * PRT-021: Approve EA-originated order
+     */
+    public function approveTeamOrder(Request $r, ?string $ref = null): Response
+    {
+        $ctx = $this->getCtx();
+        if (!$ctx->isDistributor()) {
+            throw new ForbiddenException('DISTRIBUTOR_ONLY', 'Only distributors can approve team orders.');
+        }
+        $franchiseRef = $ctx->requireFranchise();
+        $orderRef = $ref ?? (string)$r->param('ref');
+
+        $order = $this->orderRepo->findByRef($franchiseRef, $orderRef);
+        if (!$order || $order['party_ref'] !== $ctx->partyRef) {
+            throw new NotFoundException('ORDER_NOT_FOUND', 'Order not found for your franchise account.');
+        }
+
+        $res = $this->orderService->approveDistributorOrder($ctx->orgRef, $franchiseRef, $orderRef, $ctx->userRef);
+        return Response::json(200, $res);
     }
 
     /**

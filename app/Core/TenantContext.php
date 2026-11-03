@@ -41,22 +41,28 @@ final class TenantContext
      */
     public function isPartyBound(): bool     { return !$this->isSuper() && $this->partyRef !== null && $this->partyRef !== ''; }
 
-    /** @deprecated B1 — authorize with can()/scopeFor(); users.role is only the login surface now. */
     public function isAdmin(): bool          { return $this->role === 'FRANCHISE_ADMIN'; }
-    /** @deprecated B1 — authorize with can()/scopeFor(). */
     public function isFranchiseAdmin(): bool { return $this->role === 'FRANCHISE_ADMIN'; }
-    /** @deprecated B1 — authorize with can()/scopeFor(). */
     public function isSales(): bool          { return $this->role === 'SALES'; }
-    /** @deprecated B1 — use isPartyBound() for party data scoping. */
+    public function isAccountant(): bool     { return $this->role === 'ACCOUNTANT'; }
+    public function isCompanyStaff(): bool   { return in_array($this->role, ['SUPER_ADMIN', 'FRANCHISE_ADMIN', 'SALES', 'ACCOUNTANT'], true); }
     public function isDistributor(): bool    { return $this->role === 'DISTRIBUTOR'; }
+    public function isEA(): bool             { return $this->role === 'DISTRIBUTOR_EMPLOYEE'; }
+    public function isDistributorEmployee(): bool { return $this->role === 'DISTRIBUTOR_EMPLOYEE'; }
 
     public function can(string $module, string $action): bool
     {
         if ($this->isSuper() || $this->isAdmin() || in_array('admin', $this->roles, true)) {
             return true;
         }
-        if ($module === 'portal' && $this->isPartyBound() && ($this->isDistributor() || in_array('distributor', $this->roles, true))) {
+        if ($module === 'portal' && $this->isPartyBound() && ($this->isDistributor() || $this->isEA() || in_array('distributor', $this->roles, true))) {
             return true;
+        }
+        if ($this->isEA()) {
+            if ($module === 'leads' && in_array($action, ['view', 'create', 'edit'], true)) return true;
+            if ($module === 'followUps' && in_array($action, ['view', 'create', 'edit', 'complete'], true)) return true;
+            if ($module === 'orders' && in_array($action, ['view', 'create'], true)) return true;
+            if ($module === 'reports' && in_array($action, ['view'], true)) return true;
         }
         return in_array($action, $this->permissions[$module] ?? [], true);
     }

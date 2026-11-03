@@ -45,9 +45,39 @@ final class CrmScopePolicy
         });
     }
 
+    /** Checks if a user is an EA (distributor employee). */
+    private function isUserEA(?string $userRef): bool
+    {
+        if (!$userRef) return false;
+        $role = $this->db->fetchColumn('SELECT role FROM users WHERE user_ref = ? LIMIT 1', [$userRef]);
+        return $role === 'DISTRIBUTOR_EMPLOYEE';
+    }
+
     /** Record check for one lead row (show / update / status). */
     public function canAccessLead(TenantContext $ctx, array $lead): bool
     {
+        // ── EA Data Quarantine Boundary ──
+        $leadCreator = $lead['created_by_ref'] ?? null;
+        $isLeadFromEA = $this->isUserEA($leadCreator);
+
+        if ($isLeadFromEA) {
+            // Super Admin and Company Staff CANNOT access EA leads
+            if ($ctx->isSuper() || $ctx->isCompanyStaff()) {
+                return false;
+            }
+            // EA can only access if they are creator or assigned
+            if ($ctx->isEA()) {
+                return $leadCreator === $ctx->userRef || ($lead['assigned_user_ref'] ?? null) === $ctx->userRef;
+            }
+            // Distributor can only access if EA belongs to their party
+            if ($ctx->isDistributor()) {
+                $eaParty = $this->db->fetchColumn('SELECT party_ref FROM users WHERE user_ref = ? LIMIT 1', [$leadCreator]);
+                return $eaParty === $ctx->partyRef;
+            }
+            return false;
+        }
+
+        // Standard lead access check
         return $this->recordInScope($ctx, 'leads', $lead, function () use ($ctx, $lead): bool {
             return $this->leadInTerritory($ctx, $lead);
         });
@@ -109,9 +139,28 @@ final class CrmScopePolicy
 
     private function clause(TenantContext $ctx, string $module, array &$params, callable $territorySql): string
     {
-        if ($ctx->isSuper()) return '1=1';
+        // ── EA Data Quarantine SQL Filter ──
+        // 1. If viewer is Super Admin or Company Staff (Sales, Accountant), EA data is strictly excluded
+        $eaExclusion = "created_by_ref NOT IN (SELECT u.user_ref FROM users u WHERE u.role = 'DISTRIBUTOR_EMPLOYEE')";
+
+        if ($ctx->isEA()) {
+            $params[':ea_self_user'] = $ctx->userRef;
+            return "(created_by_ref = :ea_self_user OR assigned_user_ref = :ea_self_user)";
+        }
+
+        if ($ctx->isDistributor()) {
+            $params[':dist_party_ref'] = (string)$ctx->partyRef;
+            return "(created_by_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref) OR assigned_user_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref))";
+        }
+
+        if ($ctx->isSuper()) {
+            return $eaExclusion;
+        }
+
         $scope = $ctx->scopeFor($module);
-        if ($scope === 'ALL') return '1=1';
+        if ($scope === 'ALL') {
+            return $eaExclusion;
+        }
         if ($scope === 'OWN') {
             $params[':scope_user'] = $ctx->userRef;
             return 'assigned_user_ref = :scope_user';

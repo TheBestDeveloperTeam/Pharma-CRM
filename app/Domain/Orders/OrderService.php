@@ -135,8 +135,9 @@ final class OrderService
             ];
         }
 
-        // Credit is a factual check at Submit/Confirm; Draft creation does not choose breach policy.
-        $initialStatus = 'DRAFT';
+        // Check actor role: If created by an EA (Distributor Employee), order enters PENDING_APPROVAL for distributor
+        $creatorRole = $this->db->fetchColumn('SELECT role FROM users WHERE user_ref = ? LIMIT 1', [$actorRef]);
+        $initialStatus = ($creatorRole === 'DISTRIBUTOR_EMPLOYEE') ? 'PENDING_APPROVAL' : 'DRAFT';
 
         $orderData = [
             'order_ref'        => $orderRef,
@@ -173,7 +174,24 @@ final class OrderService
         ];
     }
 
-    public function confirmOrder(string $orgRef, string $franchiseRef, string $orderRef, string $actorRef): array
+        /** Distributor approves an EA-originated order. */
+    public function approveDistributorOrder(string $orgRef, string $franchiseRef, string $orderRef, string $distributorUserRef): array
+    {
+        $order = $this->orderRepo->findByRef($franchiseRef, $orderRef);
+        if (!$order) throw new ValidationException('ORDER_NOT_FOUND', 'Order not found.');
+        if ($order['status'] !== 'PENDING_APPROVAL') {
+            throw new ValidationException('INVALID_ORDER_STATE', 'Only PENDING_APPROVAL orders can be approved by distributor.');
+        }
+
+        $this->db->execute(
+            "UPDATE orders SET distributor_approved_by_ref = ?, distributor_approved_at = NOW() WHERE franchise_ref = ? AND order_ref = ?",
+            [$distributorUserRef, $franchiseRef, $orderRef]
+        );
+
+        return $this->confirmOrder($orgRef, $franchiseRef, $orderRef, $distributorUserRef);
+    }
+
+public function confirmOrder(string $orgRef, string $franchiseRef, string $orderRef, string $actorRef): array
     {
         return $this->db->transaction(function () use ($orgRef, $franchiseRef, $orderRef, $actorRef): array {
             $order = $this->orderRepo->findByRefForUpdate($franchiseRef, $orderRef); if (!$order) throw new ValidationException('ORDER_NOT_FOUND', 'Order not found.');
@@ -185,7 +203,8 @@ final class OrderService
             $allocLines = [];
             foreach ($facts['items'] as $it) $allocLines[] = ['order_item_ref' => $it['item_ref'], 'product_ref' => $it['product_ref'], 'qty' => (int)$it['paid_qty'] + (int)$it['free_qty'], 'min_shelf_days' => (int)($it['shelf_life_days'] ?? 0)];
             $reservations = $this->fefoAllocator->allocate($orgRef, $franchiseRef, $orderRef, $allocLines, $actorRef, false);
-            if (!$this->orderRepo->updateStatusNoTransaction($franchiseRef, $orderRef, 'SUBMITTED', 'CONFIRMED', $actorRef, 'Order confirmed and stock reserved')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order state changed concurrently.');
+            $prevStatus = $order['status'];
+            if (!$this->orderRepo->updateStatusNoTransaction($franchiseRef, $orderRef, $prevStatus, 'CONFIRMED', $actorRef, 'Order confirmed and stock reserved')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order state changed concurrently.');
             return ['order_ref' => $orderRef, 'status' => 'CONFIRMED', 'reservations' => $reservations];
         });
     }

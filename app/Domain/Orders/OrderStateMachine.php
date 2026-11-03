@@ -7,7 +7,8 @@ use App\Core\Exceptions\ValidationException;
 final class OrderStateMachine
 {
     private const VALID_TRANSITIONS = [
-        'DRAFT'            => ['SUBMITTED', 'CANCELLED'],
+        'DRAFT'            => ['SUBMITTED', 'PENDING_APPROVAL', 'CANCELLED'],
+        'PENDING_APPROVAL' => ['CONFIRMED', 'SUBMITTED', 'CANCELLED'],
         'SUBMITTED'        => ['CONFIRMED', 'CANCELLED'],
         // TASK-007 owns the physical fulfilment transitions.
         'CONFIRMED'        => ['PROCESSING', 'CANCELLED'],

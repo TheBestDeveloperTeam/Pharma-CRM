@@ -4119,6 +4119,64 @@ paths:
         '200':
           description: Outstanding balance breakdown.
 
+  /portal/team:
+    get:
+      summary: List distributor team members (EAs / MRs)
+      description: Returns the list of EA field force employees created by this distributor.
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      responses:
+        '200':
+          description: Team members list.
+    post:
+      summary: Create EA field force employee
+      description: Allows a distributor to hire/create their own field representative. Franchise Code is required upfront.
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [franchise_code, full_name, email, mobile]
+              properties:
+                franchise_code: {type: string, example: "MUMBAI", description: "Franchise code of distributor"}
+                full_name: {type: string, example: "Ramesh Kumar (MR)"}
+                email: {type: string, example: "ramesh.mr@distributor.local"}
+                mobile: {type: string, example: "9820011223"}
+                password: {type: string, example: "Password@123"}
+                designation: {type: string, example: "Medical Representative"}
+      responses:
+        '201':
+          description: EA team employee created successfully.
+
+  /portal/team/orders:
+    get:
+      summary: List EA team orders pending distributor review
+      description: Lists orders taken by EA field staff that require distributor approval before company fulfillment.
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      responses:
+        '200':
+          description: Orders submitted by EA field representatives.
+
+  /portal/team/orders/{ref}/approve:
+    post:
+      summary: Approve EA-originated order
+      description: Confirms an EA booked order. Transitions order to CONFIRMED and unlocks company HQ fulfillment.
+      tags: [Distributor Portal]
+      security: [bearerAuth: []]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema: {type: string}
+          example: "ord_6f4b231a980c"
+      responses:
+        '200':
+          description: Order approved and confirmed.
+
   # ============================================================================
   # TASK-001 — Roles, Permissions & Scope
   # ============================================================================
