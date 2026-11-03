@@ -37,7 +37,13 @@ final class AuthController
 
     private function handlePasswordGrant(Request $r): Response
     {
-        $clean = Validation::validate($r->all(), [
+        $all = $r->all();
+        // Support standard OAuth 2.0 username field mapped to email
+        if (empty($all['email']) && !empty($all['username'])) {
+            $all['email'] = $all['username'];
+        }
+
+        $clean = Validation::validate($all, [
             'client_id' => 'required|string',
             'email'     => 'required|email',
             'password'  => 'required|string',
