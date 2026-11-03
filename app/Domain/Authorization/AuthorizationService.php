@@ -92,9 +92,17 @@ final class AuthorizationService
             return true;
         }
         if ($ctx->isPartyBound() && ($ctx->isDistributor() || in_array('distributor', $ctx->roles, true))) {
-            if (in_array($module, ['portal', 'dcr', 'fieldCustomers', 'beats', 'tourPlans', 'notifications'], true)) {
+            if (in_array($module, ['portal', 'dcr', 'fieldCustomers', 'beats', 'tourPlans', 'notifications', 'leads', 'followUps', 'orders', 'reports'], true)) {
                 return true;
             }
+        }
+        // EA / Distributor Employee field capabilities
+        if ($ctx->isEA()) {
+            if ($module === 'leads' && in_array($action, ['view', 'create', 'edit'], true)) return true;
+            if ($module === 'followUps' && in_array($action, ['view', 'create', 'edit', 'complete'], true)) return true;
+            if ($module === 'orders' && in_array($action, ['view', 'create'], true)) return true;
+            if ($module === 'reports' && in_array($action, ['view'], true)) return true;
+            if (in_array($module, ['portal', 'dcr', 'fieldCustomers', 'beats', 'tourPlans', 'notifications'], true)) return true;
         }
         return in_array($action, $ctx->permissions[$module] ?? [], true);
     }
