@@ -149,8 +149,9 @@ final class CrmScopePolicy
         }
 
         if ($ctx->isDistributor()) {
-            $params[':dist_party_ref'] = (string)$ctx->partyRef;
-            return "(created_by_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref) OR assigned_user_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref))";
+            $params[':dist_party_ref1'] = (string)$ctx->partyRef;
+            $params[':dist_party_ref2'] = (string)$ctx->partyRef;
+            return "(created_by_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref1) OR assigned_user_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref2))";
         }
 
         if ($ctx->isSuper()) {

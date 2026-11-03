@@ -36,3 +36,4 @@ WHERE client_id = 'crm-portal';
 UPDATE oauth_clients 
 SET allowed_roles = 'FRANCHISE_ADMIN,SALES,ACCOUNTANT' 
 WHERE client_id = 'crm-admin';
+
