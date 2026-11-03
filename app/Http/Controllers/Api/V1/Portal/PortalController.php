@@ -860,7 +860,7 @@ final class PortalController
             SELECT o.order_ref, o.order_no, o.order_date, o.status, o.grand_total, o.created_by_ref, u.full_name as ea_name, u.mobile as ea_mobile
             FROM orders o
             JOIN users u ON u.user_ref COLLATE utf8mb4_unicode_ci = o.created_by_ref COLLATE utf8mb4_unicode_ci
-            WHERE o.franchise_ref = :f AND o.party_ref = :p AND u.role = 'DISTRIBUTOR_EMPLOYEE'
+            WHERE o.franchise_ref COLLATE utf8mb4_unicode_ci = :f AND o.party_ref COLLATE utf8mb4_unicode_ci = :p AND u.role = 'DISTRIBUTOR_EMPLOYEE'
             ORDER BY o.id DESC
         ");
         $stmt->execute([':f' => $franchiseRef, ':p' => $partyRef]);
