@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS organizations (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_org_ref` (`org_ref`),
   UNIQUE KEY `uq_org_code` (`org_code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: franchises
 CREATE TABLE IF NOT EXISTS franchises (
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS franchises (
   UNIQUE KEY `uq_franchise_code` (`org_ref`,`franchise_code`),
   KEY `idx_franchise_status` (`org_ref`,`status`),
   CONSTRAINT `fk_frn_org` FOREIGN KEY (`org_ref`) REFERENCES `organizations` (`org_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS users (
   KEY `idx_user_manager` (`franchise_ref`,`reporting_manager_ref`),
   CONSTRAINT `fk_user_org` FOREIGN KEY (`org_ref`) REFERENCES `organizations` (`org_ref`),
   CONSTRAINT `chk_user_scope` CHECK (`role` = 'SUPER_ADMIN' and `franchise_ref` is null or `role` <> 'SUPER_ADMIN' and `franchise_ref` is not null)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: oauth_clients
 CREATE TABLE IF NOT EXISTS oauth_clients (
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS auth_roles (
   UNIQUE KEY `uq_auth_role_slug` (`franchise_ref`,`role_slug`),
   KEY `idx_auth_role_tenant` (`org_ref`,`franchise_ref`,`status`),
   CONSTRAINT `fk_auth_role_org` FOREIGN KEY (`org_ref`) REFERENCES `organizations` (`org_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_permissions
 CREATE TABLE IF NOT EXISTS auth_permissions (
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS auth_permissions (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_auth_permission_ref` (`permission_ref`),
   UNIQUE KEY `uq_auth_permission_key` (`module_key`,`action_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_role_permissions
 CREATE TABLE IF NOT EXISTS auth_role_permissions (
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS auth_role_permissions (
   KEY `fk_arp_permission` (`permission_ref`),
   CONSTRAINT `fk_arp_permission` FOREIGN KEY (`permission_ref`) REFERENCES `auth_permissions` (`permission_ref`),
   CONSTRAINT `fk_arp_role` FOREIGN KEY (`role_ref`) REFERENCES `auth_roles` (`role_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_role_scopes
 CREATE TABLE IF NOT EXISTS auth_role_scopes (
@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS auth_role_scopes (
   `data_scope` enum('ALL','TERRITORY','TEAM','OWN','NONE') NOT NULL,
   PRIMARY KEY (`role_ref`,`module_key`),
   CONSTRAINT `fk_ars_role` FOREIGN KEY (`role_ref`) REFERENCES `auth_roles` (`role_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_user_roles
 CREATE TABLE IF NOT EXISTS auth_user_roles (
@@ -327,7 +327,7 @@ CREATE TABLE IF NOT EXISTS auth_user_roles (
   KEY `fk_aur_role` (`role_ref`),
   CONSTRAINT `fk_aur_role` FOREIGN KEY (`role_ref`) REFERENCES `auth_roles` (`role_ref`),
   CONSTRAINT `fk_aur_user` FOREIGN KEY (`user_ref`) REFERENCES `users` (`user_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_user_hierarchy
 CREATE TABLE IF NOT EXISTS auth_user_hierarchy (
@@ -339,7 +339,7 @@ CREATE TABLE IF NOT EXISTS auth_user_hierarchy (
   KEY `fk_auh_manager` (`manager_ref`),
   CONSTRAINT `fk_auh_manager` FOREIGN KEY (`manager_ref`) REFERENCES `users` (`user_ref`),
   CONSTRAINT `fk_auh_user` FOREIGN KEY (`user_ref`) REFERENCES `users` (`user_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_user_territories
 CREATE TABLE IF NOT EXISTS auth_user_territories (
@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS auth_user_territories (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`user_ref`,`territory_ref`),
   CONSTRAINT `fk_aut_user` FOREIGN KEY (`user_ref`) REFERENCES `users` (`user_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: auth_permission_catalogue
 CREATE TABLE IF NOT EXISTS auth_permission_catalogue (
@@ -358,7 +358,7 @@ CREATE TABLE IF NOT EXISTS auth_permission_catalogue (
   `label` varchar(160) NOT NULL,
   `is_sensitive` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`module_key`,`action_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: states
 CREATE TABLE IF NOT EXISTS states (
@@ -471,7 +471,7 @@ CREATE TABLE IF NOT EXISTS catalog_master_values (
   KEY `idx_catalog_master_list` (`franchise_ref`,`master_key`,`status`,`name`),
   KEY `fk_catalog_master_org` (`org_ref`),
   CONSTRAINT `fk_catalog_master_org` FOREIGN KEY (`org_ref`) REFERENCES `organizations` (`org_ref`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Table: product_categories
 CREATE TABLE IF NOT EXISTS product_categories (

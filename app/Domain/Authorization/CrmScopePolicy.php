@@ -141,7 +141,7 @@ final class CrmScopePolicy
     {
         // ── EA Data Quarantine SQL Filter ──
         // 1. If viewer is Super Admin or Company Staff (Sales, Accountant), EA data is strictly excluded
-        $eaExclusion = "created_by_ref NOT IN (SELECT u.user_ref COLLATE utf8mb4_unicode_ci FROM users u WHERE u.role = 'DISTRIBUTOR_EMPLOYEE')";
+        $eaExclusion = "created_by_ref NOT IN (SELECT u.user_ref FROM users u WHERE u.role = 'DISTRIBUTOR_EMPLOYEE')";
 
         if ($ctx->isEA()) {
             $params[':ea_self_user1'] = $ctx->userRef;
@@ -152,7 +152,7 @@ final class CrmScopePolicy
         if ($ctx->isDistributor()) {
             $params[':dist_party_ref1'] = (string)$ctx->partyRef;
             $params[':dist_party_ref2'] = (string)$ctx->partyRef;
-            return "(created_by_ref IN (SELECT u.user_ref COLLATE utf8mb4_unicode_ci FROM users u WHERE u.party_ref = :dist_party_ref1) OR assigned_user_ref IN (SELECT u.user_ref COLLATE utf8mb4_unicode_ci FROM users u WHERE u.party_ref = :dist_party_ref2))";
+            return "(created_by_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref1) OR assigned_user_ref IN (SELECT u.user_ref FROM users u WHERE u.party_ref = :dist_party_ref2))";
         }
 
         if ($ctx->isSuper()) {
