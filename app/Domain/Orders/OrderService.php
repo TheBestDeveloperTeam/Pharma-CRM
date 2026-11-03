@@ -201,7 +201,7 @@ public function confirmOrder(string $orgRef, string $franchiseRef, string $order
             $credit = $this->partyCreditService->checkForConfirmation($franchiseRef, $order['party_ref'], (string)$order['grand_total']);
             if ($credit['credit_breached']) throw new ValidationException('CREDIT_LIMIT_EXCEEDED', 'Projected exposure exceeds the party credit limit.');
             $allocLines = [];
-            foreach ($facts['items'] as $it) $allocLines[] = ['order_item_ref' => $it['item_ref'], 'product_ref' => $it['product_ref'], 'qty' => (int)$it['paid_qty'] + (int)$it['free_qty'], 'min_shelf_days' => (int)($it['shelf_life_days'] ?? 0)];
+            foreach ($facts['items'] as $it) $allocLines[] = ['order_item_ref' => $it['item_ref'], 'product_ref' => $it['product_ref'], 'qty' => (int)$it['paid_qty'] + (int)$it['free_qty'], 'min_shelf_days' => (int)($it['min_shelf_days'] ?? 0)];
             $reservations = $this->fefoAllocator->allocate($orgRef, $franchiseRef, $orderRef, $allocLines, $actorRef, false);
             $prevStatus = $order['status'];
             if (!$this->orderRepo->updateStatusNoTransaction($franchiseRef, $orderRef, $prevStatus, 'CONFIRMED', $actorRef, 'Order confirmed and stock reserved')) throw new ConflictException('ORDER_STATE_CHANGED', 'Order state changed concurrently.');
