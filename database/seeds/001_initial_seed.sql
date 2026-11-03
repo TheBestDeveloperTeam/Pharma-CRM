@@ -199,7 +199,9 @@ INSERT IGNORE INTO auth_roles
 VALUES
 ('ROLE-MUMBAI-ADMIN0001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Admin', 'admin', 'Protected full-access system role', 1, 'ACTIVE', 'ALL', 'SYSTEM'),
 ('ROLE-MUMBAI-SALES0001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Sales Team', 'sales-team', 'Default own-scope sales role', 0, 'ACTIVE', 'OWN', 'SYSTEM'),
-('ROLE-MUMBAI-PORTAL001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Distributor', 'distributor', 'Distributor portal self-service', 0, 'ACTIVE', 'OWN', 'SYSTEM');
+('ROLE-MUMBAI-ACCT00001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Accountant', 'accountant', 'Finance and billing management role', 0, 'ACTIVE', 'ALL', 'SYSTEM'),
+('ROLE-MUMBAI-PORTAL001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Distributor', 'distributor', 'Distributor portal self-service', 0, 'ACTIVE', 'OWN', 'SYSTEM'),
+('ROLE-MUMBAI-EA0000001', 'ORG-PLATFORM0000000001', 'FRN-MUMBAI000000000001', 'Distributor Employee (EA)', 'distributor-employee', 'Distributor field team rep', 0, 'ACTIVE', 'OWN', 'SYSTEM');
 
 -- Grant all permissions to Admin
 INSERT IGNORE INTO auth_role_permissions (role_ref, permission_ref, granted_by_ref)
@@ -229,7 +231,9 @@ WHERE module_key = 'portal' AND action_key IN ('view','placeOrder','editProfile'
 INSERT IGNORE INTO auth_user_roles (user_ref, role_ref, assigned_by_ref) VALUES
 ('USR-FRNADMIN000000001', 'ROLE-MUMBAI-ADMIN0001', 'SYSTEM'),
 ('USR-SALESREP000000001', 'ROLE-MUMBAI-SALES0001', 'SYSTEM'),
-('USR-DISTRIBUTOR000001', 'ROLE-MUMBAI-PORTAL001', 'SYSTEM');
+('USR-ACCOUNTANT0000001', 'ROLE-MUMBAI-ACCT00001', 'SYSTEM'),
+('USR-DISTRIBUTOR000001', 'ROLE-MUMBAI-PORTAL001', 'SYSTEM'),
+('USR-EAREPRESENT000001', 'ROLE-MUMBAI-EA0000001', 'SYSTEM');
 
 -- 4.7 Product Categories & Catalog Master Values
 INSERT INTO product_categories (category_ref, org_ref, franchise_ref, category_name, status, created_by_ref) VALUES
