@@ -86,7 +86,7 @@ final class OrderService
 
         foreach ($rawItems as $it) {
             $prodRef = $it['product_ref'];
-            $qty = (int)$it['paid_qty'];
+            $qty = (int)($it['paid_qty'] ?? $it['quantity'] ?? 0);
 
             if ($qty <= 0) {
                 throw new ValidationException('INVALID_QTY', 'Paid quantity must be greater than zero.');
