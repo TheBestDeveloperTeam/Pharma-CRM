@@ -439,8 +439,9 @@ final class GeoController
             throw new \App\Core\Exceptions\UnauthorizedException('TOKEN_REQUIRED', 'Authentication required for geographic master modifications.');
         }
         $ctx = TenantContext::get();
-        if (!$ctx->isSuper()) {
-            throw new ForbiddenException('FORBIDDEN_PLATFORM_MASTER', 'Only Super Admin can mutate platform geographic masters.');
+        // Allow Super Admin or Franchise Admin to maintain and mutate geographic masters
+        if (!$ctx->isSuper() && !$ctx->isAdmin()) {
+            throw new ForbiddenException('FORBIDDEN_PLATFORM_MASTER', 'Administrative role required to mutate geographic masters.');
         }
     }
 }
