@@ -2557,8 +2557,7 @@ paths:
               type: object
               required:
               - email
-              - name
-              - role
+              - password
               properties:
                 email:
                   type: string
@@ -2570,9 +2569,19 @@ paths:
                   enum:
                   - FRANCHISE_ADMIN
                   - SALES
+                  - ACCOUNTANT
                   - DISTRIBUTOR
+                  - DISTRIBUTOR_EMPLOYEE
                 phone:
                   type: string
+                full_name:
+                  type: string
+                  example: Rahul Sharma
+                  description: Full name of user
+                password:
+                  type: string
+                  example: Password@123
+                  description: Initial account password
       responses:
         '200':
           description: User created.

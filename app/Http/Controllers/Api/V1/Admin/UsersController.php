@@ -74,7 +74,11 @@ final class UsersController
     {
         $ctx = $this->getTenantContext();
         $this->authorization->requirePermission($ctx, 'internalUsers', 'create');
-        $clean = Validation::validate($r->all(), [
+        $input = $r->all();
+        if (empty($input['full_name']) && !empty($input['name'])) {
+            $input['full_name'] = $input['name'];
+        }
+        $clean = Validation::validate($input, [
             'full_name' => 'required|string',
             'email'     => 'required|email',
             'password'  => 'required|string',
@@ -333,7 +337,7 @@ final class UsersController
     private function resolveRoleForCreate(TenantContext $ctx, string $roleRef, string $legacyRole): string
     {
         if ($roleRef === '') {
-            if (!in_array($legacyRole, ['SALES', 'DISTRIBUTOR', 'FRANCHISE_ADMIN'], true)) {
+            if (!in_array($legacyRole, ['SALES', 'DISTRIBUTOR', 'FRANCHISE_ADMIN', 'ACCOUNTANT', 'DISTRIBUTOR_EMPLOYEE'], true)) {
                 throw new ValidationException('INVALID_ROLE', 'role_ref is required for configurable internal roles.');
             }
             return $legacyRole;
