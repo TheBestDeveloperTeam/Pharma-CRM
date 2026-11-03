@@ -1084,6 +1084,51 @@ paths:
         '201':
           description: State created successfully.
 
+  /admin/geo/states/bulk:
+    post:
+      summary: Bulk upload state masters
+      description: Bulk upload or update multiple states at once. If state_code exists, it will update; otherwise it creates a new state.
+      tags: [Admin Geo Master]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  description: List of state records to import
+                  items:
+                    type: object
+                    required: [state_code, state_name]
+                    properties:
+                      state_code: {type: string, example: "KA", description: "GST 2-letter state code"}
+                      state_name: {type: string, example: "Karnataka"}
+            example:
+              items:
+                - state_code: "MH"
+                  state_name: "Maharashtra"
+                - state_code: "GJ"
+                  state_name: "Gujarat"
+                - state_code: "KA"
+                  state_name: "Karnataka"
+      responses:
+        '200':
+          description: Bulk upload results with summary and records status.
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  total: 3
+                  inserted: 1
+                  updated: 2
+                  failed: 0
+                  errors: []
+
   /admin/geo/states/{ref}:
     parameters:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "STA-MAHARASHTRA00001"}
@@ -1137,6 +1182,52 @@ paths:
         '201':
           description: District created.
 
+  /admin/geo/districts/bulk:
+    post:
+      summary: Bulk upload district masters
+      description: Bulk upload districts linking each district to its parent state using state_ref (or state_code).
+      tags: [Admin Geo Master]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  description: List of district records to import
+                  items:
+                    type: object
+                    required: [district_name]
+                    properties:
+                      district_name: {type: string, example: "Pune"}
+                      state_ref: {type: string, example: "STA-MAHARASHTRA00001", description: "Reference to parent state"}
+                      state_code: {type: string, example: "MH", description: "Alternative state code fallback"}
+            example:
+              items:
+                - state_ref: "STA-MAHARASHTRA00001"
+                  district_name: "Pune"
+                - state_ref: "STA-MAHARASHTRA00001"
+                  district_name: "Nagpur"
+                - state_code: "MH"
+                  district_name: "Thane"
+      responses:
+        '200':
+          description: Bulk upload results with summary and records status.
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  total: 3
+                  inserted: 2
+                  updated: 1
+                  failed: 0
+                  errors: []
+
   /admin/geo/districts/{ref}:
     parameters:
     - {name: ref, in: path, required: true, schema: {type: string}, example: "DST-MUMBAICITY0001"}
@@ -1189,6 +1280,51 @@ paths:
       responses:
         '201':
           description: City created.
+
+  /admin/geo/cities/bulk:
+    post:
+      summary: Bulk upload city masters
+      description: Bulk upload cities linking each city to its parent district using district_ref.
+      tags: [Admin Geo Master]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  description: List of city records to import
+                  items:
+                    type: object
+                    required: [district_ref, city_name]
+                    properties:
+                      city_name: {type: string, example: "Bandra"}
+                      district_ref: {type: string, example: "DST-MUMBAICITY0001", description: "Reference to parent district"}
+            example:
+              items:
+                - district_ref: "DST-MUMBAICITY0001"
+                  city_name: "Bandra"
+                - district_ref: "DST-MUMBAICITY0001"
+                  city_name: "Borivali"
+                - district_ref: "DST-MUMBAICITY0001"
+                  city_name: "Kurla"
+      responses:
+        '200':
+          description: Bulk upload results with summary and records status.
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  total: 3
+                  inserted: 3
+                  updated: 0
+                  failed: 0
+                  errors: []
 
   /admin/geo/cities/{ref}:
     parameters:
@@ -1244,6 +1380,59 @@ paths:
       responses:
         '201':
           description: Pincode created.
+
+  /admin/geo/pincodes/bulk:
+    post:
+      summary: Bulk upload postal pincode masters
+      description: Bulk upload or upsert pincodes linking them to state_ref, district_ref, and optional city_ref.
+      tags: [Admin Geo Master]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  description: List of pincode records to import
+                  items:
+                    type: object
+                    required: [pincode, district_ref, state_ref]
+                    properties:
+                      pincode: {type: string, example: "400053", description: "6-digit postal pincode"}
+                      state_ref: {type: string, example: "STA-MAHARASHTRA00001"}
+                      district_ref: {type: string, example: "DST-MUMBAICITY0001"}
+                      city_ref: {type: string, example: "CTY-MUMBAI00000001", nullable: true}
+            example:
+              items:
+                - pincode: "400053"
+                  state_ref: "STA-MAHARASHTRA00001"
+                  district_ref: "DST-MUMBAICITY0001"
+                  city_ref: "CTY-MUMBAI00000001"
+                - pincode: "400054"
+                  state_ref: "STA-MAHARASHTRA00001"
+                  district_ref: "DST-MUMBAICITY0001"
+                  city_ref: "CTY-MUMBAI00000001"
+                - pincode: "400055"
+                  state_ref: "STA-MAHARASHTRA00001"
+                  district_ref: "DST-MUMBAICITY0001"
+                  city_ref: "CTY-MUMBAI00000001"
+      responses:
+        '200':
+          description: Bulk upload results with summary and records status.
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  total: 3
+                  inserted: 3
+                  updated: 0
+                  failed: 0
+                  errors: []
 
   /admin/geo/pincodes/{ref}:
     parameters:
@@ -2928,6 +3117,59 @@ paths:
       responses:
         '201':
           description: Territory allocation created.
+
+  /admin/territories/bulk:
+    post:
+      summary: Bulk upload territory allocations
+      description: Bulk upload territory mapping allocations for parties across pincodes or districts.
+      tags: [Admin Territories]
+      security: [bearerAuth: []]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  description: List of territory allocations to create
+                  items:
+                    type: object
+                    required: [party_ref, level, effective_from]
+                    properties:
+                      party_ref: {type: string, example: "PAR-APOLLODIST00001"}
+                      level: {type: string, enum: [PINCODE, DISTRICT], example: "PINCODE"}
+                      pincode: {type: string, example: "400053", description: "Required if level is PINCODE"}
+                      district_ref: {type: string, example: "DST-MUMBAICITY0001", description: "Required if level is DISTRICT"}
+                      effective_from: {type: string, format: date, example: "2026-11-01"}
+                      effective_to: {type: string, format: date, nullable: true, example: null}
+                      is_exclusive: {type: boolean, example: false}
+            example:
+              items:
+                - party_ref: "PAR-APOLLODIST00001"
+                  level: "PINCODE"
+                  pincode: "400053"
+                  effective_from: "2026-11-01"
+                  is_exclusive: false
+                - party_ref: "PAR-APOLLODIST00001"
+                  level: "PINCODE"
+                  pincode: "400054"
+                  effective_from: "2026-11-01"
+                  is_exclusive: false
+      responses:
+        '200':
+          description: Bulk territory allocation results.
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  total: 2
+                  inserted: 2
+                  failed: 0
+                  errors: []
 
   /admin/territories/{ref}:
     parameters:

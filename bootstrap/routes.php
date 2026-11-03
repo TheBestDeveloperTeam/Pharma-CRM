@@ -42,18 +42,22 @@ return function(\App\Core\Router $router): void {
 
     // Admin Geo Management
     $router->post('/api/v1/admin/geo/states', [\App\Http\Controllers\Api\V1\GeoController::class, 'createState']);
+    $router->post('/api/v1/admin/geo/states/bulk', [\App\Http\Controllers\Api\V1\GeoController::class, 'bulkStates']);
     $router->get('/api/v1/admin/geo/states/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'showState']);
     $router->patch('/api/v1/admin/geo/states/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updateState']);
     $router->delete('/api/v1/admin/geo/states/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deleteState']);
     $router->post('/api/v1/admin/geo/districts', [\App\Http\Controllers\Api\V1\GeoController::class, 'createDistrict']);
+    $router->post('/api/v1/admin/geo/districts/bulk', [\App\Http\Controllers\Api\V1\GeoController::class, 'bulkDistricts']);
     $router->get('/api/v1/admin/geo/districts/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'showDistrict']);
     $router->patch('/api/v1/admin/geo/districts/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updateDistrict']);
     $router->delete('/api/v1/admin/geo/districts/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deleteDistrict']);
     $router->post('/api/v1/admin/geo/cities', [\App\Http\Controllers\Api\V1\GeoController::class, 'createCity']);
+    $router->post('/api/v1/admin/geo/cities/bulk', [\App\Http\Controllers\Api\V1\GeoController::class, 'bulkCities']);
     $router->get('/api/v1/admin/geo/cities/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'showCity']);
     $router->patch('/api/v1/admin/geo/cities/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updateCity']);
     $router->delete('/api/v1/admin/geo/cities/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deleteCity']);
     $router->post('/api/v1/admin/geo/pincodes', [\App\Http\Controllers\Api\V1\GeoController::class, 'createPincode']);
+    $router->post('/api/v1/admin/geo/pincodes/bulk', [\App\Http\Controllers\Api\V1\GeoController::class, 'bulkPincodes']);
     $router->get('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'showPincode']);
     $router->patch('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'updatePincode']);
     $router->delete('/api/v1/admin/geo/pincodes/{ref}', [\App\Http\Controllers\Api\V1\GeoController::class, 'deletePincode']);
@@ -263,6 +267,7 @@ return function(\App\Core\Router $router): void {
     // Territories
     $router->get('/api/v1/admin/territories', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'index']);
     $router->post('/api/v1/admin/territories', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'store']);
+    $router->post('/api/v1/admin/territories/bulk', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'bulkStore']);
     $router->get('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'show']);
     $router->patch('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'update']);
     $router->delete('/api/v1/admin/territories/{ref}', [\App\Http\Controllers\Api\V1\Admin\TerritoriesController::class, 'delete']);

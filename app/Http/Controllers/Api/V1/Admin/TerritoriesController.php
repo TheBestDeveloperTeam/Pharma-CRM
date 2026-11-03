@@ -63,6 +63,99 @@ final class TerritoriesController
         return Response::json(200, ['territory_ref' => $ref, 'deleted' => true]);
     }
 
+    /** Bulk upload territory mappings */
+    public function bulkStore(Request $r): Response
+    {
+        $ctx = TenantContext::get();
+        $f = $ctx->requireFranchise();
+        $this->authorization->requirePermission($ctx, 'territory', 'allocate');
+
+        $items = $r->input('items');
+        if (!is_array($items)) {
+            $items = $r->all();
+        }
+        if (empty($items) || !is_array($items)) {
+            throw new ValidationException('INVALID_PAYLOAD', 'items array is required for bulk territory upload.');
+        }
+
+        $inserted = 0;
+        $failed = 0;
+        $errors = [];
+        $results = [];
+
+        foreach ($items as $idx => $row) {
+            if (!is_array($row) || empty($row['party_ref']) || empty($row['level'])) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'error' => 'party_ref and level (PINCODE/DISTRICT) are required'];
+                continue;
+            }
+
+            try {
+                $clean = Validation::validate($row, [
+                    'party_ref'      => 'required|string',
+                    'level'          => 'required|enum:PINCODE,DISTRICT',
+                    'pincode'        => 'pincode',
+                    'district_ref'   => 'string',
+                    'effective_from' => 'required|date:Y-m-d',
+                    'effective_to'   => 'date:Y-m-d',
+                    'is_exclusive'   => 'bool',
+                ]);
+
+                $party = $this->parties->findByRef($f, $clean['party_ref']);
+                if (!$party || ($party['status'] ?? '') !== 'ACTIVE') {
+                    throw new ValidationException('INVALID_PARTY', 'party_ref must reference an active party.');
+                }
+
+                if ($clean['level'] === 'PINCODE') {
+                    if (empty($clean['pincode'])) {
+                        throw new ValidationException('PINCODE_REQUIRED', 'pincode is required for PINCODE mapping.');
+                    }
+                    $stmt = $this->pdo->prepare('SELECT district_ref FROM pincodes WHERE pincode = ? LIMIT 1');
+                    $stmt->execute([$clean['pincode']]);
+                    $district = $stmt->fetchColumn();
+                    if (!$district) {
+                        throw new ValidationException('INVALID_PINCODE', 'pincode not found in geography master.');
+                    }
+                    $clean['district_ref'] = $clean['district_ref'] ?? $district;
+                }
+
+                if ($clean['level'] === 'DISTRICT' && empty($clean['district_ref'])) {
+                    throw new ValidationException('DISTRICT_REQUIRED', 'district_ref is required for DISTRICT mapping.');
+                }
+
+                if (($clean['effective_to'] ?? null) !== null && $clean['effective_to'] < $clean['effective_from']) {
+                    throw new ValidationException('INVALID_EFFECTIVE_DATES', 'effective_to must be on or after effective_from.');
+                }
+
+                if ($ctx->scopeFor('territory') === 'OWN') {
+                    $clean['party_ref'] = $ctx->partyRef;
+                }
+                $clean['org_ref']        = $ctx->orgRef;
+                $clean['franchise_ref']  = $f;
+                $clean['created_by_ref'] = $ctx->userRef;
+                $clean['status']         = 'ACTIVE';
+
+                $ref = $this->territoryService->create($clean);
+                $after = $this->territories->findByRef($f, $ref);
+                $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'territory.created', entityType: 'party_territory', entityRef: $ref, after: $after ?? $clean);
+
+                $inserted++;
+                $results[] = ['territory_ref' => $ref, 'party_ref' => $clean['party_ref'], 'level' => $clean['level'], 'status' => 'ACTIVE'];
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'party_ref' => $row['party_ref'] ?? null, 'error' => $e->getMessage()];
+            }
+        }
+
+        return Response::json(200, [
+            'total' => count($items),
+            'inserted' => $inserted,
+            'failed' => $failed,
+            'errors' => $errors,
+            'data' => $results,
+        ]);
+    }
+
     public function status(Request $r): Response
     {
         $ctx = TenantContext::get(); $f = $ctx->requireFranchise(); $this->authorization->requirePermission($ctx, 'territory', 'edit'); $ref = (string)$r->param('ref'); $before = $this->territories->findByRef($f, $ref); if (!$before) throw new NotFoundException('TERRITORY_NOT_FOUND', 'Territory allocation not found.'); $this->checkScope($ctx, $before); $status = Validation::validate($r->all(), ['status' => 'required|enum:ACTIVE,INACTIVE'])['status']; $this->territories->update($f, $ref, ['status' => $status]); $this->audit->log(ctx: $ctx, category: 'BUSINESS', action: 'territory.status_changed', entityType: 'party_territory', entityRef: $ref, before: $before, after: ['status' => $status]); return Response::json(200, ['territory_ref' => $ref, 'status' => $status]);

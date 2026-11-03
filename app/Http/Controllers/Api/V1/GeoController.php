@@ -431,6 +431,262 @@ final class GeoController
         return Response::json(200, ['city_ref' => $ref, 'deleted' => true]);
     }
 
+    // ── Bulk Upload Masters ───────────────────────────────────────
+
+    /** GEO-BULK-01: Bulk upload states */
+    public function bulkStates(Request $r): Response
+    {
+        $this->requireGeoPermission();
+        $items = $r->input('items');
+        if (!is_array($items)) {
+            $items = $r->all();
+        }
+        if (empty($items) || !is_array($items)) {
+            throw new ValidationException('INVALID_PAYLOAD', 'items array is required for bulk upload.');
+        }
+
+        $inserted = 0;
+        $updated = 0;
+        $failed = 0;
+        $errors = [];
+        $results = [];
+
+        foreach ($items as $idx => $row) {
+            if (!is_array($row) || empty($row['state_code']) || empty($row['state_name'])) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'error' => 'state_code and state_name are required'];
+                continue;
+            }
+
+            $code = strtoupper(trim((string)$row['state_code']));
+            $name = trim((string)$row['state_name']);
+
+            try {
+                $existing = $this->db->fetchOne("SELECT state_ref FROM states WHERE state_code = ? LIMIT 1", [$code]);
+                if ($existing) {
+                    $this->db->execute("UPDATE states SET state_name = ? WHERE state_ref = ?", [$name, $existing['state_ref']]);
+                    $updated++;
+                    $results[] = ['state_ref' => $existing['state_ref'], 'state_code' => $code, 'state_name' => $name, 'action' => 'updated'];
+                } else {
+                    $ref = RefGenerator::generate('STT');
+                    $this->db->execute("INSERT INTO states (state_ref, state_code, state_name) VALUES (?, ?, ?)", [$ref, $code, $name]);
+                    $inserted++;
+                    $results[] = ['state_ref' => $ref, 'state_code' => $code, 'state_name' => $name, 'action' => 'inserted'];
+                }
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'state_code' => $code, 'error' => $e->getMessage()];
+            }
+        }
+
+        return Response::json(200, [
+            'total' => count($items),
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'failed' => $failed,
+            'errors' => $errors,
+            'data' => $results,
+        ]);
+    }
+
+    /** GEO-BULK-02: Bulk upload districts */
+    public function bulkDistricts(Request $r): Response
+    {
+        $this->requireGeoPermission();
+        $items = $r->input('items');
+        if (!is_array($items)) {
+            $items = $r->all();
+        }
+        if (empty($items) || !is_array($items)) {
+            throw new ValidationException('INVALID_PAYLOAD', 'items array is required for bulk upload.');
+        }
+
+        $inserted = 0;
+        $updated = 0;
+        $failed = 0;
+        $errors = [];
+        $results = [];
+
+        foreach ($items as $idx => $row) {
+            if (!is_array($row) || empty($row['district_name']) || (empty($row['state_ref']) && empty($row['state_code']))) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'error' => 'district_name and state_ref (or state_code) are required'];
+                continue;
+            }
+
+            $name = trim((string)$row['district_name']);
+            $stateRef = !empty($row['state_ref']) ? trim((string)$row['state_ref']) : null;
+
+            if (!$stateRef && !empty($row['state_code'])) {
+                $st = $this->db->fetchOne("SELECT state_ref FROM states WHERE state_code = ? LIMIT 1", [strtoupper(trim((string)$row['state_code']))]);
+                $stateRef = $st['state_ref'] ?? null;
+            }
+
+            if (!$stateRef) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'district_name' => $name, 'error' => 'Valid state_ref or state_code not found'];
+                continue;
+            }
+
+            try {
+                $existing = $this->db->fetchOne(
+                    "SELECT district_ref FROM districts WHERE state_ref = ? AND LOWER(district_name) = LOWER(?) LIMIT 1",
+                    [$stateRef, $name]
+                );
+                if ($existing) {
+                    $this->db->execute("UPDATE districts SET district_name = ? WHERE district_ref = ?", [$name, $existing['district_ref']]);
+                    $updated++;
+                    $results[] = ['district_ref' => $existing['district_ref'], 'state_ref' => $stateRef, 'district_name' => $name, 'action' => 'updated'];
+                } else {
+                    $ref = RefGenerator::generate('DST');
+                    $this->db->execute("INSERT INTO districts (district_ref, state_ref, district_name) VALUES (?, ?, ?)", [$ref, $stateRef, $name]);
+                    $inserted++;
+                    $results[] = ['district_ref' => $ref, 'state_ref' => $stateRef, 'district_name' => $name, 'action' => 'inserted'];
+                }
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'district_name' => $name, 'error' => $e->getMessage()];
+            }
+        }
+
+        return Response::json(200, [
+            'total' => count($items),
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'failed' => $failed,
+            'errors' => $errors,
+            'data' => $results,
+        ]);
+    }
+
+    /** GEO-BULK-03: Bulk upload cities */
+    public function bulkCities(Request $r): Response
+    {
+        $this->requireGeoPermission();
+        $items = $r->input('items');
+        if (!is_array($items)) {
+            $items = $r->all();
+        }
+        if (empty($items) || !is_array($items)) {
+            throw new ValidationException('INVALID_PAYLOAD', 'items array is required for bulk upload.');
+        }
+
+        $inserted = 0;
+        $updated = 0;
+        $failed = 0;
+        $errors = [];
+        $results = [];
+
+        foreach ($items as $idx => $row) {
+            if (!is_array($row) || empty($row['city_name']) || empty($row['district_ref'])) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'error' => 'city_name and district_ref are required'];
+                continue;
+            }
+
+            $name = trim((string)$row['city_name']);
+            $districtRef = trim((string)$row['district_ref']);
+
+            try {
+                $existing = $this->db->fetchOne(
+                    "SELECT city_ref FROM cities WHERE district_ref = ? AND LOWER(city_name) = LOWER(?) LIMIT 1",
+                    [$districtRef, $name]
+                );
+                if ($existing) {
+                    $this->db->execute("UPDATE cities SET city_name = ? WHERE city_ref = ?", [$name, $existing['city_ref']]);
+                    $updated++;
+                    $results[] = ['city_ref' => $existing['city_ref'], 'district_ref' => $districtRef, 'city_name' => $name, 'action' => 'updated'];
+                } else {
+                    $ref = RefGenerator::generate('CTY');
+                    $this->db->execute("INSERT INTO cities (city_ref, district_ref, city_name) VALUES (?, ?, ?)", [$ref, $districtRef, $name]);
+                    $inserted++;
+                    $results[] = ['city_ref' => $ref, 'district_ref' => $districtRef, 'city_name' => $name, 'action' => 'inserted'];
+                }
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'city_name' => $name, 'error' => $e->getMessage()];
+            }
+        }
+
+        return Response::json(200, [
+            'total' => count($items),
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'failed' => $failed,
+            'errors' => $errors,
+            'data' => $results,
+        ]);
+    }
+
+    /** GEO-BULK-04: Bulk upload pincodes */
+    public function bulkPincodes(Request $r): Response
+    {
+        $this->requireGeoPermission();
+        $items = $r->input('items');
+        if (!is_array($items)) {
+            $items = $r->all();
+        }
+        if (empty($items) || !is_array($items)) {
+            throw new ValidationException('INVALID_PAYLOAD', 'items array is required for bulk upload.');
+        }
+
+        $inserted = 0;
+        $updated = 0;
+        $failed = 0;
+        $errors = [];
+        $results = [];
+
+        foreach ($items as $idx => $row) {
+            if (!is_array($row) || empty($row['pincode']) || empty($row['district_ref']) || empty($row['state_ref'])) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'error' => 'pincode, district_ref and state_ref are required'];
+                continue;
+            }
+
+            $pin = trim((string)$row['pincode']);
+            if (!preg_match('/^[1-9][0-9]{5}$/', $pin)) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'pincode' => $pin, 'error' => 'Pincode must be 6 digits'];
+                continue;
+            }
+
+            $districtRef = trim((string)$row['district_ref']);
+            $stateRef = trim((string)$row['state_ref']);
+            $cityRef = !empty($row['city_ref']) ? trim((string)$row['city_ref']) : null;
+
+            try {
+                $existing = $this->db->fetchOne("SELECT pincode FROM pincodes WHERE pincode = ? LIMIT 1", [$pin]);
+                if ($existing) {
+                    $this->db->execute(
+                        "UPDATE pincodes SET city_ref = ?, district_ref = ?, state_ref = ? WHERE pincode = ?",
+                        [$cityRef, $districtRef, $stateRef, $pin]
+                    );
+                    $updated++;
+                    $results[] = ['pincode' => $pin, 'city_ref' => $cityRef, 'district_ref' => $districtRef, 'state_ref' => $stateRef, 'action' => 'updated'];
+                } else {
+                    $this->db->execute(
+                        "INSERT INTO pincodes (pincode, city_ref, district_ref, state_ref) VALUES (?, ?, ?, ?)",
+                        [$pin, $cityRef, $districtRef, $stateRef]
+                    );
+                    $inserted++;
+                    $results[] = ['pincode' => $pin, 'city_ref' => $cityRef, 'district_ref' => $districtRef, 'state_ref' => $stateRef, 'action' => 'inserted'];
+                }
+            } catch (\Throwable $e) {
+                $failed++;
+                $errors[] = ['index' => $idx, 'pincode' => $pin, 'error' => $e->getMessage()];
+            }
+        }
+
+        return Response::json(200, [
+            'total' => count($items),
+            'inserted' => $inserted,
+            'updated' => $updated,
+            'failed' => $failed,
+            'errors' => $errors,
+            'data' => $results,
+        ]);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────
 
     private function requireGeoPermission(): void
